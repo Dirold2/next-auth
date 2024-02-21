@@ -10,12 +10,12 @@ runBasicTests({
   adapter: PrismaAdapter(prisma),
   testWebAuthnMethods: true,
   db: {
-    id() {
+    id(): string | void {
       if (process.env.CONTAINER_NAME !== "authjs-mongodb-test") return
       return new ObjectId().toHexString()
     },
-    connect: async () => {
-      await Promise.all([
+    connect: async (): Promise<void> => {
+      await prisma.$transaction([
         prisma.user.deleteMany({}),
         prisma.account.deleteMany({}),
         prisma.session.deleteMany({}),
@@ -23,8 +23,8 @@ runBasicTests({
         prisma.authenticator.deleteMany({}),
       ])
     },
-    disconnect: async () => {
-      await Promise.all([
+    disconnect: async (): Promise<void> => {
+      await prisma.$transaction([
         prisma.user.deleteMany({}),
         prisma.account.deleteMany({}),
         prisma.session.deleteMany({}),
@@ -33,12 +33,12 @@ runBasicTests({
       ])
       await prisma.$disconnect()
     },
-    user: (id) => prisma.user.findUnique({ where: { id } }),
-    account: (provider_providerAccountId) =>
+    user: (id: string) => prisma.user.findUnique({ where: { id } }),
+    account: (provider_providerAccountId: {provider: string; providerAccountId: string}) =>
       prisma.account.findUnique({ where: { provider_providerAccountId } }),
-    session: (sessionToken) =>
+    session: (sessionToken: string) =>
       prisma.session.findUnique({ where: { sessionToken } }),
-    async verificationToken(identifier_token) {
+    async verificationToken(identifier_token: {identifier: string; token: string}) {
       const result = await prisma.verificationToken.findUnique({
         where: { identifier_token },
       })
@@ -47,7 +47,7 @@ runBasicTests({
       delete result.id
       return result
     },
-    authenticator: (credentialID) =>
+    authenticator: (credentialID: string) =>
       prisma.authenticator.findUnique({ where: { credentialID } }),
   },
 })

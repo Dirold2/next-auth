@@ -15,7 +15,7 @@
   "types": "./index.d.ts",
   "files": [
     "*.js",
-    "*.d.ts*",
+    "*.d.ts",
     "src"
   ],
   "exports": {
@@ -36,13 +36,13 @@
     "access": "public"
   },
   "scripts": {
-    "clean": "rm ./prisma/dev.db* || echo 'File deleted'",
+    "clean": "rm -f ./prisma/dev.db*",
     "init:default": "prisma migrate dev --name init --skip-seed",
     "init:custom": "prisma migrate dev --name init-custom --schema ./prisma/custom.prisma",
-    "test:default": "pnpm init:default && vitest -c ../utils/vitest.config.ts",
-    "test:custom": "pnpm init:custom && CUSTOM_MODEL=1 vitest -c ../utils/vitest.config.ts",
+    "test:default": "pnpm run init:default && vitest -c ../utils/vitest.config.ts",
+    "test:custom": "pnpm run init:custom && CUSTOM_MODEL=1 vitest -c ../utils/vitest.config.ts",
     "test:mongodb": "./test/mongodb.test.sh",
-    "test": "pnpm test:default && pnpm test:custom && pnpm test:mongodb",
+    "test": "pnpm run test:default && pnpm run test:custom && pnpm run test:mongodb",
     "build": "prisma generate && tsc",
     "dev": "prisma generate && tsc -w",
     "studio": "prisma studio"
@@ -51,7 +51,7 @@
     "@auth/core": "workspace:*"
   },
   "peerDependencies": {
-    "@prisma/client": ">=2.26.0 || >=3 || >=4 || >=5"
+    "@prisma/client": ">=2.26.0"
   },
   "devDependencies": {
     "@prisma/client": "^5.9.1",

@@ -14,7 +14,8 @@
  * ```
  *
  * @module @auth/prisma-adapter
- */
+*/
+
 import type { PrismaClient, Prisma } from "@prisma/client"
 import type {
   Adapter,
@@ -44,100 +45,90 @@ import type {
  *   ],
  * })
  * ```
- **/
+**/
+
 export function PrismaAdapter(
   prisma: PrismaClient | ReturnType<PrismaClient["$extends"]>
 ): Adapter {
   const p = prisma as PrismaClient
   return {
-    // We need to let Prisma generate the ID because our default UUID is incompatible with MongoDB
-    createUser: ({ id: _id, ...data }) => {
-      return p.user.create({ data })
-    },
-    getUser: (id) => p.user.findUnique({ where: { id } }),
-    getUserByEmail: (email) => p.user.findUnique({ where: { email } }),
-    async getUserByAccount(provider_providerAccountId) {
+    createUser: (data: AdapterUser) => p.user.create({ data }),
+    getUser: (id: string) => p.user.findUnique({ where: { id } }),
+    getUserByEmail: (email: string) => p.user.findUnique({ where: { email } }),
+    getUserByAccount: async (provider_providerAccountId: {provider: string, providerAccountId: string}) => {
       const account = await p.account.findUnique({
         where: { provider_providerAccountId },
         select: { user: true },
       })
-      return (account?.user as AdapterUser) ?? null
+      return account?.user ?? null
     },
-    updateUser: ({ id, ...data }) =>
-      p.user.update({ where: { id }, data }) as Promise<AdapterUser>,
-    deleteUser: (id) =>
-      p.user.delete({ where: { id } }) as Promise<AdapterUser>,
-    linkAccount: (data) =>
-      p.account.create({ data }) as unknown as AdapterAccount,
-    unlinkAccount: (provider_providerAccountId) =>
+    updateUser: (data: Partial<AdapterUser> & { id: string }) => p.user.update({ where: { id: data.id }, data }),
+    deleteUser: (id: string) => p.user.delete({ where: { id } }),
+    linkAccount: (data: AdapterAccount) => p.account.create({ data }),
+    unlinkAccount: (provider_providerAccountId: {provider: string, providerAccountId: string}) =>
       p.account.delete({
         where: { provider_providerAccountId },
-      }) as unknown as AdapterAccount,
-    async getSessionAndUser(sessionToken) {
+      }),
+    getSessionAndUser: async (sessionToken: string) => {
       const userAndSession = await p.session.findUnique({
         where: { sessionToken },
         include: { user: true },
       })
       if (!userAndSession) return null
       const { user, ...session } = userAndSession
-      return { user, session } as { user: AdapterUser; session: AdapterSession }
+      return { user, session: session as AdapterSession }
     },
-    createSession: (data) => p.session.create({ data }),
-    updateSession: (data) =>
+    createSession: (data: AdapterSession) => p.session.create({ data }),
+    updateSession: (data: Partial<AdapterSession> & { sessionToken: string }) =>
       p.session.update({ where: { sessionToken: data.sessionToken }, data }),
-    deleteSession: (sessionToken) =>
+    deleteSession: (sessionToken: string) =>
       p.session.delete({ where: { sessionToken } }),
-    async createVerificationToken(data) {
-      const verificationToken = await p.verificationToken.create({ data })
-      // @ts-expect-errors // MongoDB needs an ID, but we don't
-      if (verificationToken.id) delete verificationToken.id
-      return verificationToken
+    createVerificationToken: async (data: {identifier: string, token: string, expires: Date}) => {
+      const verificationToken = await p.verificationToken.create({ data });
+      verificationToken.id && delete verificationToken.id;
+      return verificationToken;
     },
-    async useVerificationToken(identifier_token) {
+    useVerificationToken: async (identifier_token: {identifier: string, token: string}) => {
       try {
         const verificationToken = await p.verificationToken.delete({
           where: { identifier_token },
-        })
-        // @ts-expect-errors // MongoDB needs an ID, but we don't
-        if (verificationToken.id) delete verificationToken.id
-        return verificationToken
+        });
+        verificationToken.id && delete verificationToken.id;
+        return verificationToken;
       } catch (error) {
-        // If token already used/deleted, just return null
-        // https://www.prisma.io/docs/reference/api-reference/error-reference#p2025
-        if ((error as Prisma.PrismaClientKnownRequestError).code === "P2025")
-          return null
-        throw error
+        if ((error as Prisma.PrismaClientKnownRequestError).code === "P2025") {
+          return null;
+        }
+        throw new Error('An error occurred while using the verification token.');
       }
     },
-    async getAccount(providerAccountId, provider) {
-      return p.account.findFirst({
+    getAccount: (providerAccountId: string, provider: string) =>
+      p.account.findFirst({
         where: { providerAccountId, provider },
-      }) as Promise<AdapterAccount | null>
-    },
-    async createAuthenticator(authenticator) {
+      }),
+    createAuthenticator: async (authenticator: PrismaAuthenticator) => {
       return p.authenticator
         .create({
           data: authenticator,
         })
         .then(fromDBAuthenticator)
     },
-    async getAuthenticator(credentialID) {
+    getAuthenticator: async (credentialID: string) => {
       const authenticator = await p.authenticator.findUnique({
         where: { credentialID },
       })
       return authenticator ? fromDBAuthenticator(authenticator) : null
     },
-    async listAuthenticatorsByUserId(userId) {
+    listAuthenticatorsByUserId: async (userId: string) => {
       const authenticators = await p.authenticator.findMany({
         where: { userId },
       })
-
       return authenticators.map(fromDBAuthenticator)
     },
-    async updateAuthenticatorCounter(credentialID, counter) {
+    updateAuthenticatorCounter: async (credentialID: string, counter: number) => {
       return p.authenticator
         .update({
-          where: { credentialID: credentialID },
+          where: { credentialID },
           data: { counter },
         })
         .then(fromDBAuthenticator)
@@ -145,17 +136,13 @@ export function PrismaAdapter(
   }
 }
 
-type BasePrismaAuthenticator = Parameters<
-  PrismaClient["authenticator"]["create"]
->[0]["data"]
-type PrismaAuthenticator = BasePrismaAuthenticator &
-  Required<Pick<BasePrismaAuthenticator, "userId">>
+type PrismaAuthenticatorData = Parameters<PrismaClient['authenticator']['create']>[0]['data'];
+type PrismaAuthenticator = PrismaAuthenticatorData & { userId: string };
 
 function fromDBAuthenticator(
   authenticator: PrismaAuthenticator
 ): AdapterAuthenticator {
   const { transports, id, user, ...other } = authenticator
-
   return {
     ...other,
     transports: transports || undefined,

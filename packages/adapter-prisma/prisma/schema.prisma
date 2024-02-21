@@ -11,7 +11,7 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
-  emailVerified DateTime?
+  emailVerified DateTime? @map("email_verified_at")
   image         String?
   accounts      Account[]
   sessions      Session[]
@@ -25,7 +25,7 @@ model Account {
   providerAccountId String
   refresh_token     String?
   access_token      String?
-  expires_at        Int?
+  expires_at        DateTime?
   token_type        String?
   scope             String?
   id_token          String?
