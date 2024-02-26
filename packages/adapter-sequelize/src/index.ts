@@ -27,7 +27,6 @@ import * as defaultModels from "./models.js"
 export { defaultModels as models }
 
 // @see https://sequelize.org/master/manual/typescript.html
-//@ts-expect-error
 interface AccountInstance
   extends Model<AdapterAccount, Partial<AdapterAccount>>,
     AdapterAccount {}
@@ -219,7 +218,6 @@ export default function SequelizeAdapter(
       await sync()
 
       const accountInstance = await Account.findOne({
-        // @ts-expect-error
         where: { provider, providerAccountId },
       })
 

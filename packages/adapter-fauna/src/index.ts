@@ -277,7 +277,6 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
       await q(Delete(Select("ref", Get(Match(SessionByToken, sessionToken)))))
     },
     async createVerificationToken(data) {
-      // @ts-expect-error
       const { id: _id, ...verificationToken } = await q<VerificationToken>(
         Create(VerificationTokens, { data: to(data) })
       )
@@ -292,8 +291,6 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
 
       // Verification tokens can be used only once
       await q(Delete(Select("ref", object)))
-
-      // @ts-expect-error
       delete verificationToken.id
       return verificationToken
     },
