@@ -34,7 +34,7 @@
  * - [Most common use case guides](https://authjs.dev/guides)
  *
  * @module @auth/core
- */
+*/
 
 import { assertConfig } from "./lib/utils/assert.js"
 import { AuthError, ErrorPageLoop } from "./errors.js"
@@ -69,24 +69,6 @@ export async function Auth(
   config: Omit<AuthConfig, "raw">
 ): Promise<Response>
 
-/**
- * Core functionality provided by Auth.js.
- *
- * Receives a standard {@link Request} and returns a {@link Response}.
- *
- * @example
- * ```ts
- * import Auth from "@auth/core"
- *
- * const request = new Request("https://example.com")
- * const response = await AuthHandler(request, {
- *   providers: [...],
- *   secret: "...",
- *   trustHost: true,
- * })
- *```
- * @see [Documentation](https://authjs.dev)
- */
 export async function Auth(
   request: Request,
   config: AuthConfig
@@ -108,7 +90,6 @@ export async function Auth(
   if (Array.isArray(assertionResult)) {
     assertionResult.forEach(logger.warn)
   } else if (assertionResult instanceof Error) {
-    // Bail out early if there's an error in the user config
     logger.error(assertionResult)
     const htmlPages = ["authorized", "signout", "error", "verify-request"]
     if (
@@ -162,14 +143,11 @@ export async function Auth(
     const isAuthError = error instanceof AuthError
     if (isAuthError && isRaw && !isRedirect) throw error
 
-    // If the CSRF check failed for POST/session, return a 400 status code.
-    // We should not redirect to a page as this is an API route
     if (request.method === "POST" && internalRequest.action === "session")
       return Response.json(null, { status: 400 })
 
     const type = isAuthError ? error.type : "Configuration"
     const page = (isAuthError && error.kind) ?? "error"
-    // TODO: Filter out some error types from being sent to the client
     const params = new URLSearchParams({ error: type })
     const path =
       (config.pages as Record<string, string>)?.[page as string] ?? `${config.basePath}/${typeof page === 'string' ? page.toLowerCase() : ''}`

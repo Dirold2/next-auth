@@ -16,7 +16,7 @@ import {
 
 import type { AuthConfig, RequestInternal, SemverString } from "../../types.js"
 import type { WarningCode } from "./logger.js"
-import { Adapter } from "../../adapters.js"
+import { type Adapter } from "../../adapters.js"
 
 type ConfigError =
   | InvalidCallbackUrl
@@ -47,13 +47,13 @@ let hasCredentials = false
 let hasEmail = false
 let hasWebAuthn = false
 
-const emailMethods: (keyof Adapter)[] = [
+const emailMethods: Array<keyof Adapter> = [
   "createVerificationToken",
   "useVerificationToken",
   "getUserByEmail",
 ]
 
-const sessionMethods: (keyof Adapter)[] = [
+const sessionMethods: Array<keyof Adapter> = [
   "createUser",
   "getUser",
   "getUserByEmail",
@@ -66,7 +66,7 @@ const sessionMethods: (keyof Adapter)[] = [
   "deleteSession",
 ]
 
-const webauthnMethods: (keyof Adapter)[] = [
+const webauthnMethods: Array<keyof Adapter> = [
   "createUser",
   "getUser",
   "linkAccount",
@@ -169,7 +169,7 @@ export function assertConfig(
         // Make sure at least one formField has "webauthn" in its autocomplete param
         const hasWebauthnFormField = Object.values(
           provider.formFields
-        ).some((f) => f.autocomplete && f.autocomplete.toString().indexOf("webauthn") > -1)
+        ).some((f) => typeof f.autocomplete === 'string' && f.autocomplete.includes("webauthn"))
         if (!hasWebauthnFormField) {
           return new MissingWebAuthnAutocomplete(
             `Provider "${provider.id}" has 'enableConditionalUI' set to True, but none of its formFields have 'webauthn' in their autocomplete param.`
@@ -203,7 +203,7 @@ export function assertConfig(
 
   const { adapter, session } = options
 
-  let requiredMethods: (keyof Adapter)[] = []
+  const requiredMethods: Array<keyof Adapter> = []
 
   if (hasEmail || session?.strategy === "database" || (!session?.strategy && adapter)) {
     if (hasEmail) {

@@ -187,7 +187,7 @@ export default function SigninPage(props: {
                         src={logoDark}
                       />
                     )}
-                    <span>Authorized with {provider.name}</span>
+                    <span>Log in with {provider.name}</span>
                   </button>
                 </form>
               ) : null}
@@ -215,7 +215,7 @@ export default function SigninPage(props: {
                     required
                   />
                   <button id="submitButton" type="submit" tabIndex={0}>
-                    Authorized with {provider.name}
+                    Log in with {provider.name}
                   </button>
                 </form>
               )}
@@ -244,7 +244,7 @@ export default function SigninPage(props: {
                     )
                   })}
                   <button id="submitButton" type="submit" tabIndex={0}>
-                    Authorized with {provider.name}
+                    Log in with {provider.name}
                   </button>
                 </form>
               )}
@@ -274,7 +274,7 @@ export default function SigninPage(props: {
                     )
                   })}
                   <button id={`submitButton-${provider.id}`} type="submit" tabIndex={0}>
-                    Authorized with {provider.name}
+                    Log in with {provider.name}
                   </button>
                 </form>
               )}

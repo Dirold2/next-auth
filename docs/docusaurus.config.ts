@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { typedocFramework, typedocAdapter } from "./typedoc-utils"
 import { themes } from "prism-react-renderer"
 import pkgManagerPlugin from "@docusaurus/remark-plugin-npm2yarn"

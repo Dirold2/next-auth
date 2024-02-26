@@ -1,10 +1,10 @@
 import * as React from "react"
-import { signIn, signOut, useSession } from "next-auth/react"
-import { SignInResponse, SignOutResponse } from "next-auth/react"
+import { logIn, logOut, useSession } from "next-auth/react"
+import { AuthorizedResponse, SignOutResponse } from "next-auth/lib/client.js"
 
 export default function Page() {
   const [response, setResponse] = React.useState<
-    SignInResponse | SignOutResponse
+    AuthorizedResponse | SignOutResponse
   >()
 
   const { data: session } = useSession()
@@ -14,10 +14,10 @@ export default function Page() {
       <>
         <h1>Test different flows for Credentials logout</h1>
         <span className="spacing">Default: </span>
-        <button onClick={() => signOut()}>Logout</button>
+        <button onClick={() => logOut()}>Logout</button>
         <br />
         <span className="spacing">No redirect: </span>
-        <button onClick={() => signOut({ redirect: false }).then(setResponse)}>
+        <button onClick={() => logOut({ redirect: false }).then(setResponse)}>
           Logout
         </button>
         <br />
@@ -33,14 +33,14 @@ export default function Page() {
     <>
       <h1>Test different flows for Credentials login</h1>
       <span className="spacing">Default: </span>
-      <button onClick={() => signIn("credentials", { password: "password" })}>
+      <button onClick={() => logIn("credentials", { password: "password" })}>
         Login
       </button>
       <br />
       <span className="spacing">No redirect: </span>
       <button
         onClick={() =>
-          signIn("credentials", { redirect: false, password: "password" }).then(
+          logIn("credentials", { redirect: false, password: "password" }).then(
             setResponse
           )
         }
@@ -51,7 +51,7 @@ export default function Page() {
       <span className="spacing">No redirect, wrong password: </span>
       <button
         onClick={() =>
-          signIn("credentials", { redirect: false, password: "wrong" }).then(
+          logIn("credentials", { redirect: false, password: "wrong" }).then(
             setResponse
           )
         }

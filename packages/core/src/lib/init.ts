@@ -117,7 +117,7 @@ export async function init({
       cookie.defaultCookies(
         authOptions.useSecureCookies ?? url.protocol === "https:"
       ),
-      authOptions.cookies
+      authOptions.cookies ?? {},
     ),
     providers,
     secret: authOptions.secret ?? "defaultSecret",

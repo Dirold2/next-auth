@@ -193,7 +193,7 @@ export async function getProviders(): Promise<ProvidersType | null> {
  * Initiate a signin flow or send the user to the signin page listing all possible providers.
  * Handles CSRF protection.
  */
-export async function signIn(
+export async function logIn(
   provider?: string,
   options?: AuthorizedOptions,
   authorizationParams?: SiAuthorizedParams
@@ -281,7 +281,7 @@ export async function signIn(
  * Initiate a signout, by destroying the current session.
  * Handles CSRF protection.
  */
-export async function signOut(options?: AuthorizedParams): Promise<SignOutResponse | undefined> {
+export async function logOut(options?: AuthorizedParams): Promise<SignOutResponse | undefined> {
   const { callbackUrl = window.location.href } = options ?? {}
   const baseUrl = apiBaseUrl(__NEXTAUTH)
   const csrfToken = await getCsrfToken()
@@ -411,7 +411,7 @@ export function SessionProvider(props: SessionProviderProps) {
         status: loading ? "loading" : session ? "authenticated" : "unauthenticated",
         update: async (data) => {
           if (data === undefined) {
-            await signOut()
+            await logOut()
             return null
           }
           const updatedSession = await getSession()

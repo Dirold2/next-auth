@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn, signOut, useSession } from "next-auth/react"
+import { logIn, logOut, useSession } from "next-auth/react"
 
 export default function Client() {
   const { data: session, update, status } = useSession()
@@ -24,12 +24,12 @@ export default function Client() {
               >
                 Update Session - New Name
               </button>
-              <button onClick={() => signOut()}>Sign out</button>
+              <button onClick={() => logOut()}>Sign out</button>
             </>
           ) : (
             <>
-              <button onClick={() => signIn("github")}>Sign in Github</button>
-              <button onClick={() => signIn("credentials", {})}>
+              <button onClick={() => logIn("github")}>Sign in Github</button>
+              <button onClick={() => logIn("credentials", {})}>
                 Sign in Credentials
               </button>
             </>

@@ -63,7 +63,7 @@
       "Segoe UI Symbol",
       "Noto Color Emoji";
     padding: 0 1rem 1rem 1rem;
-    max-width: 680px;
+    max-width: 960px;
     margin: 0 auto;
     background: #fff;
     color: #333;

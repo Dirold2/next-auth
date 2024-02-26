@@ -74,7 +74,7 @@ export interface WorkOSProfile extends Record<string, any> {
  * ```
  * We can then add a custom login page that displays an input where the user can enter their email address.
  * We then extract the domain from the user's email address and pass it to the `authorizationParams` parameter on the `authorized` function:
- * ```js title="pages/auth/authorized.js"
+ * ```js title="pages/auth/login.js"
  * import { useState } from "react"
  * import { getProviders, authorized } from "next-auth/react"
  *
@@ -152,7 +152,7 @@ export default function WorkOS<P extends WorkOSProfile>(
     id: "workos",
     name: "WorkOS",
     type: "oauth",
-    authorization: `${issuer}sso/authorize`,
+    authorization: `${issuer}sso/login`,
     token: `${issuer}sso/token`,
     client: {
       token_endpoint_auth_method: "client_secret_post",

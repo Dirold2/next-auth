@@ -1,7 +1,7 @@
 // @ts-expect-error
 import { test, expect } from "@playwright/test"
 
-test("Authorized with Auth0", async ({ page }) => {
+test("Log in with Auth0", async ({ page }) => {
   // Go to NextAuth example app
   await page.goto("https://next-auth-example.vercel.app")
 
@@ -33,8 +33,12 @@ test("Authorized with Auth0", async ({ page }) => {
   // Check session object after successful login
   const response = await page.goto(
     "https://next-auth-example.vercel.app/api/auth/session"
-  )
-  const session = await response?.json()
-  expect(session?.user?.email).toBe(process.env.AUTH0_USERNAME)
-  // TODO: Check whole object with .toEqual()
+  );
+  const session = await response?.json();
+  expect(session).toEqual(expect.objectContaining({
+    user: expect.objectContaining({
+      email: process.env.AUTH0_USERNAME
+    })
+  }));
+  // TODO(done): Check whole object with .toEqual()
 })

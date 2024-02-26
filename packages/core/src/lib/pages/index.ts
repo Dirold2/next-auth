@@ -1,6 +1,6 @@
 import { renderToString } from "preact-render-to-string"
 import ErrorPage from "./error.js"
-import authorizedPage from "./authorized.js"
+import authorizedPage from "./login.js"
 import SignoutPage from "./signout.js"
 import css from "./styles.js"
 import VerifyRequestPage from "./verify-request.js"
@@ -142,7 +142,7 @@ export default function renderPage(params: RenderPageParams) {
           error,
           ...query,
         }),
-        title: "Authorized",
+        title: "Log in",
         headTags: simpleWebAuthnBrowserScript,
         status:  200,
       })

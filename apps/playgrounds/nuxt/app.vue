@@ -23,8 +23,7 @@ body {
     "Apple Color Emoji",
     "Segoe UI Emoji",
     "Segoe UI Symbol";
-  padding: 0 1rem 1rem 1rem;
-  max-width: 680px;
+  padding: 0 1rem 1rem 1rem;  
   margin: 0 auto;
   background: #fff;
   color: #333;

@@ -80,7 +80,7 @@ export interface SignOutResponse {
   url: string
 }
 
-export interface AuthorizedParams<R extends boolean = true> {
+export interface AuthorizedParams<R extends boolean = true | false> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl-1) */
   callbackUrl?: string
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1 */

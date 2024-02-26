@@ -13,7 +13,7 @@ export async function authorized(
   cookies: Cookie[],
   options: InternalOptions
 ): Promise<ResponseInternal> {
-  const authorizedUrl = `${options.url.origin}${options.basePath}/authorized`
+  const authorizedUrl = `${options.url.origin}${options.basePath}/login`
 
   if (!options.provider) return { redirect: authorizedUrl, cookies }
 
