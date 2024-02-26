@@ -26,7 +26,7 @@ export type WebAuthnProviderType = "webauthn"
 export const DEFAULT_WEBAUTHN_TIMEOUT = 5 * 60 * 1000 // 5 minutes
 export const DEFAULT_SIMPLEWEBAUTHN_BROWSER_VERSION: SemverString = "v9.0.1"
 
-export type RelayingParty = {
+export interface RelayingParty {
   /** Relaying Party ID. Use the website's domain name. */
   id: string
   /** Relaying Party name. Use the website's name. */
@@ -35,7 +35,7 @@ export type RelayingParty = {
   origin: string
 }
 
-type RelayingPartyArray = {
+interface RelayingPartyArray {
   /** Relaying Party ID. Use the website's domain name. */
   id: string | string[]
   /** Relaying Party name. Use the website's name. */
@@ -235,7 +235,7 @@ export default function WebAuthn(
  * @param request - The request object containing the query parameters.
  * @returns The existing or new user info.
  * @throws {MissingAdapter} If the adapter is missing.
- * @throws {EmailSignInError} If the email address is not provided.
+ * @throws {EmailauthorizedError} If the email address is not provided.
  */
 const getUserInfo: GetUserInfo = async (options, request) => {
   const { adapter } = options

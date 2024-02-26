@@ -54,7 +54,7 @@ import type {
   Theme,
 } from "./types.js"
 import type { Provider } from "./providers/index.js"
-import { JWTOptions } from "./jwt.js"
+import { type JWTOptions } from "./jwt.js"
 import { isAuthAction } from "./lib/utils/actions.js"
 
 export { skipCSRFCheck, raw, setEnvDefaults, createActionURL, isAuthAction }
@@ -110,7 +110,7 @@ export async function Auth(
   } else if (assertionResult instanceof Error) {
     // Bail out early if there's an error in the user config
     logger.error(assertionResult)
-    const htmlPages = ["signin", "signout", "error", "verify-request"]
+    const htmlPages = ["authorized", "signout", "error", "verify-request"]
     if (
       !htmlPages.includes(internalRequest.action) ||
       internalRequest.method !== "GET"
@@ -154,7 +154,7 @@ export async function Auth(
   try {
     const rawResponse = await AuthInternal(internalRequest, config)
     if (isRaw) return rawResponse
-    response = await toResponse(rawResponse)
+    response = toResponse(rawResponse)
   } catch (e) {
     const error = e as Error
     logger.error(error)
@@ -168,11 +168,11 @@ export async function Auth(
       return Response.json(null, { status: 400 })
 
     const type = isAuthError ? error.type : "Configuration"
-    const page = (isAuthError && error.kind) || "error"
+    const page = (isAuthError && error.kind) ?? "error"
     // TODO: Filter out some error types from being sent to the client
     const params = new URLSearchParams({ error: type })
     const path =
-      config.pages?.[page] ?? `${config.basePath}/${page.toLowerCase()}`
+      (config.pages as Record<string, string>)?.[page as string] ?? `${config.basePath}/${typeof page === 'string' ? page.toLowerCase() : ''}`
 
     const url = `${internalRequest.url.origin}${path}?${params}`
 
@@ -203,7 +203,7 @@ export async function Auth(
  */
 export interface AuthConfig {
   /**
-   * List of authentication providers for signing in
+   * List of authentication providers for authorizedg in
    * (e.g. Google, Facebook, Twitter, GitHub, Email, etc) in any order.
    * This can be one of the built-in providers or an object with a custom provider.
    *
@@ -276,7 +276,7 @@ export interface AuthConfig {
    *
    * ```ts
    *   pages: {
-   *     signIn: '/auth/signin',
+   *     authorized: '/auth/authorized',
    *     signOut: '/auth/signout',
    *     error: '/auth/error',
    *     verifyRequest: '/auth/verify-request',

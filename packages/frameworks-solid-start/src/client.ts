@@ -5,9 +5,9 @@ import type {
 
 type LiteralUnion<T extends U, U = string> = T | (U & Record<never, never>)
 
-interface SignInOptions extends Record<string, unknown> {
+interface authorizedOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after signing in. Defaults to the page URL the sign-in is initiated from.
+   * Specify to which URL the user will be redirected after authorizedg in. Defaults to the page URL the sign-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */
@@ -24,24 +24,24 @@ interface SignOutParams<R extends boolean = true> {
 }
 
 /** Match `inputType` of `new URLSearchParams(inputType)` */
-export type SignInAuthorizationParams =
+export type authorizedAuthorizationParams =
   | string
   | string[][]
   | Record<string, string>
   | URLSearchParams
 
 /**
- * Client-side method to initiate a signin flow
- * or send the user to the signin page listing all possible providers.
+ * Client-side method to initiate a authorized flow
+ * or send the user to the authorized page listing all possible providers.
  * Automatically adds the CSRF token to the request.
  *
  * ```ts
- * import { signIn } from "@auth/solid-start/client"
- * signIn()
- * signIn("provider") // example: signIn("github")
+ * import { authorized } from "@auth/solid-start/client"
+ * authorized()
+ * authorized("provider") // example: authorized("github")
  * ```
  */
-export async function signIn<
+export async function authorized<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   providerId?: LiteralUnion<
@@ -49,8 +49,8 @@ export async function signIn<
       ? P | BuiltInProviderType
       : BuiltInProviderType
   >,
-  options?: SignInOptions,
-  authorizationParams?: SignInAuthorizationParams
+  options?: authorizedOptions,
+  authorizationParams?: authorizedAuthorizationParams
 ) {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
@@ -60,17 +60,17 @@ export async function signIn<
   const isSupportingReturn = isCredentials || isEmail
 
   // TODO: Handle custom base path
-  const signInUrl = `/api/auth/${
-    isCredentials ? "callback" : "signin"
+  const authorizedUrl = `/api/auth/${
+    isCredentials ? "callback" : "authorized"
   }/${providerId}`
 
-  const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`
+  const _authorizedUrl = `${authorizedUrl}?${new URLSearchParams(authorizationParams)}`
 
   // TODO: Handle custom base path
   const csrfTokenResponse = await fetch("/api/auth/csrf")
   const { csrfToken } = await csrfTokenResponse.json()
 
-  const res = await fetch(_signInUrl, {
+  const res = await fetch(_authorizedUrl, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

@@ -20,7 +20,7 @@
  * import GitHub from "@auth/sveltekit/providers/github"
  * import { GITHUB_ID, GITHUB_SECRET } from "$env/static/private"
  *
- * export const { handle, signIn, signOut } = SvelteKitAuth({
+ * export const { handle, authorized, signOut } = SvelteKitAuth({
  *   providers: [GitHub({ clientId: GITHUB_ID, clientSecret: GITHUB_SECRET })],
  * })
  * ```
@@ -32,7 +32,7 @@
  * import GitHub from "@auth/sveltekit/providers/github"
  * import type { Handle } from "@sveltejs/kit";
  *
- * export const { handle, signIn, signOut } = SvelteKitAuth(async (event) => {
+ * export const { handle, authorized, signOut } = SvelteKitAuth(async (event) => {
  *   const authOptions = {
  *     providers: [GitHub({ clientId: event.platform.env.GITHUB_ID, clientSecret: event.platform.env.GITHUB_SECRET })]
  *     secret: event.platform.env.AUTH_SECRET,
@@ -56,14 +56,14 @@
  * [origin]/auth/callback/[provider]
  * ```
  *
- * ## Signing in and signing out
+ * ## authorizedg in and authorizedg out
  *
  * The data for the current session in this example was made available through the `$page` store which can be set through the root `+page.server.ts` file.
  * It is not necessary to store the data there, however, this makes it globally accessible throughout your application simplifying state management.
  *
  * ```ts
  * <script>
- *   import { SignIn, SignOut } from "@auth/sveltekit/components"
+ *   import { authorized, SignOut } from "@auth/sveltekit/components"
  *   import { page } from "$app/stores"
  * </script>
  *
@@ -83,19 +83,19 @@
  *     <SignOut />
  *   {:else}
  *     <span class="notSignedInText">You are not signed in</span>
- *     <SignIn provider="github"/>
- *     <SignIn provider="google"/>
- *     <SignIn provider="facebook"/>
+ *     <authorized provider="github"/>
+ *     <authorized provider="google"/>
+ *     <authorized provider="facebook"/>
  *   {/if}
  * </p>
  * ```
  *
- * `<SignIn />` and `<SignOut />` are components that `@auth/sveltekit` provides out of the box - they handle the sign-in/signout flow, and can be used as-is as a starting point or customized for your own components.
+ * `<authorized />` and `<SignOut />` are components that `@auth/sveltekit` provides out of the box - they handle the sign-in/signout flow, and can be used as-is as a starting point or customized for your own components.
  * To set up the form actions, we need to define the files in `src/routes`:
- * ```ts title="src/routes/signin/+page.server.ts"
- * import { signIn } from "../../auth"
+ * ```ts title="src/routes/authorized/+page.server.ts"
+ * import { authorized } from "../../auth"
  * import type { Actions } from "./$types"
- * export const actions: Actions = { default: signIn }
+ * export const actions: Actions = { default: authorized }
  * ```
  * ```ts title="src/routes/signout/+page.server.ts"
  * import { signOut } from "../../auth"
@@ -224,7 +224,7 @@ import { env } from "$env/dynamic/private"
 
 import type { SvelteKitAuthConfig } from "./types"
 import { setEnvDefaults } from "./env"
-import { auth, signIn, signOut } from "./actions"
+import { auth, authorized, signOut } from "./actions"
 import { Auth, isAuthAction } from "@auth/core"
 
 export type {
@@ -249,19 +249,19 @@ export function SvelteKitAuth(
     | ((event: RequestEvent) => PromiseLike<SvelteKitAuthConfig>)
 ): {
   handle: Handle
-  signIn: Action
+  authorized: Action
   signOut: Action
 } {
   return {
-    signIn: async (event) => {
+    authorized: async (event) => {
       const { request } = event
       const _config = typeof config === "object" ? config : await config(event)
       setEnvDefaults(env, _config)
       const formData = await request.formData()
       const { providerId: provider, ...options } = Object.fromEntries(formData)
       // get the authorization params from the options prefixed with `authorizationParams-`
-      let authorizationParams: Parameters<typeof signIn>[2] = {}
-      let _options: Parameters<typeof signIn>[1] = {}
+      let authorizationParams: Parameters<typeof authorized>[2] = {}
+      let _options: Parameters<typeof authorized>[1] = {}
       for (const key in options) {
         if (key.startsWith(authorizationParamsPrefix)) {
           authorizationParams[key.slice(authorizationParamsPrefix.length)] =
@@ -270,7 +270,7 @@ export function SvelteKitAuth(
           _options[key] = options[key]
         }
       }
-      await signIn(
+      await authorized(
         provider as string,
         _options,
         authorizationParams,

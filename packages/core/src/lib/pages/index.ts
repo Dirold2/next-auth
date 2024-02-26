@@ -1,6 +1,6 @@
 import { renderToString } from "preact-render-to-string"
 import ErrorPage from "./error.js"
-import SigninPage from "./signin.js"
+import authorizedPage from "./authorized.js"
 import SignoutPage from "./signout.js"
 import css from "./styles.js"
 import VerifyRequestPage from "./verify-request.js"
@@ -14,6 +14,12 @@ import type {
   PublicProvider,
 } from "../../types.js"
 import type { Cookie } from "../utils/cookie.js"
+import { type VNode } from "preact"
+
+interface VerifyRequestPageProps {
+  url: URL;
+  theme: any;
+}
 
 function send({
   html,
@@ -22,7 +28,14 @@ function send({
   cookies,
   theme,
   headTags,
-}: any): ResponseInternal {
+}: {
+  html: VNode;
+  title: string;
+  status: number;
+  cookies: any; 
+  theme: any;
+  headTags: string | undefined;
+}): ResponseInternal {
   return {
     cookies,
     status,
@@ -73,22 +86,22 @@ export default function renderPage(params: RenderPageParams) {
       return {
         headers: { "Content-Type": "application/json" },
         body: providers.reduce<Record<string, PublicProvider>>(
-          (acc, { id, name, type, signinUrl, callbackUrl }) => {
-            acc[id] = { id, name, type, signinUrl, callbackUrl }
+          (acc, { id, name, type, authorizedUrl, callbackUrl }) => {
+            acc[id] = { id, name, type, authorizedUrl, callbackUrl }
             return acc
           },
           {}
         ),
       }
     },
-    signin(providerId?: string, error?: any) {
+    authorized(providerId?: string, error?: any) {
       if (providerId) throw new UnknownAction("Unsupported action")
-      if (pages?.signIn) {
-        let signinUrl = `${pages.signIn}${
-          pages.signIn.includes("?") ? "&" : "?"
+      if (pages?.authorized) {
+        let authorizedUrl = `${pages.authorized}${
+          pages.authorized.includes("?") ? "&" : "?"
         }${new URLSearchParams({ callbackUrl: params.callbackUrl ?? "/" })}`
-        if (error) signinUrl = `${signinUrl}&${new URLSearchParams({ error })}`
-        return { redirect: signinUrl, cookies }
+        if (error) authorizedUrl = `${authorizedUrl}&${new URLSearchParams({ error })}`
+        return { redirect: authorizedUrl, cookies }
       }
 
       // If we have a webauthn provider with conditional UI and
@@ -110,7 +123,7 @@ export default function renderPage(params: RenderPageParams) {
       return send({
         cookies,
         theme,
-        html: SigninPage({
+        html: authorizedPage({
           csrfToken: params.csrfToken,
           // We only want to render providers
           providers: params.providers?.filter(
@@ -131,6 +144,7 @@ export default function renderPage(params: RenderPageParams) {
         }),
         title: "Sign In",
         headTags: simpleWebAuthnBrowserScript,
+        status:  200,
       })
     },
     signout() {
@@ -140,16 +154,18 @@ export default function renderPage(params: RenderPageParams) {
         theme,
         html: SignoutPage({ csrfToken: params.csrfToken, url, theme }),
         title: "Sign Out",
+        status:   200,
+        headTags: "",
       })
     },
     verifyRequest(props?: any) {
-      if (pages?.verifyRequest)
-        return { redirect: pages.verifyRequest, cookies }
       return send({
         cookies,
         theme,
-        html: VerifyRequestPage({ url, theme, ...props }),
+        html: VerifyRequestPage({ ...(props as VerifyRequestPageProps) }),
         title: "Verify Request",
+        status:  200, // Add the missing status property
+        headTags: "", // Add the missing headTags property, adjust as needed
       })
     },
     error(error?: string) {
@@ -167,6 +183,7 @@ export default function renderPage(params: RenderPageParams) {
         // @ts-expect-error fix error type
         ...ErrorPage({ url, theme, error }),
         title: "Error",
+        headTags: "",
       })
     },
   }

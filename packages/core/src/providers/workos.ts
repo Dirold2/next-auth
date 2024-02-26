@@ -69,16 +69,16 @@ export interface WorkOSProfile extends Record<string, any> {
  * To add a custom login page, you can use the `pages` option:
  * ```js title="pages/api/auth/[...nextauth].js"
  * pages: {
- *   signIn: "/auth/signin",
+ *   authorized: "/auth/authorized",
  * }
  * ```
  * We can then add a custom login page that displays an input where the user can enter their email address.
- * We then extract the domain from the user's email address and pass it to the `authorizationParams` parameter on the `signIn` function:
- * ```js title="pages/auth/signin.js"
+ * We then extract the domain from the user's email address and pass it to the `authorizationParams` parameter on the `authorized` function:
+ * ```js title="pages/auth/authorized.js"
  * import { useState } from "react"
- * import { getProviders, signIn } from "next-auth/react"
+ * import { getProviders, authorized } from "next-auth/react"
  *
- * export default function SignIn({ providers }) {
+ * export default function authorized({ providers }) {
  *   const [email, setEmail] = useState("")
  *
  *   return (
@@ -95,7 +95,7 @@ export interface WorkOSProfile extends Record<string, any> {
  *               />
  *               <button
  *                 onClick={() =>
- *                   signIn(provider.id, undefined, {
+ *                   authorized(provider.id, undefined, {
  *                     domain: email.split("@")[1],
  *                   })
  *                 }
@@ -108,7 +108,7 @@ export interface WorkOSProfile extends Record<string, any> {
  *
  *         return (
  *           <div key={provider.id}>
- *             <button onClick={() => signIn(provider.id)}>
+ *             <button onClick={() => authorized(provider.id)}>
  *               Sign in with {provider.name}
  *             </button>
  *           </div>

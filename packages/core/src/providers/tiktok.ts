@@ -203,7 +203,7 @@ export default function Tiktok<P extends TiktokProfile>(
     authorization: {
       url: "https://www.tiktok.com/v2/auth/authorize",
       params: {
-        client_key: options.clientId,
+        client_key: options.clientId!,
         scope: "user.info.profile",
         response_type: "code",
       },
@@ -220,7 +220,7 @@ export default function Tiktok<P extends TiktokProfile>(
           body: new URLSearchParams({
             client_key: provider.clientId!,
             client_secret: provider.clientSecret!,
-            code: params.code!,
+            code: String(params.code!),
             grant_type: "authorization_code",
             redirect_uri: provider.callbackUrl!,
           }),
@@ -253,7 +253,7 @@ export default function Tiktok<P extends TiktokProfile>(
         id: profile.data.user.open_id,
         name: profile.data.user.display_name,
         image: profile.data.user.avatar_url,
-        email: profile.data.user.email || null,
+        email: profile.data.user.email ?? null,
       }
     },
     style: {

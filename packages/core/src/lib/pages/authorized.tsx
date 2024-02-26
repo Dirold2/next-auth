@@ -1,25 +1,24 @@
 import type {
   InternalProvider,
-  SignInPageErrorParam,
+  AuthorizedPageErrorParam,
   Theme,
 } from "../../types.js"
 import { webauthnScript } from "../utils/webauthn-client.js"
 
-const signinErrors: Record<SignInPageErrorParam | "default", string> = {
+const signinErrors: Record<string | number | symbol, string> = {
   default: "Unable to sign in.",
-  Signin: "Try signing in with a different account.",
-  OAuthSignin: "Try signing in with a different account.",
+  Authorized: "Try signing in with a different account.",
+  OAuthAuthorized: "Try signing in with a different account.",
   OAuthCallbackError: "Try signing in with a different account.",
   OAuthCreateAccount: "Try signing in with a different account.",
   EmailCreateAccount: "Try signing in with a different account.",
   Callback: "Try signing in with a different account.",
-  OAuthAccountNotLinked:
-    "To confirm your identity, sign in with the same account you used originally.",
-  EmailSignin: "The e-mail could not be sent.",
-  CredentialsSignin:
-    "Sign in failed. Check the details you provided are correct.",
+  OAuthAccountNotLinked: "To confirm your identity, sign in with the same account you used originally.",
+  EmailAuthorized: "The e-mail could not be sent.",
+  CredentialsAuthorized: "Sign in failed. Check the details you provided are correct.",
   SessionRequired: "Please sign in to access this page.",
-}
+};
+
 function hexToRgba(hex?: string, alpha = 1) {
   if (!hex) {
     return
@@ -65,7 +64,7 @@ export default function SigninPage(props: {
   providers?: InternalProvider[]
   callbackUrl?: string
   email?: string
-  error?: SignInPageErrorParam
+  error?: AuthorizedPageErrorParam
   theme?: Theme
 }) {
   const {
@@ -136,7 +135,7 @@ export default function SigninPage(props: {
               bgDark = bg,
               textDark = text,
               logoDark = "",
-            } = provider.style ?? {})
+            } = provider.style as any ?? {})
 
             logo = logo.startsWith("/") ? providerLogoPath + logo : logo
             logoDark = logoDark.startsWith("/")
@@ -148,7 +147,7 @@ export default function SigninPage(props: {
           return (
             <div key={provider.id} className="provider">
               {provider.type === "oauth" || provider.type === "oidc" ? (
-                <form action={provider.signinUrl} method="POST">
+                <form action={provider.authorizedUrl} method="POST">
                   <input type="hidden" name="csrfToken" value={csrfToken} />
                   {callbackUrl && (
                     <input
@@ -198,7 +197,7 @@ export default function SigninPage(props: {
                 providers[i - 1].type !== "credentials" &&
                 providers[i - 1].type !== "webauthn" && <hr />}
               {provider.type === "email" && (
-                <form action={provider.signinUrl} method="POST">
+                <form action={provider.authorizedUrl} method="POST">
                   <input type="hidden" name="csrfToken" value={csrfToken} />
                   <label
                     className="section-header"

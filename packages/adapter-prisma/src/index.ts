@@ -37,7 +37,7 @@ import type {
  *
  * const prisma = new PrismaClient()
  *
- * export { handlers, auth, signIn, signOut } = NextAuth({
+ * export { handlers, auth, authorized, signOut } = NextAuth({
  *   adapter: PrismaAdapter(prisma),
  *   providers: [
  *     Google,

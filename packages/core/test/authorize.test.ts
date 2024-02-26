@@ -12,9 +12,9 @@ const mockAdapter: Adapter = {
 }
 const logger = { error: vi.fn() }
 
-async function signIn(config: Partial<AuthConfig> = {}) {
+async function authorized(config: Partial<AuthConfig> = {}) {
   return (await Auth(
-    new Request("http://a/auth/signin/sendgrid", {
+    new Request("http://a/auth/authorized/sendgrid", {
       method: "POST",
       body: new URLSearchParams({ email: "a@b.c" }),
     }),
@@ -30,24 +30,24 @@ async function signIn(config: Partial<AuthConfig> = {}) {
   )) as Response
 }
 
-describe("auth via callbacks.signIn", () => {
+describe("auth via callbacks.authorized", () => {
   beforeEach(() => {
     logger.error.mockReset()
   })
   describe("redirect before sending an email", () => {
     it("return false", async () => {
-      const res = await signIn({ callbacks: { signIn: () => false } })
+      const res = await authorized({ callbacks: { authorized: () => false } })
       expect(res.headers.get("Location")).toBe(
         "http://a/auth/error?error=AuthorizedCallbackError"
       )
     })
     it("return redirect relative URL", async () => {
-      const res = await signIn({ callbacks: { signIn: () => "/wrong" } })
+      const res = await authorized({ callbacks: { authorized: () => "/wrong" } })
       expect(res.headers.get("Location")).toBe("http://a/wrong")
     })
 
     it("return redirect absolute URL, different domain", async () => {
-      const res = await signIn({ callbacks: { signIn: () => "/wrong" } })
+      const res = await authorized({ callbacks: { authorized: () => "/wrong" } })
       const redirect = res.headers.get("Location")
       // Not allowed by our default redirect callback
       expect(redirect).not.toBe("http://b/wrong")
@@ -56,9 +56,9 @@ describe("auth via callbacks.signIn", () => {
 
     it("throw error", async () => {
       const e = new Error("my error")
-      const res = await signIn({
+      const res = await authorized({
         callbacks: {
-          signIn() {
+          authorized() {
             throw e
           },
         },
@@ -71,14 +71,17 @@ describe("auth via callbacks.signIn", () => {
 
   describe("oauth callback", () => {
     it("should build the correct user object", async () => {
-      const { profile, provider, tokens, logger } = getUserAndAccountArgs
+      const { profile, provider, tokens, logger } = getUserAndAccountArgs;
+      const profileWithStringId = {
+        ...profile,
+        id: profile.id.toString(),
+      };
       const profileResult = await getUserAndAccount(
-        profile,
+        profileWithStringId,
         provider,
         tokens,
         logger
-      )
-
+      );
       expect(profileResult?.account.type).toBe("oauth")
       expect(profileResult?.account.provider).toBe("github")
       expect(profileResult?.account.providerAccountId).toBe("abc")

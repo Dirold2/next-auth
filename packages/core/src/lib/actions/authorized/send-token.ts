@@ -1,8 +1,8 @@
 import { createHash, randomString, toRequest } from "../../utils/web.js"
 import { AuthorizedCallbackError } from "../../../errors.js"
 
-import type { InternalOptions, RequestInternal } from "../../../types.js"
-import type { Account } from "../../../types.js"
+import type { InternalOptions, RequestInternal , Account } from "../../../types.js"
+
 
 /**
  * Starts an e-mail login flow, by generating a token,
@@ -16,7 +16,7 @@ export async function sendToken(
   const { body } = request
   const { provider, callbacks, adapter } = options
   const normalizer = provider.normalizeIdentifier ?? defaultNormalizer
-  const email = normalizer(body?.email)
+  const email = normalizer(String(body?.email ?? ''))
 
   const defaultUser = { id: crypto.randomUUID(), email, emailVerified: null }
   const user = (await adapter!.getUserByEmail(email)) ?? defaultUser
@@ -30,7 +30,7 @@ export async function sendToken(
 
   let authorized
   try {
-    authorized = await callbacks.signIn({
+    authorized = await callbacks.authorized({
       user,
       account,
       email: { verificationRequest: true },

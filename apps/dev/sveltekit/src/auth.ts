@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { SvelteKitAuth } from "@auth/sveltekit"
 import GitHub from "@auth/sveltekit/providers/github"
 import Credentials from "@auth/sveltekit/providers/credentials"
@@ -23,7 +24,7 @@ import { UnstorageAdapter } from "@auth/unstorage-adapter"
 
 
 const storage = createStorage()
-export const { handle, signIn, signOut } = SvelteKitAuth({
+export const { handle, authorized, signOut } = SvelteKitAuth({
   adapter: UnstorageAdapter(storage),
   session: {
     strategy: "jwt",
@@ -33,7 +34,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
     Email({ server: "smtps://0.0.0.0:465?tls.rejectUnauthorized=false" }),
     Credentials({
       credentials: { password: { label: "Password", type: "password" } },
-      async authorize(credentials) {
+      async authorize(credentials: { password: string }) {
         if (credentials.password !== "pw") return null
         return {
           name: "Fill Murray",

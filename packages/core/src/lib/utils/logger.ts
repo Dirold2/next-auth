@@ -7,10 +7,10 @@ export type WarningCode = "debug-enabled" | "csrf-disabled" | "experimental-weba
  *
  * [Documentation](https://authjs.dev/reference/core#authconfig#logger)
  */
-export interface LoggerInstance extends Record<string, Function> {
-  warn: (code: WarningCode) => void
-  error: (error: Error) => void
-  debug: (message: string, metadata?: unknown) => void
+export interface LoggerInstance extends Record<string, (...args: any[]) => any> {
+  warn: (code: WarningCode) => void;
+  error: (error: Error) => void;
+  debug: (message: string, metadata?: unknown) => void;
 }
 
 const red = "\x1b[31m"

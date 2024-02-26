@@ -12,7 +12,7 @@ import type {
 import type { AuthConfig, InternalProvider, Profile } from "../../types.js"
 
 /**
- * Adds `signinUrl` and `callbackUrl` to each provider
+ * Adds `authorizedUrl` and `callbackUrl` to each provider
  * and deep merge user-defined options.
  */
 export default function parseProviders(params: {
@@ -33,7 +33,7 @@ export default function parseProviders(params: {
 
     const id = (userOptions?.id ?? defaults.id) as string
     const merged = merge(defaults, userOptions, {
-      signinUrl: `${url}/signin/${id}`,
+      authorizedUrl: `${url}/authorized/${id}`,
       callbackUrl: `${url}/callback/${id}`,
     })
 

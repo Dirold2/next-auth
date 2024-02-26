@@ -37,7 +37,7 @@
  * [origin]/auth/callback/[provider]
  * ```
  *
- * ## Signing in and signing out
+ * ## authorizedg in and authorizedg out
  * Once your application is mounted you can sign in or out by making requests to the following [REST API endpoints](https://authjs.dev/reference/core/types#authaction) from your client-side code.
  * NB: Make sure to include the `csrfToken` in the request body for all sign-in and sign-out requests.
  *

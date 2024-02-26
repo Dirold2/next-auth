@@ -8,11 +8,11 @@ import type { NextAuthResult, Session } from "../index.js"
 import type { ProviderType } from "../providers/index.js"
 import type { headers } from "next/headers"
 
-type SignInParams = Parameters<NextAuthResult["signIn"]>
-export async function signIn(
-  provider: SignInParams[0],
-  options: SignInParams[1] = {},
-  authorizationParams: SignInParams[2],
+type authorizedParams = Parameters<NextAuthResult["authorized"]>
+export async function authorized(
+  provider: authorizedParams[0],
+  options: authorizedParams[1] = {},
+  authorizationParams: authorizedParams[2],
   config: NextAuthConfig
 ) {
   const headers = new Headers(nextHeaders())
@@ -23,18 +23,18 @@ export async function signIn(
   } = options instanceof FormData ? Object.fromEntries(options) : options
 
   const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/"
-  const signInURL = createActionURL("signin", headers, config.basePath)
+  const authorizedURL = createActionURL("authorized", headers, config.basePath)
 
   if (!provider) {
-    signInURL.searchParams.append("callbackUrl", callbackUrl)
-    if (shouldRedirect) redirect(signInURL.toString())
-    return signInURL.toString()
+    authorizedURL.searchParams.append("callbackUrl", callbackUrl)
+    if (shouldRedirect) redirect(authorizedURL.toString())
+    return authorizedURL.toString()
   }
 
-  let url = `${signInURL}/${provider}?${new URLSearchParams(
+  let url = `${authorizedURL}/${provider}?${new URLSearchParams(
     authorizationParams
   )}`
-  let foundProvider: { id?: SignInParams[0]; type?: ProviderType } = {}
+  let foundProvider: { id?: authorizedParams[0]; type?: ProviderType } = {}
 
   for (const providerConfig of config.providers) {
     const { options, ...defaults } =
@@ -50,13 +50,13 @@ export async function signIn(
   }
 
   if (!foundProvider.id) {
-    const url = `${signInURL}?${new URLSearchParams({ callbackUrl })}`
+    const url = `${authorizedURL}?${new URLSearchParams({ callbackUrl })}`
     if (shouldRedirect) redirect(url)
     return url
   }
 
   if (foundProvider.type === "credentials") {
-    url = url.replace("signin", "callback")
+    url = url.replace("authorized", "callback")
   }
 
   headers.set("Content-Type", "application/x-www-form-urlencoded")

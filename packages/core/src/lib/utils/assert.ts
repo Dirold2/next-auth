@@ -186,7 +186,7 @@ export function assertConfig(
     )
     if (dbStrategy && onlyCredentials) {
       return new UnsupportedStrategy(
-        "Signing in with credentials only supported if JWT strategy is enabled"
+        "authorizedg in with credentials only supported if JWT strategy is enabled"
       )
     }
 

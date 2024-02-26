@@ -162,7 +162,7 @@
  * @module adapters
  */
 
-import { ProviderType } from "./providers/index.js"
+import { type ProviderType } from "./providers/index.js"
 import type { Account, Authenticator, Awaitable, User } from "./types.js"
 // TODO: Discuss if we should expose methods to serialize and deserialize
 // the data? Many adapters share this logic, so it could be useful to
@@ -181,9 +181,12 @@ export interface AdapterUser extends User {
   email: string
   /**
    * Whether the user has verified their email address via an [Email provider](https://authjs.dev/reference/core/providers/email).
-   * It is `null` if the user has not signed in with the Email provider yet, or the date of the first successful signin.
+   * It is `null` if the user has not signed in with the Email provider yet, or the date of the first successful authorized.
    */
   emailVerified: Date | null
+
+  role?: string | null
+  phone?: string | null
 }
 
 /**
@@ -201,7 +204,7 @@ export interface AdapterAccount extends Account {
 }
 
 /**
- * A session holds information about a user's current signin state.
+ * A session holds information about a user's current authorized state.
  */
 export interface AdapterSession {
   /**
@@ -429,7 +432,15 @@ export interface Adapter {
   ): Awaitable<AdapterAuthenticator>
 }
 
+export interface SessionPayload {
+  user: AdapterUser;
+  expires: Date;
+  sessionToken: string;
+  userId: string;
+}
+
 // For compatibility with older versions of NextAuth.js
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 declare module "next-auth/adapters" {
   type JsonObject = {

@@ -1,7 +1,7 @@
 import type {
   LiteralUnion,
-  SignInOptions,
-  SignInAuthorizationParams,
+  authorizedOptions,
+  authorizedAuthorizationParams,
   SignOutParams,
 } from "./types"
 import type {
@@ -10,13 +10,13 @@ import type {
 } from "@auth/core/providers"
 
 /**
- * Client-side method to initiate a signin flow
- * or send the user to the signin page listing all possible providers.
+ * Client-side method to initiate a authorized flow
+ * or send the user to the authorized page listing all possible providers.
  * Automatically adds the CSRF token to the request.
  *
- * [Documentation](https://next-auth.js.org/getting-started/client#signin)
+ * [Documentation](https://next-auth.js.org/getting-started/client#authorized)
  */
-export async function signIn<
+export async function authorized<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   providerId?: LiteralUnion<
@@ -24,8 +24,8 @@ export async function signIn<
       ? P | BuiltInProviderType
       : BuiltInProviderType
   >,
-  options?: SignInOptions,
-  authorizationParams?: SignInAuthorizationParams
+  options?: authorizedOptions,
+  authorizationParams?: authorizedAuthorizationParams
 ) {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
@@ -35,19 +35,19 @@ export async function signIn<
   const isSupportingReturn = isCredentials || isEmail
 
   // TODO: Handle custom base path
-  const signInUrl = `/api/auth/${
-    isCredentials ? "callback" : "signin"
+  const authorizedUrl = `/api/auth/${
+    isCredentials ? "callback" : "authorized"
   }/${providerId}`
 
-  const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`
+  const _authorizedUrl = `${authorizedUrl}?${new URLSearchParams(authorizationParams)}`
 
   // TODO: Handle custom base path
   // TODO: Remove this since Sveltekit offers the CSRF protection via origin check
   const { csrfToken } = await $fetch<{ csrfToken: string }>("/api/auth/csrf")
 
-  console.log(_signInUrl)
+  console.log(_authorizedUrl)
 
-  const res = await fetch(_signInUrl, {
+  const res = await fetch(_authorizedUrl, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

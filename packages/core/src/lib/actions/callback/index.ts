@@ -1,10 +1,8 @@
-// TODO: Make this file smaller
-
 import {
   AuthError,
   AuthorizedCallbackError,
   CallbackRouteError,
-  CredentialsSignin,
+  Credentialsauthorized,
   InvalidProvider,
   Verification,
 } from "../../../errors.js"
@@ -83,41 +81,47 @@ export async function callback(
       } = authorizationResult
 
       // If we don't have a profile object then either something went wrong
-      // or the user cancelled signing in. We don't know which, so we just
-      // direct the user to the signin page for now. We could do something
+      // or the user cancelled authorizedg in. We don't know which, so we just
+      // direct the user to the authorized page for now. We could do something
       // else in future.
-      // TODO: Handle user cancelling signin
+      // TODO: Handle user cancelling authorized
       if (!userFromProvider || !account || !OAuthProfile) {
-        return { redirect: `${url}/signin`, cookies }
+        return { redirect: `${url}/authorized`, cookies }
       }
 
       // Check if user is allowed to sign in
       // Attempt to get Profile from OAuth provider details before invoking
-      // signIn callback - but if no user object is returned, that is fine
-      // (that just means it's a new user signing in for the first time).
-      let userByAccount
-      if (adapter) {
-        const { getUserByAccount } = adapter
+      // authorized callback - but if no user object is returned, that is fine
+      // (that just means it's a new user authorizedg in for the first time).
+      let userByAccount: User | null = null;
+      if (adapter && typeof account === 'object' && account !== null && 'providerAccountId' in account) {
+        const { getUserByAccount } = adapter;
         userByAccount = await getUserByAccount({
           providerAccountId: account.providerAccountId,
           provider: provider.id,
-        })
+        });
       }
+
+      const accountToUse: Account | null = userByAccount?.id ? {
+        providerAccountId: userByAccount.id, // Assuming userByAccount has an id property
+        provider: provider.id,
+        type: "oauth", // Assuming the type is "oauth" for OAuth accounts
+      } : null;
 
       const redirect = await handleAuthorized(
         {
           user: userByAccount ?? userFromProvider,
-          account,
+          account: accountToUse,
           profile: OAuthProfile,
         },
         options
-      )
-      if (redirect) return { redirect, cookies }
+      );
+      if (redirect) return { redirect, cookies };
 
       const { user, session, isNewUser } = await handleLoginOrRegister(
         sessionStore.value,
         userFromProvider,
-        account,
+        account ? accountToUse : null,
         options
       )
 
@@ -131,10 +135,10 @@ export async function callback(
         const token = await callbacks.jwt({
           token: defaultToken,
           user,
-          account,
+          account: accountToUse,
           profile: OAuthProfile,
           isNewUser,
-          trigger: isNewUser ? "signUp" : "signIn",
+          trigger: isNewUser ? "signUp" : "authorized",
         })
 
         // Clear cookies if token is null
@@ -166,9 +170,9 @@ export async function callback(
         })
       }
 
-      await events.signIn?.({
+      await events.authorized?.({
         user,
-        account,
+        account: accountToUse,
         profile: OAuthProfile,
         isNewUser,
       })
@@ -200,8 +204,7 @@ export async function callback(
       }
 
       const secret = provider.secret ?? options.secret
-      // @ts-expect-error -- Verified in `assertConfig`.
-      const invite = await adapter.useVerificationToken({
+      const invite = await adapter!.useVerificationToken({
         identifier,
         token: await createHash(`${token}${secret}`),
       })
@@ -251,7 +254,7 @@ export async function callback(
           user: loggedInUser,
           account,
           isNewUser,
-          trigger: isNewUser ? "signUp" : "signIn",
+          trigger: isNewUser ? "signUp" : "authorized",
         })
 
         // Clear cookies if token is null
@@ -283,7 +286,7 @@ export async function callback(
         })
       }
 
-      await events.signIn?.({ user: loggedInUser, account, isNewUser })
+      await events.authorized?.({ user: loggedInUser, account, isNewUser })
 
       // Handle first logins on new accounts
       // e.g. option to send users to a new account landing page on initial login
@@ -304,7 +307,7 @@ export async function callback(
 
       // TODO: Forward the original request as is, instead of reconstructing it
       Object.entries(query ?? {}).forEach(([k, v]) =>
-        url.searchParams.set(k, v)
+        { url.searchParams.set(k , v as string); }
       )
       const userFromAuthorize = await provider.authorize(
         credentials,
@@ -316,7 +319,7 @@ export async function callback(
         id: userFromAuthorize?.id?.toString() ?? crypto.randomUUID(),
       }
 
-      if (!user) throw new CredentialsSignin()
+      if (!user) throw new Credentialsauthorized()
 
       const account = {
         providerAccountId: user.id,
@@ -342,7 +345,7 @@ export async function callback(
         user,
         account,
         isNewUser: false,
-        trigger: "signIn",
+        trigger: "authorized",
       })
 
       // Clear cookies if token is null
@@ -364,7 +367,7 @@ export async function callback(
         cookies.push(...sessionCookies)
       }
 
-      await events.signIn?.({ user, account })
+      await events.authorized?.({ user, account })
 
       return { redirect: callbackUrl, cookies }
     } else if (provider.type === "webauthn" && method === "POST") {
@@ -438,7 +441,7 @@ export async function callback(
           user: loggedInUser,
           account: currentAccount,
           isNewUser,
-          trigger: isNewUser ? "signUp" : "signIn",
+          trigger: isNewUser ? "signUp" : "authorized",
         })
 
         // Clear cookies if token is null
@@ -470,7 +473,7 @@ export async function callback(
         })
       }
 
-      await events.signIn?.({ user: loggedInUser, account: currentAccount, isNewUser })
+      await events.authorized?.({ user: loggedInUser, account: currentAccount, isNewUser })
 
       // Handle first logins on new accounts
       // e.g. option to send users to a new account landing page on initial login
@@ -499,13 +502,12 @@ export async function callback(
 }
 
 async function handleAuthorized(
-  params: Parameters<InternalOptions["callbacks"]["signIn"]>[0],
+  params: Parameters<InternalOptions["callbacks"]["authorized"]>[0],
   config: InternalOptions
 ): Promise<string | undefined> {
-  let authorized
-  const { signIn, redirect } = config.callbacks
+  const { authorized, redirect } = config.callbacks
   try {
-    authorized = await signIn(params)
+    await authorized(params)
   } catch (e) {
     if (e instanceof AuthError) throw e
     throw new AuthorizedCallbackError(e as Error)

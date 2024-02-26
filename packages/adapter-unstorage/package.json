@@ -43,7 +43,7 @@
     "unstorage": "^1.10.1"
   },
   "devDependencies": {
-    "redis": "^4.6.12",
+    "redis": "^4.6.13",
     "unstorage": "^1.10.1"
   }
 }

@@ -1,4 +1,5 @@
-import type { ErrorPageParam, Theme } from "../../types.js"
+import { Fragment, type JSX } from "preact"
+import { type ErrorPageParam, type Theme } from "../../types.js"
 
 /**
  * The following errors are passed as error query parameters to the default or overridden error page.
@@ -6,7 +7,7 @@ import type { ErrorPageParam, Theme } from "../../types.js"
  * [Documentation](https://authjs.dev/guides/basics/pages#error-page)
  */
 
-export interface ErrorProps {
+interface ErrorProps {
   url?: URL
   theme?: Theme
   error?: ErrorPageParam
@@ -40,34 +41,34 @@ export default function ErrorPage(props: ErrorProps) {
       status: 500,
       heading: "Server error",
       message: (
-        <div>
+        <Fragment>
           <p>There is a problem with the server configuration.</p>
           <p>Check the server logs for more information.</p>
-        </div>
+        </Fragment>
       ),
     },
     AccessDenied: {
       status: 403,
       heading: "Access Denied",
       message: (
-        <div>
+        <Fragment>
           <p>You do not have permission to sign in.</p>
           <p>
             <a className="button" href={signinPageUrl}>
               Sign in
             </a>
           </p>
-        </div>
+        </Fragment>
       ),
     },
     Verification: {
       status: 403,
       heading: "Unable to sign in",
       message: (
-        <div>
+        <Fragment>
           <p>The sign in link is no longer valid.</p>
           <p>It may have been used already or it may have expired.</p>
-        </div>
+        </Fragment>
       ),
       signin: (
         <a className="button" href={signinPageUrl}>
@@ -79,23 +80,25 @@ export default function ErrorPage(props: ErrorProps) {
 
   const { status, heading, message, signin } = errors[error] ?? errors.default
 
+  const styleHtml = theme?.brandColor ? (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: `
+        :root {
+          --brand-color: ${theme.brandColor}
+        }
+      `,
+      }}
+    />
+  ) : null
+
   return {
     status,
     html: (
       <div className="error">
-        {theme?.brandColor && (
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `
-        :root {
-          --brand-color: ${theme?.brandColor}
-        }
-      `,
-            }}
-          />
-        )}
+        {styleHtml}
         <div className="card">
-          {theme?.logo && <img src={theme?.logo} alt="Logo" className="logo" />}
+          {theme?.logo && <img src={theme.logo} alt="Logo" className="logo" />}
           <h1>{heading}</h1>
           <div className="message">{message}</div>
           {signin}

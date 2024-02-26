@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test"
 
 test.describe("Basic Auth", () => {
-  test("Credentials Signin / Signout", async ({ page }) => {
+  test("Credentials authorized / Signout", async ({ page }) => {
     await test.step("should login", async () => {
-      await page.goto("http://localhost:3000/auth/signin")
+      await page.goto("http://localhost:3000/auth/authorized")
       await page.getByLabel("Password").fill("password")
       await page
         .getByRole("button", { name: "Sign in with Credentials" })
@@ -34,7 +34,7 @@ test.describe("Basic Auth", () => {
     })
   })
 
-  test("Keycloak Signin / Signout", async ({ page }) => {
+  test("Keycloak authorized / Signout", async ({ page }) => {
     if (
       !process.env.TEST_KEYCLOAK_USERNAME ||
       !process.env.TEST_KEYCLOAK_PASSWORD
@@ -42,7 +42,7 @@ test.describe("Basic Auth", () => {
       throw new TypeError("Missing TEST_KEYCLOAK_{USERNAME,PASSWORD}")
 
     await test.step("should login", async () => {
-      await page.goto("http://localhost:3000/auth/signin")
+      await page.goto("http://localhost:3000/auth/authorized")
       await page.getByText("Keycloak").click()
       await page
         .getByLabel("Username or email")

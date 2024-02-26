@@ -75,10 +75,10 @@ export interface BoxyHQSAMLProfile extends Record<string, any> {
  * Check out the [documentation](https://boxyhq.com/docs/jackson/saml-flow#2-saml-config-api) for more details.
  *
  *
- * On the client side you'll need to pass additional parameters `tenant` and `product` to the `signIn` function. This will allow BoxyHQL SAML to figure out the right SAML configuration and take your user to the right SAML Identity Provider to sign them in.
+ * On the client side you'll need to pass additional parameters `tenant` and `product` to the `authorized` function. This will allow BoxyHQL SAML to figure out the right SAML configuration and take your user to the right SAML Identity Provider to sign them in.
  *
  * ```tsx
- * import { signIn } from "next-auth/react";
+ * import { authorized } from "next-auth/react";
  * ...
  *
  *   // Map your users's email to a tenant and product
@@ -89,7 +89,7 @@ export interface BoxyHQSAMLProfile extends Record<string, any> {
  *     onClick={async (event) => {
  *       event.preventDefault();
  *
- *       signIn("boxyhq-saml", {}, { tenant, product });
+ *       authorized("boxyhq-saml", {}, { tenant, product });
  *     }}>
  * ...
  * ```

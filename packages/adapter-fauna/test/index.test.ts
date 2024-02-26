@@ -27,7 +27,6 @@ runBasicTests({
       const key = [identifier, token]
       const ref = Match(indexes.VerificationTokenByIdentifierAndToken, key)
       const verificationToken = await q(Get(ref))
-      // @ts-expect-error
       if (verificationToken) delete verificationToken.id
       return verificationToken
     },

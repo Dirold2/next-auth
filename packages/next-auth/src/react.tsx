@@ -1,29 +1,24 @@
 /**
- *
- * NextAuth.js methods and components that work in [Client components](https://nextjs.org/docs/app/building-your-application/rendering/client-components) and the [Pages Router](https://nextjs.org/docs/pages).
- *
- * For use in [Server Actions](https://nextjs.org/docs/app/api-reference/functions/server-actions), check out [these methods](https://authjs.dev/guides/upgrade-to-v5#methods)
- *
+ * NextAuth.js methods and components that work in Client components and the Pages Router.
+ * For use in Server Actions, check out these methods.
  * @module react
  */
 
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   apiBaseUrl,
-  ClientSessionError,
   fetchData,
   now,
   parseUrl,
   useOnline,
-} from "./lib/client.js"
+} from "./lib/client.js";
 
 import type {
   BuiltInProviderType,
-  RedirectableProviderType,
-} from "@auth/core/providers"
-import type { LoggerInstance, Session } from "@auth/core/types"
+} from "../../core/providers";
+import type { LoggerInstance, Session } from "../../core/types";
 import type {
   AuthClientConfig,
   ClientSafeProvider,
@@ -35,24 +30,32 @@ import type {
   SignOutParams,
   SignOutResponse,
   UseSessionOptions,
-} from "./lib/client.js"
+} from "./lib/client.js";
 
-// TODO: Remove/move to core?
-export type {
-  LiteralUnion,
-  SignInOptions,
-  SignInAuthorizationParams,
-  SignOutParams,
-  SignInResponse,
+// Define the structure of the context value returned by useSession hook
+export interface SessionContextValue {
+  update: UpdateSession;
+  data: Session | null;
+  status: "authenticated" | "unauthenticated" | "loading";
 }
 
-export { SessionProviderProps }
-// This behaviour mirrors the default behaviour for getting the site name that
-// happens server side in server/index.js
-// 1. An empty value is legitimate when the code is being invoked client side as
-//    relative URLs are valid in that context and so defaults to empty.
-// 2. When invoked server side the value is picked up from an environment
-//    variable and defaults to 'http://localhost:3000'.
+// Create a context for session data
+export const SessionContext = React.createContext<SessionContextValue | undefined>(undefined);
+
+// Define the function signature for updating session data
+export type UpdateSession = (data?: any) => Promise<Session | null>;
+
+// Define the parameters for the getSession function
+export interface GetSessionParams {
+  event?: "storage" | "timer" | "hidden" | string;
+  triggerEvent?: boolean;
+  broadcast?: boolean;
+}
+
+// Define the structure of the providers object
+type ProvidersType = Record<LiteralUnion<BuiltInProviderType>, ClientSafeProvider>;
+
+// Define the configuration object for NextAuth.js
 export const __NEXTAUTH: AuthClientConfig = {
   baseUrl: parseUrl(process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL).origin,
   basePath: parseUrl(process.env.NEXTAUTH_URL).path,
@@ -67,116 +70,100 @@ export const __NEXTAUTH: AuthClientConfig = {
   _lastSync: 0,
   _session: undefined,
   _getSession: () => {},
-}
+};
 
+// Function to create a broadcast channel
 function broadcast() {
   if (typeof BroadcastChannel !== "undefined") {
-    return new BroadcastChannel("next-auth")
+    return new BroadcastChannel("next-auth");
   }
   return {
     postMessage: () => {},
     addEventListener: () => {},
     removeEventListener: () => {},
-  }
+  };
 }
 
-// TODO:
+// Logger instance for logging messages
 const logger: LoggerInstance = {
   debug: console.debug,
   error: console.error,
   warn: console.warn,
-}
-
-/** @todo Document */
-export type UpdateSession = (data?: any) => Promise<Session | null>
+};
 
 /**
- * useSession() returns an object containing three things: a method called {@link UpdateSession|update}, `data` and `status`.
+ * React Hook that gives you access to the logged-in user's session data and lets you modify it.
+ * You will likely not need `useSession` if you are using the Next.js App Router (`app/`).
+ * @param options Options for the hook.
+ * @returns An object containing session data and its status.
  */
-export type SessionContextValue<R extends boolean = false> = R extends true
-  ?
-      | { update: UpdateSession; data: Session; status: "authenticated" }
-      | { update: UpdateSession; data: null; status: "loading" }
-  :
-      | { update: UpdateSession; data: Session; status: "authenticated" }
-      | {
-          update: UpdateSession
-          data: null
-          status: "unauthenticated" | "loading"
-        }
-
-export const SessionContext = React.createContext?.<
-  SessionContextValue | undefined
->(undefined)
-
-/**
- * React Hook that gives you access to the logged in user's session data and lets you modify it.
- *
- * :::info
- * You will likely not need `useSession` if you are using the [Next.js App Router (`app/`)](https://nextjs.org/blog/next-13-4#nextjs-app-router).
- * :::
- */
-export function useSession<R extends boolean>(
-  options?: UseSessionOptions<R>
-): SessionContextValue<R> {
+export function useSession(options?: UseSessionOptions<any>): SessionContextValue {
+  // Check if SessionContext is available
   if (!SessionContext) {
-    throw new Error("React Context is unavailable in Server Components")
+    throw new Error("React Context is unavailable in Server Components");
   }
 
-  // @ts-expect-error Satisfy TS if branch on line below
-  const value: SessionContextValue<R> = React.useContext(SessionContext)
+  // Get the context value
+  const value: SessionContextValue = React.useContext(SessionContext)!;
+
+  // Throw an error if SessionContext is not provided
   if (!value && process.env.NODE_ENV !== "production") {
-    throw new Error(
-      "[next-auth]: `useSession` must be wrapped in a <SessionProvider />"
-    )
+    throw new Error("[next-auth]: `useSession` must be wrapped in a <SessionProvider />");
   }
 
-  const { required, onUnauthenticated } = options ?? {}
+  // Destructure the options or set default values
+  const { required, onUnauthenticated } = options ?? {};
 
-  const requiredAndNotLoading = required && value.status === "unauthenticated"
+  // Check if session is required and not loading
+  const requiredAndNotLoading = required && value && value.status === "unauthenticated";
 
+  // Redirect to sign-in page if session is required but not available
   React.useEffect(() => {
     if (requiredAndNotLoading) {
       const url = `${__NEXTAUTH.basePath}/signin?${new URLSearchParams({
         error: "SessionRequired",
         callbackUrl: window.location.href,
-      })}`
-      if (onUnauthenticated) onUnauthenticated()
-      else window.location.href = url
+      })}`;
+      if (onUnauthenticated) onUnauthenticated();
+      else window.location.href = url;
     }
-  }, [requiredAndNotLoading, onUnauthenticated])
+  }, [requiredAndNotLoading, onUnauthenticated]);
 
+  // Return session data
   if (requiredAndNotLoading) {
     return {
       data: value.data,
       update: value.update,
       status: "loading",
-    }
+    };
   }
 
-  return value
+  return value;
 }
 
-export interface GetSessionParams {
-  event?: "storage" | "timer" | "hidden" | string
-  triggerEvent?: boolean
-  broadcast?: boolean
-}
-
-export async function getSession(params?: GetSessionParams) {
+/**
+ * Retrieves the current session data from the server.
+ * @param params Parameters for the request.
+ * @returns The session data.
+ */
+export async function getSession(params?: GetSessionParams): Promise<Session | null> {
+  // Fetch session data from the server
   const session = await fetchData<Session>(
     "session",
     __NEXTAUTH,
     logger,
     params
-  )
+  );
+
+  // Broadcast session data to other tabs/windows
   if (params?.broadcast ?? true) {
     broadcast().postMessage({
       event: "session",
       data: { trigger: "getSession" },
-    })
+    });
   }
-  return session
+
+  return session;
 }
 
 /**
@@ -185,7 +172,7 @@ export async function getSession(params?: GetSessionParams) {
  *
  * [CSRF Prevention: Double Submit Cookie](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie)
  */
-export async function getCsrfToken() {
+export async function getCsrfToken(): Promise<string> {
   const response = await fetchData<{ csrfToken: string }>(
     "csrf",
     __NEXTAUTH,
@@ -194,36 +181,23 @@ export async function getCsrfToken() {
   return response?.csrfToken ?? ""
 }
 
-type ProvidersType = Record<
-  LiteralUnion<BuiltInProviderType>,
-  ClientSafeProvider
->
-
 /**
  * Returns a client-safe configuration object of the currently
  * available providers.
  */
-export async function getProviders() {
-  return fetchData<ProvidersType>("providers", __NEXTAUTH, logger)
+export async function getProviders(): Promise<ProvidersType | null> {
+  return await fetchData<ProvidersType>("providers", __NEXTAUTH, logger)
 }
 
 /**
  * Initiate a signin flow or send the user to the signin page listing all possible providers.
  * Handles CSRF protection.
  */
-export async function signIn<
-  P extends RedirectableProviderType | undefined = undefined,
->(
-  provider?: LiteralUnion<
-    P extends RedirectableProviderType
-      ? P | BuiltInProviderType
-      : BuiltInProviderType
-  >,
+export async function signIn(
+  provider?: string,
   options?: SignInOptions,
   authorizationParams?: SignInAuthorizationParams
-): Promise<
-  P extends RedirectableProviderType ? SignInResponse | undefined : undefined
-> {
+): Promise<SignInResponse | undefined> {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
   const baseUrl = apiBaseUrl(__NEXTAUTH)
@@ -258,12 +232,12 @@ export async function signIn<
         "Content-Type": "application/x-www-form-urlencoded",
         "X-Auth-Return-Redirect": "1",
       },
-      // @ts-expect-error
       body: new URLSearchParams({
         ...options,
         csrfToken,
         callbackUrl,
-      }),
+        redirect: String(options?.redirect ?? 'false'),
+      }).toString(),
     }
   )
 
@@ -278,7 +252,18 @@ export async function signIn<
     return
   }
 
-  const error = new URL(data.url).searchParams.get("error")
+  const error = typeof data.url === 'string' ? (() => {
+    try {
+      return new URL(data.url as string).searchParams.get("error");
+    } catch (e) {
+      if (e instanceof Error) {
+        logger.error(e);
+      } else {
+        logger.error(new Error(String(e)));
+      }
+      return null;
+    }
+  })() : null;
 
   if (res.ok) {
     await __NEXTAUTH._getSession({ event: "storage" })
@@ -296,16 +281,14 @@ export async function signIn<
  * Initiate a signout, by destroying the current session.
  * Handles CSRF protection.
  */
-export async function signOut<R extends boolean = true>(
-  options?: SignOutParams<R>
-): Promise<R extends true ? undefined : SignOutResponse> {
+export async function signOut(options?: SignOutParams): Promise<SignOutResponse | undefined> {
   const { callbackUrl = window.location.href } = options ?? {}
   const baseUrl = apiBaseUrl(__NEXTAUTH)
   const csrfToken = await getCsrfToken()
   const res = await fetch(`${baseUrl}/signout`, {
     method: "post",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Type": "application/x-form-urlencoded",
       "X-Auth-Return-Redirect": "1",
     },
     body: new URLSearchParams({ csrfToken, callbackUrl }),
@@ -319,13 +302,12 @@ export async function signOut<R extends boolean = true>(
     window.location.href = url
     // If url contains a hash, the browser does not reload the page. We reload manually
     if (url.includes("#")) window.location.reload()
-    // @ts-expect-error
-    return
+    return undefined;
   }
 
   await __NEXTAUTH._getSession({ event: "storage" })
 
-  return data
+  return data;
 }
 
 /**
@@ -343,7 +325,7 @@ export function SessionProvider(props: SessionProviderProps) {
     throw new Error("React Context is unavailable in Server Components")
   }
 
-  const { children, basePath, refetchInterval, refetchWhenOffline } = props
+  const { children, basePath, refetchInterval } = props
 
   if (basePath) __NEXTAUTH.basePath = basePath
 
@@ -362,140 +344,83 @@ export function SessionProvider(props: SessionProviderProps) {
   })
 
   /** If session was passed, initialize as not loading */
-  const [loading, setLoading] = React.useState(!hasInitialSession)
+  const [loading] = React.useState(!hasInitialSession)
 
   React.useEffect(() => {
-    __NEXTAUTH._getSession = async ({ event } = {}) => {
-      try {
-        const storageEvent = event === "storage"
-        // We should always update if we don't have a client session yet
-        // or if there are events from other tabs/windows
-        if (storageEvent || __NEXTAUTH._session === undefined) {
-          __NEXTAUTH._lastSync = now()
-          __NEXTAUTH._session = await getSession({
-            broadcast: !storageEvent,
-          })
-          setSession(__NEXTAUTH._session)
-          return
-        }
+    __NEXTAUTH._getSession = async (...args: unknown[]) => {
+      if (args[0] && typeof args[0] === 'object') {
+        const { event } = args[0] as { event?: any };
+        try {
+          const storageEvent = event === "storage";
+          // We should always update if we don't have a client session yet
+          // or if there are events from other tabs/windows
+          if (storageEvent || __NEXTAUTH._session === undefined) {
+            __NEXTAUTH._lastSync = now();
+            __NEXTAUTH._session = await getSession({
+              broadcast: !storageEvent,
+            });
+            setSession(__NEXTAUTH._session);
+            return;
+          }
 
-        if (
-          // If there is no time defined for when a session should be considered
-          // stale, then it's okay to use the value we have until an event is
-          // triggered which updates it
-          !event ||
-          // If the client doesn't have a session then we don't need to call
-          // the server to check if it does (if they have signed in via another
-          // tab or window that will come through as a "stroage" event
-          // event anyway)
-          __NEXTAUTH._session === null ||
-          // Bail out early if the client session is not stale yet
-          now() < __NEXTAUTH._lastSync
-        ) {
-          return
-        }
+          if (
+            // If there is no time defined for when a session should be considered
+            // stale, then it's okay to use the value we have until an event is
+            // triggered which updates it
+            !refetchInterval ||
+            // If the session is new, it's okay to use it until a refresh happens
+            (__NEXTAUTH._session?.user as any)?.created &&
+            // If we're within the window to revalidate, then do nothing
+            now() - __NEXTAUTH._lastSync < refetchInterval
+          ) {
+            return;
+          }
 
-        // An event or session staleness occurred, update the client session.
-        __NEXTAUTH._lastSync = now()
-        __NEXTAUTH._session = await getSession()
-        setSession(__NEXTAUTH._session)
-      } catch (error) {
-        logger.error(
-          new ClientSessionError((error as Error).message, error as any)
-        )
-      } finally {
-        setLoading(false)
+          __NEXTAUTH._lastSync = now();
+          const updatedSession = await getSession();
+          setSession(updatedSession);
+        } catch (error) {
+          if (
+            process.env.NODE_ENV !== "production" &&
+            process.env.NODE_ENV !== "test"
+          ) {
+            console.error("[next-auth][error]", error);
+          }
+        }
       }
-    }
-
-    __NEXTAUTH._getSession()
-
-    return () => {
-      __NEXTAUTH._lastSync = 0
-      __NEXTAUTH._session = undefined
-      __NEXTAUTH._getSession = () => {}
-    }
+    };
   }, [])
 
-  React.useEffect(() => {
-    const handle = () => __NEXTAUTH._getSession({ event: "storage" })
-    // Listen for storage events and update session if event fired from
-    // another window (but suppress firing another event to avoid a loop)
-    // Fetch new session data but tell it to not to fire another event to
-    // avoid an infinite loop.
-    // Note: We could pass session data through and do something like
-    // `setData(message.data)` but that can cause problems depending
-    // on how the session object is being used in the client; it is
-    // more robust to have each window/tab fetch it's own copy of the
-    // session object rather than share it across instances.
-    broadcast().addEventListener("message", handle)
-    return () => broadcast().removeEventListener("message", handle)
-  }, [])
+  const online = useOnline();
 
   React.useEffect(() => {
-    const { refetchOnWindowFocus = true } = props
-    // Listen for when the page is visible, if the user switches tabs
-    // and makes our tab visible again, re-fetch the session, but only if
-    // this feature is not disabled.
-    const visibilityHandler = () => {
-      if (refetchOnWindowFocus && document.visibilityState === "visible")
-        __NEXTAUTH._getSession({ event: "visibilitychange" })
+    if (online) __NEXTAUTH._getSession()
+  }, [online])
+
+  React.useEffect(() => {
+    if (refetchInterval && refetchInterval > 0 && !loading) {
+      const interval = setInterval(__NEXTAUTH._getSession, refetchInterval)
+      return () => { clearInterval(interval); }
     }
-    document.addEventListener("visibilitychange", visibilityHandler, false)
-    return () =>
-      document.removeEventListener("visibilitychange", visibilityHandler, false)
-  }, [props.refetchOnWindowFocus])
-
-  const isOnline = useOnline()
-  // TODO: Flip this behavior in next major version
-  const shouldRefetch = refetchWhenOffline !== false || isOnline
-
-  React.useEffect(() => {
-    if (refetchInterval && shouldRefetch) {
-      const refetchIntervalTimer = setInterval(() => {
-        if (__NEXTAUTH._session) {
-          __NEXTAUTH._getSession({ event: "poll" })
-        }
-      }, refetchInterval * 1000)
-      return () => clearInterval(refetchIntervalTimer)
-    }
-  }, [refetchInterval, shouldRefetch])
-
-  const value: any = React.useMemo(
-    () => ({
-      data: session,
-      status: loading
-        ? "loading"
-        : session
-          ? "authenticated"
-          : "unauthenticated",
-      async update(data: any) {
-        if (loading || !session) return
-        setLoading(true)
-        const newSession = await fetchData<Session>(
-          "session",
-          __NEXTAUTH,
-          logger,
-          typeof data === "undefined"
-            ? undefined
-            : { body: { csrfToken: await getCsrfToken(), data } }
-        )
-        setLoading(false)
-        if (newSession) {
-          setSession(newSession)
-          broadcast().postMessage({
-            event: "session",
-            data: { trigger: "getSession" },
-          })
-        }
-        return newSession
-      },
-    }),
-    [session, loading]
-  )
+  }, [loading, refetchInterval])
 
   return (
-    // @ts-expect-error
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
+    <SessionContext.Provider
+      value={{
+        data: session ?? null,
+        status: loading ? "loading" : session ? "authenticated" : "unauthenticated",
+        update: async (data) => {
+          if (data === undefined) {
+            await signOut()
+            return null
+          }
+          const updatedSession = await getSession()
+          setSession(updatedSession)
+          return updatedSession
+        },
+      }}
+    >
+      {children}
+    </SessionContext.Provider>
   )
 }

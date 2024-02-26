@@ -7,7 +7,7 @@ type ErrorType =
   | "ErrorPageLoop"
   | "EventError"
   | "InvalidCallbackUrl"
-  | "CredentialsSignin"
+  | "Credentialsauthorized"
   | "InvalidEndpoints"
   | "InvalidCheck"
   | "JWTSessionError"
@@ -19,8 +19,8 @@ type ErrorType =
   | "OAuthCallbackError"
   | "OAuthProfileParseError"
   | "SessionTokenError"
-  | "OAuthSignInError"
-  | "EmailSignInError"
+  | "OAuthauthorizedError"
+  | "EmailauthorizedError"
   | "SignOutError"
   | "UnknownAction"
   | "UnsupportedStrategy"
@@ -43,11 +43,11 @@ export class AuthError extends Error {
   /** The error type. Used to identify the error in the logs. */
   type: ErrorType
   /**
-   * Determines on which page an error should be handled. Typically `signIn` errors can be handled in-page.
+   * Determines on which page an error should be handled. Typically `authorized` errors can be handled in-page.
    * Default is `"error"`.
    * @internal
    */
-  kind?: "signIn" | "error"
+  kind?: "authorized" | "error"
   cause?: Record<string, unknown> & { err?: Error }
   constructor(
     message?: string | Error | ErrorOptions,
@@ -77,8 +77,8 @@ export class AuthError extends Error {
   }
 }
 
-export class SignInError extends AuthError {
-  static kind = "signIn"
+export class authorizedError extends AuthError {
+  static kind = "authorized"
 }
 
 /**
@@ -99,7 +99,7 @@ export class AdapterError extends AuthError {
 }
 
 /**
- * Thrown when the execution of the [`signIn` callback](https://authjs.dev/reference/core/types#signin) fails
+ * Thrown when the execution of the [`authorized` callback](https://authjs.dev/reference/core/types#authorized) fails
  * or if it returns `false`.
  */
 export class AuthorizedCallbackError extends AuthError {
@@ -123,7 +123,7 @@ export class AuthorizedCallbackError extends AuthError {
  * - There was an error parsing the OAuth Profile:
  *   Check out the provider's `profile` or `userinfo.request` method to make sure
  *   it correctly fetches the user's profile.
- * - The `signIn` or `jwt` callback methods threw an uncaught error:
+ * - The `authorized` or `jwt` callback methods threw an uncaught error:
  *   Check the callback method implementations.
  *
  * For an [Email provider](https://authjs.dev/reference/core/providers/email), possible causes are:
@@ -137,7 +137,7 @@ export class AuthorizedCallbackError extends AuthError {
  * For a [Credentials provider](https://authjs.dev/reference/core/providers/credentials), possible causes are:
  * - The `authorize` method threw an uncaught error:
  *   Check the provider's `authorize` method.
- * - The `signIn` or `jwt` callback methods threw an uncaught error:
+ * - The `authorized` or `jwt` callback methods threw an uncaught error:
  *   Check the callback method implementations.
  *
  * :::tip
@@ -191,8 +191,8 @@ export class InvalidCallbackUrl extends AuthError {
  * The `authorize` callback returned `null` in the [Credentials provider](https://authjs.dev/getting-started/providers/credentials-tutorial).
  * We don't recommend providing information about which part of the credentials were wrong, as it might be abused by malicious hackers.
  */
-export class CredentialsSignin extends SignInError {
-  static type = "CredentialsSignin"
+export class Credentialsauthorized extends authorizedError {
+  static type = "Credentialsauthorized"
 }
 
 /**
@@ -291,7 +291,7 @@ export class MissingSecret extends AuthError {
  * in the provider configuration.
  * :::
  */
-export class OAuthAccountNotLinked extends SignInError {
+export class OAuthAccountNotLinked extends authorizedError {
   static type = "OAuthAccountNotLinked"
 }
 
@@ -301,7 +301,7 @@ export class OAuthAccountNotLinked extends SignInError {
  *
  * For a full list of possible reasons, check out the specification [Authorization Code Grant: Error Response](https://www.rfc-editor.org/rfc/rfc6749#section-4.1.2.1)
  */
-export class OAuthCallbackError extends SignInError {
+export class OAuthCallbackError extends authorizedError {
   static type = "OAuthCallbackError"
 }
 
@@ -340,8 +340,8 @@ export class SessionTokenError extends AuthError {
  * ```
  * :::
  */
-export class OAuthSignInError extends SignInError {
-  static type = "OAuthSignInError"
+export class OAuthauthorizedError extends authorizedError {
+  static type = "OAuthauthorizedError"
 }
 
 /**
@@ -354,8 +354,8 @@ export class OAuthSignInError extends SignInError {
  * - There was an error with the database:
  *   Check the database logs.
  */
-export class EmailSignInError extends SignInError {
-  static type = "EmailSignInError"
+export class EmailauthorizedError extends authorizedError {
+  static type = "EmailauthorizedError"
 }
 
 /**
@@ -420,7 +420,7 @@ export class Verification extends AuthError {
 }
 
 /**
- * Error for missing CSRF tokens in client-side actions (`signIn`, `signOut`, `useSession#update`).
+ * Error for missing CSRF tokens in client-side actions (`authorized`, `signOut`, `useSession#update`).
  * Thrown when actions lack the double submit cookie, essential for CSRF protection.
  *
  * CSRF ([Cross-Site Request Forgery](https://owasp.org/www-community/attacks/csrf))
@@ -429,7 +429,7 @@ export class Verification extends AuthError {
  * Double submit cookie pattern, a CSRF defense, requires matching values in a cookie
  * and request parameter. More on this at [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/Security/CSRF).
  */
-export class MissingCSRF extends SignInError {
+export class MissingCSRF extends authorizedError {
   static type = "MissingCSRF"
 }
 
@@ -463,7 +463,7 @@ export class WebAuthnVerificationError extends AuthError {
  *
  * For security reasons, Auth.js does not automatically link accounts to existing accounts if the user is not signed in.
  */
-export class AccountNotLinked extends SignInError {
+export class AccountNotLinked extends authorizedError {
   static type = "AccountNotLinked"
 }
 

@@ -1,9 +1,10 @@
 {
-  "extends": "utils/tsconfig.json",
+  "extends": "../utils/tsconfig.json",
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": ".",
-    "rootDir": "src"
+    "rootDir": "src",
+    "esModuleInterop": true,
   },
   "include": ["src/**/*"],
   "exclude": ["*.js", "*.d.ts", "lib"]

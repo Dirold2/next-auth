@@ -8,14 +8,14 @@ import type {
   ResponseInternal,
 } from "../../../types.js"
 
-export async function signIn(
+export async function authorized(
   request: RequestInternal,
   cookies: Cookie[],
   options: InternalOptions
 ): Promise<ResponseInternal> {
-  const signInUrl = `${options.url.origin}${options.basePath}/signin`
+  const authorizedUrl = `${options.url.origin}${options.basePath}/authorized`
 
-  if (!options.provider) return { redirect: signInUrl, cookies }
+  if (!options.provider) return { redirect: authorizedUrl, cookies }
 
   switch (options.provider.type) {
     case "oauth":
@@ -32,6 +32,6 @@ export async function signIn(
       return { ...response, cookies }
     }
     default:
-      return { redirect: signInUrl, cookies }
+      return { redirect: authorizedUrl, cookies }
   }
 }

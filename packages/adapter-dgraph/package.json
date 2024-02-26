@@ -41,10 +41,10 @@
     "test": "./test/test.sh"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^8.5.5"
+    "@types/jsonwebtoken": "^9.0.5"
   },
   "dependencies": {
     "@auth/core": "workspace:*",
-    "jsonwebtoken": "^9.0.0"
+    "jsonwebtoken": "^9.0.2"
   }
 }

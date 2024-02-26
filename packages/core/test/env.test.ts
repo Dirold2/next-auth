@@ -129,7 +129,7 @@ describe("createActionURL", () => {
     },
     {
       args: {
-        action: "signin",
+        action: "authorized",
         protocol: "http",
         headers: new Headers({
           "x-forwarded-host": "example.com",
@@ -138,7 +138,7 @@ describe("createActionURL", () => {
         env: {},
         basePath: "/auth",
       },
-      expected: "https://example.com/auth/signin",
+      expected: "https://example.com/auth/authorized",
     },
     {
       args: {

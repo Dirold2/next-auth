@@ -45,8 +45,8 @@
     "@auth/core": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230321.0",
-    "@miniflare/d1": "^2.12.2",
-    "better-sqlite3": "^8.6.0"
+    "@cloudflare/workers-types": "^4.20240222.0",
+    "@miniflare/d1": "^2.14.2",
+    "better-sqlite3": "^9.4.3"
   }
 }

@@ -12,7 +12,7 @@ import type { OAuthConfig } from "../../../providers/index.js"
 import type { SessionToken } from "../../utils/cookie.js"
 
 /**
- * This function handles the complex flow of signing users in, and either creating,
+ * This function handles the complex flow of authorizedg users in, and either creating,
  * linking (or not linking) accounts depending on if the user is currently logged
  * in, if they have account already and the authentication mechanism they are using.
  *
@@ -90,7 +90,7 @@ export async function handleLoginOrRegister(
   }
 
   if (account.type === "email") {
-    // If signing in with an email, check if an account with the same email address exists already
+    // If authorizedg in with an email, check if an account with the same email address exists already
     const userByEmail = await getUserByEmail(profile.email)
     if (userByEmail) {
       // If they are not already signed in as the same user, this flow will
@@ -138,7 +138,7 @@ export async function handleLoginOrRegister(
           const currentAccount: AdapterAccount = { ...account, userId: user.id }
           return { session, user, isNewUser, account: currentAccount }
         }
-        // If the user is currently signed in, but the new account they are signing in
+        // If the user is currently signed in, but the new account they are authorizedg in
         // with is already associated with another user, then we cannot link them
         // and need to return an error.
         throw new AccountNotLinked(
@@ -212,7 +212,7 @@ export async function handleLoginOrRegister(
     }
   }
 
-  // If signing in with OAuth account, check to see if the account exists already
+  // If authorizedg in with OAuth account, check to see if the account exists already
   const userByAccount = await getUserByAccount({
     providerAccountId: account.providerAccountId,
     provider: account.provider,
@@ -223,7 +223,7 @@ export async function handleLoginOrRegister(
       if (userByAccount.id === user.id) {
         return { session, user, isNewUser }
       }
-      // If the user is currently signed in, but the new account they are signing in
+      // If the user is currently signed in, but the new account they are authorizedg in
       // with is already associated with another user, then we cannot link them
       // and need to return an error.
       throw new OAuthAccountNotLinked(
@@ -246,15 +246,17 @@ export async function handleLoginOrRegister(
     const { provider: p } = options as InternalOptions<"oauth" | "oidc">
     const { type, provider, providerAccountId, userId, ...tokenSet } = account
     const defaults = { providerAccountId, provider, type, userId }
-    account = Object.assign(p.account(tokenSet) ?? {}, defaults)
+    const { expires_at, ...restTokenSet } = tokenSet;
+    const mergedAccount = {
+      ...defaults,
+      ...restTokenSet,
+      expires_at: expires_at ?? undefined,
+    };
+    account = Object.assign(p.account(mergedAccount) ?? {}, mergedAccount);
 
     if (user) {
-      // If the user is already signed in and the OAuth account isn't already associated
-      // with another user account then we can go ahead and link the accounts safely.
       await linkAccount({ ...account, userId: user.id })
       await events.linkAccount?.({ user, account, profile })
-
-      // As they are already signed in, we don't need to do anything after linking them
       return { session, user, isNewUser }
     }
 
@@ -265,7 +267,7 @@ export async function handleLoginOrRegister(
     // This step is often overlooked in OAuth implementations, but covers the following cases:
     //
     // 1. It makes it harder for someone to accidentally create two accounts.
-    //    e.g. by signin in with email, then again with an oauth account connected to the same email.
+    //    e.g. by authorized in with email, then again with an oauth account connected to the same email.
     // 2. It makes it harder to hijack a user account using a 3rd party OAuth account.
     //    e.g. by creating an oauth account then changing the email address associated with it.
     //

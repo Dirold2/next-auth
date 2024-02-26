@@ -105,7 +105,7 @@ export interface GoogleProfile extends Record<string, any> {
  * const options = {
  *   ...
  *   callbacks: {
- *     async signIn({ account, profile }) {
+ *     async authorized({ account, profile }) {
  *       if (account.provider === "google") {
  *         return profile.email_verified && profile.email.endsWith("@example.com")
  *       }

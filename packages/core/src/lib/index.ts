@@ -30,7 +30,7 @@ export async function AuthInternal(
 
   const sessionStore = new SessionStore(
     options.cookies.sessionToken,
-    request.cookies,
+    request.cookies ?? {},
     options.logger
   )
 
@@ -40,15 +40,15 @@ export async function AuthInternal(
       case "callback":
         return await actions.callback(request, options, sessionStore, cookies)
       case "csrf":
-        return render.csrf(csrfDisabled, options, cookies)
+        return render.csrf(csrfDisabled, options, cookies);
       case "error":
         return render.error(error)
       case "providers":
         return render.providers(options.providers)
       case "session":
         return await actions.session(options, sessionStore, cookies)
-      case "signin":
-        return render.signin(providerId, error)
+      case "authorized":
+        return render.authorized(providerId, error)
       case "signout":
         return render.signout()
       case "verify-request":
@@ -59,7 +59,7 @@ export async function AuthInternal(
           options,
           sessionStore,
           cookies,
-        )
+        ) ?? { status:  200, body: {} };
       default:
     }
   } else {
@@ -79,9 +79,9 @@ export async function AuthInternal(
           true,
           request.body?.data
         )
-      case "signin":
+      case "authorized":
         validateCSRF(action, csrfTokenVerified)
-        return await actions.signIn(request, cookies, options)
+        return await actions.authorized(request, cookies, options)
 
       case "signout":
         validateCSRF(action, csrfTokenVerified)

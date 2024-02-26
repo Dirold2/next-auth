@@ -59,7 +59,7 @@ export async function getAuthorizationUrl(
     query
   )
 
-  for (const k in params) authParams.set(k, params[k])
+  for (const k in params) authParams.set(k, params[k] as string)
 
   const cookies: Cookie[] = []
 

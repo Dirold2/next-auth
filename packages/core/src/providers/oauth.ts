@@ -27,7 +27,7 @@ type EndpointRequest<C, R, P> = (
   context: C & {
     /** Provider is passed for convenience, and also contains the `callbackUrl`. */
     provider: OAuthConfigInternal<P> & {
-      signinUrl: string
+      authorizedUrl: string
       callbackUrl: string
     }
   }
@@ -116,7 +116,7 @@ export interface OAuth2Config<Profile>
    *
    * @example
    * ```ts
-   * signIn('github') // "github" is the provider ID
+   * authorized('github') // "github" is the provider ID
    * ```
    */
   id: string

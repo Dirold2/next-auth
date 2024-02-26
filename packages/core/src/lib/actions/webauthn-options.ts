@@ -12,7 +12,7 @@ export async function webAuthnOptions(
   options: InternalOptions,
   sessionStore: SessionStore,
   cookies: Cookie[]
-): Promise<ResponseInternal> {
+ ): Promise<ResponseInternal | undefined> {
   // Return an error if the adapter is missing or if the provider
   // is not a webauthn provider.
   const narrowOptions = assertInternalOptionsWebAuthn(options)
@@ -50,19 +50,20 @@ export async function webAuthnOptions(
 
   switch (decision) {
     case "authenticate":
-      return getAuthenticationResponse(narrowOptions, request, userInfo, cookies)
+      return await getAuthenticationResponse(narrowOptions, request, userInfo, cookies)
     case "register":
       if (typeof userInfo?.email === "string") {
-        return getRegistrationResponse(narrowOptions, request, userInfo as User & { email: string }, cookies)
+        return await getRegistrationResponse(narrowOptions, request, userInfo as User & { email: string }, cookies)
       }
-    default:
-      return {
-        status: 400,
-        body: { error: "Invalid request" },
-        cookies,
-        headers: {
-          "Content-Type": "application/json"
+      break;
+      default:
+        return {
+          status:   400,
+          body: { error: "Invalid request" },
+          cookies,
+          headers: {
+            "Content-Type": "application/json"
+          }
         }
-      }
   }
 }

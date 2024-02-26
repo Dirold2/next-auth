@@ -11,6 +11,19 @@ export interface CredentialInput
   extends Partial<JSX.IntrinsicElements["input"]> {
   label?: string
 }
+// Assuming CredentialsProvider is defined somewhere in your project
+export type CredentialsProvider = (config: CredentialsConfig) => CredentialsConfig;
+// Определение типа CredentialsProvider
+// export interface CredentialsProvider {
+//   // Здесь должны быть поля, соответствующие конфигурации провайдера учетных данных
+//   // Например:
+//   id: string;
+//   name: string;
+//   credentials: {
+//     username: string;
+//     password: string;
+//   };
+
 
 /** The Credentials Provider needs to be configured. */
 export interface CredentialsConfig<
@@ -60,7 +73,7 @@ export interface CredentialsConfig<
 export type CredentialsProviderType = "Credentials"
 
 /**
- * The Credentials provider allows you to handle signing in with arbitrary credentials,
+ * The Credentials provider allows you to handle authorizedg in with arbitrary credentials,
  * such as a username and password, domain, or two factor authentication or hardware device (e.g. YubiKey U2F / FIDO).
  *
  * It is intended to support use cases where you have an existing system you need to authenticate users against.
@@ -121,7 +134,7 @@ export type CredentialsProviderType = "Credentials"
  * })
  * ```
  * @see [Username/Password Example](https://authjs.dev/guides/providers/credentials#example---username--password)
- * @see [Web3/Signin With Ethereum Example](https://authjs.dev/guides/providers/credentials#example---web3--signin-with-ethereum)
+ * @see [Web3/authorized With Ethereum Example](https://authjs.dev/guides/providers/credentials#example---web3--authorized-with-ethereum)
  */
 export default function Credentials<
   CredentialsInputs extends Record<string, CredentialInput> = Record<
@@ -135,6 +148,7 @@ export default function Credentials<
     type: "credentials",
     credentials: {},
     authorize: () => null,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     options: config,
   }

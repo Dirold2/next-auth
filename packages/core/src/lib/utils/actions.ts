@@ -4,7 +4,7 @@ const actions: AuthAction[] = [
   "providers",
   "session",
   "csrf",
-  "signin",
+  "authorized",
   "signout",
   "callback",
   "verify-request",

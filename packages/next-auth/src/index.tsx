@@ -70,7 +70,7 @@
 import { Auth } from "@auth/core"
 import { reqWithEnvURL, setEnvDefaults } from "./lib/env.js"
 import { initAuth } from "./lib/index.js"
-import { signIn, signOut, update } from "./lib/actions.js"
+import { authorized, signOut, update } from "./lib/actions.js"
 
 import type { Session } from "@auth/core/types"
 import type { BuiltInProviderType } from "@auth/core/providers"
@@ -278,8 +278,8 @@ export interface NextAuthResult {
    * ```
    *
    */
-  signIn: <
-    P extends BuiltInProviderType | (string & {}),
+  authorized: <
+    P extends BuiltInProviderType | string,
     R extends boolean = true,
   >(
     /** Provider to sign in to */
@@ -363,48 +363,50 @@ export default function NextAuth(
     | ((request: NextRequest | undefined) => NextAuthConfig)
 ): NextAuthResult {
   if (typeof config === "function") {
-    const httpHandler = (req: NextRequest) => {
+    const httpHandler = async (req: NextRequest) => {
       const _config = config(req)
       setEnvDefaults(_config)
-      return Auth(reqWithEnvURL(req), _config)
+      return await Auth(reqWithEnvURL(req), _config)
     }
 
     return {
       handlers: { GET: httpHandler, POST: httpHandler } as const,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
-      auth: initAuth(config, (c) => setEnvDefaults(c)),
+      auth: initAuth(config, (c) => { setEnvDefaults(c); }),
 
-      signIn: (provider, options, authorizationParams) => {
+      authorized: async (provider, options, authorizationParams) => {
         const _config = config(undefined)
         setEnvDefaults(_config)
-        return signIn(provider, options, authorizationParams, _config)
+        return await authorized(provider, options, authorizationParams, _config)
       },
-      signOut: (options) => {
+      signOut: async (options) => {
         const _config = config(undefined)
         setEnvDefaults(_config)
-        return signOut(options, _config)
+        return await signOut(options, _config)
       },
-      unstable_update: (data) => {
+      unstable_update: async (data) => {
         const _config = config(undefined)
         setEnvDefaults(_config)
-        return update(data, _config)
+        return await update(data, _config)
       },
     }
   }
   setEnvDefaults(config)
-  const httpHandler = (req: NextRequest) => Auth(reqWithEnvURL(req), config)
+  const httpHandler = async (req: NextRequest) => await Auth(reqWithEnvURL(req), config)
   return {
     handlers: { GET: httpHandler, POST: httpHandler } as const,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     auth: initAuth(config),
-    signIn: (provider, options, authorizationParams) => {
-      return signIn(provider, options, authorizationParams, config)
+    authorized: async (provider, options, authorizationParams) => {
+      return await authorized(provider, options, authorizationParams, config)
     },
-    signOut: (options) => {
-      return signOut(options, config)
+    signOut: async (options) => {
+      return await signOut(options, config)
     },
-    unstable_update: (data) => {
-      return update(data, config)
+    unstable_update: async (data) => {
+      return await update(data, config)
     },
   }
 }

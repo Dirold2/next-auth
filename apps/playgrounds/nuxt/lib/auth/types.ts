@@ -11,12 +11,12 @@ export interface ClientSafeProvider {
   id: LiteralUnion<BuiltInProviderType>
   name: string
   type: ProviderType
-  signinUrl: string
+  authorizedUrl: string
   callbackUrl: string
 }
-export interface SignInOptions extends Record<string, unknown> {
+export interface authorizedOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after signing in. Defaults to the page URL the sign-in is initiated from.
+   * Specify to which URL the user will be redirected after authorizedg in. Defaults to the page URL the sign-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */
@@ -24,14 +24,14 @@ export interface SignInOptions extends Record<string, unknown> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option) */
   redirect?: boolean
 }
-export interface SignInResponse {
+export interface authorizedResponse {
   error: string | undefined
   status: number
   ok: boolean
   url: string | null
 }
 /** Match `inputType` of `new URLSearchParams(inputType)` */
-export declare type SignInAuthorizationParams =
+export declare type authorizedAuthorizationParams =
   | string
   | string[][]
   | Record<string, string>

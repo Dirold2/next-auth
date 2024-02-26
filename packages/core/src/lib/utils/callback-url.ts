@@ -36,7 +36,7 @@ export async function createCallbackUrl({
 
   return {
     callbackUrl,
-    // Save callback URL in a cookie so that it can be used for subsequent requests in signin/signout/callback flow
+    // Save callback URL in a cookie so that it can be used for subsequent requests in authorized/signout/callback flow
     callbackUrlCookie: callbackUrl !== cookieValue ? callbackUrl : undefined,
   }
 }

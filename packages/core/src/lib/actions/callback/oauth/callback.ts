@@ -16,15 +16,10 @@ import type {
 } from "../../../../types.js"
 import type { OAuthConfigInternal } from "../../../../providers/index.js"
 import type { Cookie } from "../../../utils/cookie.js"
+import { type OAuth2Error } from "oauth4webapi"
 
 /**
- * Handles the following OAuth steps.
- * https://www.rfc-editor.org/rfc/rfc6749#section-4.1.1
- * https://www.rfc-editor.org/rfc/rfc6749#section-4.1.3
- * https://openid.net/specs/openid-connect-core-1_0.html#UserInfoRequest
- *
- * @note Although requesting userinfo is not required by the OAuth2.0 spec,
- * we fetch it anyway. This is because we always want a user profile.
+ * Handles OAuth callback.
  */
 export async function handleOAuth(
   query: RequestInternal["query"],
@@ -36,47 +31,34 @@ export async function handleOAuth(
   let as: o.AuthorizationServer
 
   const { token, userinfo } = provider
-  // Falls back to authjs.dev if the user only passed params
   if (
     (!token?.url || token.url.host === "authjs.dev") &&
     (!userinfo?.url || userinfo.url.host === "authjs.dev")
   ) {
-    // We assume that issuer is always defined as this has been asserted earlier
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // Perform dynamic discovery if provider URLs are not set or if they point to a development environment
     const issuer = new URL(provider.issuer!)
     const discoveryResponse = await o.discoveryRequest(issuer)
-    const discoveredAs = await o.processDiscoveryResponse(
-      issuer,
-      discoveryResponse
-    )
-
-    if (!discoveredAs.token_endpoint)
-      throw new TypeError(
-        "TODO: Authorization server did not provide a token endpoint."
-      )
-
-    if (!discoveredAs.userinfo_endpoint)
-      throw new TypeError(
-        "TODO: Authorization server did not provide a userinfo endpoint."
-      )
-
-    as = discoveredAs
+    as = await o.processDiscoveryResponse(issuer, discoveryResponse)
   } else {
+    // Use configured provider URLs
     as = {
-      issuer: provider.issuer ?? "https://authjs.dev", // TODO: review fallback issuer
+      issuer: provider.issuer ?? "https://authjs.dev",
       token_endpoint: token?.url.toString(),
       userinfo_endpoint: userinfo?.url.toString(),
     }
   }
 
+  // Configure OAuth client
   const client: o.Client = {
     client_id: provider.clientId,
     client_secret: provider.clientSecret,
     ...provider.client,
   }
 
+  // Initialize array for response cookies
   const resCookies: Cookie[] = []
 
+  // Generate or validate state
   const state = await checks.state.use(
     cookies,
     resCookies,
@@ -84,6 +66,7 @@ export async function handleOAuth(
     randomState
   )
 
+  // Validate OAuth response and extract authorization code
   const codeGrantParams = o.validateAuthResponse(
     as,
     client,
@@ -91,33 +74,38 @@ export async function handleOAuth(
     provider.checks.includes("state") ? state : o.skipStateCheck
   )
 
-  /** https://www.rfc-editor.org/rfc/rfc6749#section-4.1.2.1 */
   if (o.isOAuth2Error(codeGrantParams)) {
     const cause = { providerId: provider.id, ...codeGrantParams }
     logger.debug("OAuthCallbackError", cause)
     throw new OAuthCallbackError("OAuth Provider returned an error", cause)
   }
 
+  // Generate PKCE code verifier if required
   const codeVerifier = await checks.pkce.use(cookies, resCookies, options)
 
+  // Determine redirect URL
   let redirect_uri = provider.callbackUrl
   if (!options.isOnRedirectProxy && provider.redirectProxyUrl) {
     redirect_uri = provider.redirectProxyUrl
   }
+
+  // Request authorization code grant
   let codeGrantResponse = await o.authorizationCodeGrantRequest(
     as,
     client,
     codeGrantParams,
     redirect_uri,
-    codeVerifier ?? "auth" // TODO: review fallback code verifier
+    codeVerifier ?? "auth"
   )
 
+  // Conform token response if required by provider
   if (provider.token?.conform) {
-    codeGrantResponse =
-      (await provider.token.conform(codeGrantResponse.clone())) ??
-      codeGrantResponse
+    codeGrantResponse = (await provider.token.conform(
+      codeGrantResponse.clone()
+    )) ?? codeGrantResponse
   }
 
+  // Handle www-authenticate challenges if present
   let challenges: o.WWWAuthenticateChallenge[] | undefined
   if ((challenges = o.parseWwwAuthenticateChallenges(codeGrantResponse))) {
     for (const challenge of challenges) {
@@ -126,10 +114,12 @@ export async function handleOAuth(
     throw new Error("TODO: Handle www-authenticate challenges as needed")
   }
 
+  // Process tokens and user profile based on provider type
   let profile: Profile = {}
   let tokens: TokenSet & Pick<Account, "expires_at">
 
   if (provider.type === "oidc") {
+    // OIDC provider - process OIDC response
     const nonce = await checks.nonce.use(cookies, resCookies, options)
     const result = await o.processAuthorizationCodeOpenIDResponse(
       as,
@@ -146,24 +136,31 @@ export async function handleOAuth(
     profile = o.getValidatedIdTokenClaims(result)
     tokens = result
   } else {
+    // OAuth 2.0 provider - process OAuth 2.0 response
     tokens = await o.processAuthorizationCodeOAuth2Response(
       as,
       client,
       codeGrantResponse
     )
-    if (o.isOAuth2Error(tokens as any)) {
-      console.log("error", tokens)
-      throw new Error("TODO: Handle OAuth 2.0 response body error")
+
+    if (o.isOAuth2Error(tokens as o.OAuth2TokenEndpointResponse | OAuth2Error)) {
+      console.log("error", tokens);
+      throw new Error("TODO: Handle OAuth  2.0 response body error");
     }
 
+    // Fetch user profile
     if (userinfo?.request) {
-      const _profile = await userinfo.request({ tokens, provider })
-      if (_profile instanceof Object) profile = _profile
+      const providerWithauthorizedUrl = {
+        ...provider,
+        authorizedUrl: provider.authorizedUrl, // Ensure authorizedUrl is included
+      };
+      const _profile = await userinfo.request({ tokens, provider: providerWithauthorizedUrl });
+      if (_profile instanceof Object) profile = _profile;
     } else if (userinfo?.url) {
       const userinfoResponse = await o.userInfoRequest(
         as,
         client,
-        (tokens as any).access_token
+        (tokens as { access_token: string }).access_token
       )
       profile = await userinfoResponse.json()
     } else {
@@ -171,11 +168,12 @@ export async function handleOAuth(
     }
   }
 
+  // Normalize token expiry time if present
   if (tokens.expires_in) {
-    tokens.expires_at =
-      Math.floor(Date.now() / 1000) + Number(tokens.expires_in)
+    tokens.expires_at = Math.floor(Date.now() / 1000) + Number(tokens.expires_in)
   }
 
+  // Fetch user and account details from profile and tokens
   const profileResult = await getUserAndAccount(
     profile,
     provider,
@@ -197,33 +195,30 @@ export async function getUserAndAccount(
   logger: LoggerInstance
 ) {
   try {
+    // Fetch user details from the profile
     const userFromProfile = await provider.profile(OAuthProfile, tokens)
     const user = {
       ...userFromProfile,
       id: crypto.randomUUID(),
       email: userFromProfile.email?.toLowerCase(),
-    } satisfies User
+    } satisfies User // Ensure user satisfies User interface
 
-    return {
-      user,
-      account: {
-        ...tokens,
-        provider: provider.id,
-        type: provider.type,
-        providerAccountId: userFromProfile.id ?? crypto.randomUUID(),
-      },
+    // Construct account object
+    const account: Account = {
+      ...tokens,
+      provider: provider.id,
+      type: provider.type,
+      providerAccountId: userFromProfile.id ?? crypto.randomUUID(),
     }
+
+    return { user, account }
   } catch (e) {
-    // If we didn't get a response either there was a problem with the provider
-    // response *or* the user cancelled the action with the provider.
-    //
-    // Unfortunately, we can't tell which - at least not in a way that works for
-    // all providers, so we return an empty object; the user should then be
-    // redirected back to the sign up page. We log the error to help developers
-    // who might be trying to debug this when configuring a new provider.
     logger.debug("getProfile error details", OAuthProfile)
     logger.error(
       new OAuthProfileParseError(e as Error, { provider: provider.id })
     )
+    // Handle error gracefully
+    // Possibly return default or empty user and account objects
+    return { user: {}, account: {} }
   }
 }

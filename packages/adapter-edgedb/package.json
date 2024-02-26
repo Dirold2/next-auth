@@ -47,6 +47,6 @@
     "edgedb": "^1.0.1"
   },
   "devDependencies": {
-    "edgedb": "^1.0.1"
+    "edgedb": "^1.4.1"
   }
 }

@@ -22,14 +22,14 @@ export interface AuthClientConfig {
   _lastSync: number
   /**
    * Stores the `SessionProvider`'s session update method to be able to
-   * trigger session updates from places like `signIn` or `signOut`
+   * trigger session updates from places like `authorized` or `signOut`
    */
   _getSession: (...args: any[]) => any
 }
 
 export interface UseSessionOptions<R extends boolean> {
   required: R
-  /** Defaults to `signIn` */
+  /** Defaults to `authorized` */
   onUnauthenticated?: () => void
 }
 
@@ -43,13 +43,13 @@ export interface ClientSafeProvider {
   id: LiteralUnion<BuiltInProviderType>
   name: string
   type: ProviderType
-  signinUrl: string
+  authorizedUrl: string
   callbackUrl: string
 }
 
-export interface SignInOptions extends Record<string, unknown> {
+export interface authorizedOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after signing in. Defaults to the page URL the sign-in is initiated from.
+   * Specify to which URL the user will be redirected after authorizedg in. Defaults to the page URL the sign-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */
@@ -58,7 +58,7 @@ export interface SignInOptions extends Record<string, unknown> {
   redirect?: boolean
 }
 
-export interface SignInResponse {
+export interface authorizedResponse {
   error: string | undefined
   status: number
   ok: boolean
@@ -69,7 +69,7 @@ export interface SignInResponse {
  * Match `inputType` of `new URLSearchParams(inputType)`
  * @internal
  */
-export type SignInAuthorizationParams =
+export type authorizedAuthorizationParams =
   | string
   | string[][]
   | Record<string, string>

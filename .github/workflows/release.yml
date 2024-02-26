@@ -34,7 +34,8 @@ on:
           - "@auth/upstash-redis-adapter"
           - "@auth/xata-adapter"
           - "next-auth"
-      # TODO: Infer from package name
+          # TODO: Add new packages here
+        
       path:
         type: choice
         description: Directory name (packages/*)
@@ -60,6 +61,8 @@ on:
           - "adapter-upstash-redis"
           - "adapter-xata"
           - "next-auth"
+          # TODO: Add new paths here
+        
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -89,7 +92,7 @@ jobs:
       - name: Build
         run: pnpm build
       - name: Run unit tests
-        if: false
+        if: ${{ github.repository == 'nextauthjs/next-auth' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: pnpm test
         timeout-minutes: 15
         env:
@@ -110,7 +113,8 @@ jobs:
         run: |
           pnpm exec playwright install --with-deps chromium
       - name: Run E2E tests
-        continue-on-error: true # TODO: Make this less flakey
+        continue-on-error: true # TODO: Improve stability by addressing intermittent failures
+  
         if: github.repository == 'nextauthjs/next-auth'
         timeout-minutes: 15
         run: |
@@ -203,6 +207,8 @@ jobs:
         env:
           VERSION: ${{ steps.determine-version.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          # TODO: Improve stability before merging
+          COMMENT: "Improve stability before merging."
   release-manual:
     name: Publish manually
     runs-on: ubuntu-latest
@@ -218,7 +224,9 @@ jobs:
           node-version: 18
           cache: "pnpm"
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          pnpm install --prefer-offline
+          pnpm install --frozen-lockfile
       - name: Determine version
         uses: ./.github/version-pr
         id: determine-version

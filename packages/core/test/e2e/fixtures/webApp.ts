@@ -21,7 +21,7 @@ export class WebApp {
   public isLoggedIn = false
 
   // locators
-  public signinButton: Locator
+  public authorizedButton: Locator
   public session: Record<string, any>
 
   constructor({
@@ -41,7 +41,7 @@ export class WebApp {
     this.page = page
     this.context = context
 
-    this.signinButton = page
+    this.authorizedButton = page
       .getByRole("banner")
       .getByRole("button", { name: "Sign in" })
 
@@ -61,9 +61,9 @@ export class WebApp {
 
     // Go to homepage
     await this.page.goto(environmentUrl)
-    await this.signinButton.click()
+    await this.authorizedButton.click()
 
-    // On built-in signin page, select Keycloak
+    // On built-in authorized page, select Keycloak
     await this.page.getByText("Keycloak").click()
 
     // Use keycloak POM to login

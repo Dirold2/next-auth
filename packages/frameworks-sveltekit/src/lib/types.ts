@@ -12,7 +12,7 @@ declare global {
       auth(): Promise<Session | null>
       /** @deprecated Use `auth` instead. */
       getSession(): Promise<Session | null>
-      signIn: <
+      authorized: <
         P extends BuiltInProviderType | (string & NonNullable<unknown>),
         R extends boolean = true,
       >(
@@ -21,9 +21,9 @@ declare global {
         options?:
           | FormData
           | ({
-              /** The URL to redirect to after signing in. By default, the user is redirected to the current page. */
+              /** The URL to redirect to after authorizedg in. By default, the user is redirected to the current page. */
               redirectTo?: string
-              /** If set to `false`, the `signIn` method will return the URL to redirect to instead of redirecting automatically. */
+              /** If set to `false`, the `authorized` method will return the URL to redirect to instead of redirecting automatically. */
               redirect?: R
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } & Record<string, any>),
@@ -39,7 +39,7 @@ declare global {
           : never
       >
       signOut: <R extends boolean = true>(options?: {
-        /** The URL to redirect to after signing out. By default, the user is redirected to the current page. */
+        /** The URL to redirect to after authorizedg out. By default, the user is redirected to the current page. */
         redirectTo?: string
         /** If set to `false`, the `signOut` method will return the URL to redirect to instead of redirecting automatically. */
         redirect?: R

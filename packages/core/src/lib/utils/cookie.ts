@@ -2,7 +2,6 @@ import type {
   CookieOption,
   CookiesOptions,
   LoggerInstance,
-  RequestInternal,
 } from "../../types.js"
 
 // Uncomment to recalculate the estimated size
@@ -138,23 +137,23 @@ type Chunks = Record<string, string>
 
 export class SessionStore {
   #chunks: Chunks = {}
-  #option: CookieOption
-  #logger: LoggerInstance | Console
+  readonly #option: CookieOption
+  readonly #logger: LoggerInstance | Console
 
   constructor(
     option: CookieOption,
-    cookies: RequestInternal["cookies"],
+    cookies: Record<string, unknown>,
     logger: LoggerInstance | Console
   ) {
     this.#logger = logger
     this.#option = option
     if (!cookies) return
-
+ 
     const { name: sessionCookiePrefix } = option
-
+ 
     for (const [name, value] of Object.entries(cookies)) {
       if (!name.startsWith(sessionCookiePrefix) || !value) continue
-      this.#chunks[name] = value
+      this.#chunks[name] = value as string
     }
   }
 
@@ -165,8 +164,8 @@ export class SessionStore {
   get value() {
     // Sort the chunks by their keys before joining
     const sortedKeys = Object.keys(this.#chunks).sort((a, b) => {
-      const aSuffix = parseInt(a.split(".").pop() || "0")
-      const bSuffix = parseInt(b.split(".").pop() || "0")
+      const aSuffix = parseInt(a.split(".").pop() ?? "0")
+      const bSuffix = parseInt(b.split(".").pop() ?? "0")
 
       return aSuffix - bSuffix
     })

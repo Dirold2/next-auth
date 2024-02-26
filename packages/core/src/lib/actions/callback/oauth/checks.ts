@@ -1,20 +1,15 @@
-import * as jose from "jose"
-import * as o from "oauth4webapi"
-import { InvalidCheck } from "../../../../errors.js"
-import { decode, encode } from "../../../../jwt.js"
+import * as jose from "jose";
+import * as o from "oauth4webapi";
+import { InvalidCheck } from "../../../../errors.js";
+import { decode, encode } from "../../../../jwt.js";
 
-import type {
-  CookiesOptions,
-  InternalOptions,
-  RequestInternal,
-  User,
-} from "../../../../types.js"
-import type { Cookie } from "../../../utils/cookie.js"
-import type { OAuthConfigInternal } from "../../../../providers/oauth.js"
-import type { WebAuthnProviderType } from "../../../../providers/webauthn.js"
+import type { CookiesOptions, InternalOptions, RequestInternal, User } from "../../../../types.js";
+import type { Cookie } from "../../../utils/cookie.js";
+import type { OAuthConfigInternal } from "../../../../providers/oauth.js";
+import type { WebAuthnProviderType } from "../../../../providers/webauthn.js";
 
 interface CheckPayload {
-  value: string
+  value: string;
 }
 
 /** Returns a signed cookie. */
@@ -25,35 +20,36 @@ export async function signCookie(
   options: InternalOptions<"oauth" | "oidc" | WebAuthnProviderType>,
   data?: any
 ): Promise<Cookie> {
-  const { cookies, logger } = options
+  const { cookies, logger } = options;
 
-  logger.debug(`CREATE_${type.toUpperCase()}`, { value, maxAge })
+  logger.debug(`CREATE_${type.toUpperCase()}`, { value, maxAge });
 
-  const expires = new Date()
-  expires.setTime(expires.getTime() + maxAge * 1000)
-  const token: any = { value }
-  if (type === "state" && data) token.data = data
-  const name = cookies[type].name
+  const expires = new Date(Date.now() + maxAge * 1000);
+  const token: any = { value };
+
+  if (type === "state" && data) {
+    token.data = data;
+  }
+
+  const name = cookies[type].name;
+  const encodedToken = await encode({ ...options.jwt, maxAge, token, salt: name });
+
   return {
     name,
-    value: await encode({ ...options.jwt, maxAge, token, salt: name }),
+    value: encodedToken,
     options: { ...cookies[type].options, expires },
-  }
+  };
 }
 
-const PKCE_MAX_AGE = 60 * 15 // 15 minutes in seconds
+const PKCE_MAX_AGE = 60 * 15; // 15 minutes in seconds
 export const pkce = {
   async create(options: InternalOptions<"oauth">) {
-    const code_verifier = o.generateRandomCodeVerifier()
-    const value = await o.calculatePKCECodeChallenge(code_verifier)
-    const maxAge = PKCE_MAX_AGE
-    const cookie = await signCookie(
-      "pkceCodeVerifier",
-      code_verifier,
-      maxAge,
-      options
-    )
-    return { cookie, value }
+    const code_verifier = o.generateRandomCodeVerifier();
+    const value = await o.calculatePKCECodeChallenge(code_verifier);
+    const maxAge = PKCE_MAX_AGE;
+    const cookie = await signCookie("pkceCodeVerifier", code_verifier, maxAge, options);
+
+    return { cookie, value };
   },
   /**
    * Returns code_verifier if the provider is configured to use PKCE,
@@ -67,34 +63,32 @@ export const pkce = {
     resCookies: Cookie[],
     options: InternalOptions<"oauth">
   ): Promise<string | undefined> {
-    const { provider } = options
+    const { provider } = options;
 
-    if (!provider?.checks?.includes("pkce")) return
+    if (!provider?.checks?.includes("pkce")) return;
 
-    const codeVerifier = cookies?.[options.cookies.pkceCodeVerifier.name]
+    const codeVerifier = cookies?.[options.cookies.pkceCodeVerifier.name];
 
-    if (!codeVerifier)
-      throw new InvalidCheck("PKCE code_verifier cookie was missing.")
+    if (!codeVerifier) throw new InvalidCheck("PKCE code_verifier cookie was missing.");
 
     const value = await decode<CheckPayload>({
       ...options.jwt,
       token: codeVerifier,
       salt: options.cookies.pkceCodeVerifier.name,
-    })
+    });
 
-    if (!value?.value)
-      throw new InvalidCheck("PKCE code_verifier value could not be parsed.")
+    if (!value?.value) throw new InvalidCheck("PKCE code_verifier value could not be parsed.");
 
     // Clear the pkce code verifier cookie after use
     resCookies.push({
       name: options.cookies.pkceCodeVerifier.name,
       value: "",
       options: { ...options.cookies.pkceCodeVerifier.options, maxAge: 0 },
-    })
+    });
 
-    return value.value
+    return value.value;
   },
-}
+};
 
 const STATE_MAX_AGE = 60 * 15 // 15 minutes in seconds
 export function decodeState(value: string):
@@ -245,28 +239,26 @@ export function handleState(
   provider: OAuthConfigInternal<any>,
   isOnRedirectProxy: InternalOptions["isOnRedirectProxy"]
 ) {
-  let randomState: string | undefined
+  const state = decodeState((query?.state ?? '') as string)
+  const randomState: string | undefined = state?.random
   let proxyRedirect: string | undefined
-
+ 
   if (provider.redirectProxyUrl && !query?.state) {
     throw new InvalidCheck(
       "Missing state in query, but required for redirect proxy"
     )
   }
-
-  const state = decodeState(query?.state)
-  randomState = state?.random
-
+ 
   if (isOnRedirectProxy) {
     if (!state?.origin) return { randomState }
     proxyRedirect = `${state.origin}?${new URLSearchParams(query)}`
   }
-
+ 
   return { randomState, proxyRedirect }
 }
 
 const WEBAUTHN_CHALLENGE_MAX_AGE = 60 * 15 // 15 minutes in seconds
-type WebAuthnChallengeCookie = { challenge: string; registerData?: User }
+interface WebAuthnChallengeCookie { challenge: string; registerData?: User }
 export const webauthnChallenge = {
   async create(options: InternalOptions<WebAuthnProviderType>, challenge: string, registerData?: User) {
     const maxAge = WEBAUTHN_CHALLENGE_MAX_AGE
