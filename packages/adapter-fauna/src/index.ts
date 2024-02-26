@@ -16,8 +16,8 @@
  * @module @auth/fauna-adapter
  */
 import {
-  Client as FaunaClient,
-  ExprArg,
+  type Client as FaunaClient,
+  type ExprArg,
   Collection,
   Create,
   Delete,
@@ -36,14 +36,14 @@ import {
   Lambda,
   Do,
   Foreach,
-  errors,
+  type errors,
 } from "faunadb"
 
 import {
-  Adapter,
-  AdapterSession,
-  AdapterUser,
-  VerificationToken,
+  type Adapter,
+  type AdapterSession,
+  type AdapterUser,
+  type VerificationToken,
 } from "@auth/core/adapters"
 
 export const collections = {
@@ -86,9 +86,10 @@ export const format = {
     for (const key in object) {
       const value = object[key]
       if (value?.value && typeof value.value === "string") {
-        newObject[key] = new Date(value.value)
+        newObject[key] = new Date(value.value as string);
       } else {
-        newObject[key] = value
+        console.error(`Expected string for date conversion, but got: ${value.value}`);
+        newObject[key] = value;
       }
     }
     return newObject as T
@@ -209,10 +210,10 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
     UserByEmail,
     VerificationTokenByIdentifierAndToken,
   } = indexes
-  const { to, from } = format
-  const q = query(f, from)
+  const { to: toFormat, from: fromFormat } = { to: format.to.bind(format), from: format.from.bind(format) };
+  const q = query(f, fromFormat)
   return {
-    createUser: async (data) => (await q(Create(Users, { data: to(data) })))!,
+    createUser: async (data) => (await q(Create(Users, { data: toFormat(data) })))!,
     getUser: async (id) => await q(Get(Ref(Users, id))),
     getUserByEmail: async (email) => await q(Get(Match(UserByEmail, email))),
     async getUserByAccount({ provider, providerAccountId }) {
@@ -231,7 +232,7 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
       return user
     },
     updateUser: async (data) =>
-      (await q(Update(Ref(Users, data.id), { data: to(data) })))!,
+      (await q(Update(Ref(Users, data.id), { data: toFormat(data) })))!,
     async deleteUser(userId) {
       await f.query(
         Do(
@@ -248,7 +249,7 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
       )
     },
     linkAccount: async (data) =>
-      (await q(Create(Accounts, { data: to(data) })))!,
+      (await q(Create(Accounts, { data: toFormat(data) })))!,
     async unlinkAccount({ provider, providerAccountId }) {
       const id = [provider, providerAccountId]
       await q(
@@ -258,7 +259,7 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
       )
     },
     createSession: async (data) =>
-      (await q<AdapterSession>(Create(Sessions, { data: to(data) })))!,
+      (await q<AdapterSession>(Create(Sessions, { data: toFormat(data) })))!,
     async getSessionAndUser(sessionToken) {
       const session = await q<AdapterSession>(
         Get(Match(SessionByToken, sessionToken))
@@ -271,27 +272,31 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
     },
     async updateSession(data) {
       const ref = Select("ref", Get(Match(SessionByToken, data.sessionToken)))
-      return await q(Update(ref, { data: to(data) }))
+      return await q(Update(ref, { data: toFormat(data) }))
     },
     async deleteSession(sessionToken) {
       await q(Delete(Select("ref", Get(Match(SessionByToken, sessionToken)))))
     },
     async createVerificationToken(data) {
-      const { id: _id, ...verificationToken } = await q<VerificationToken>(
-        Create(VerificationTokens, { data: to(data) })
+      const result = await q<VerificationToken>(
+        Create(VerificationTokens, { data: toFormat(data) })
       )
-      return verificationToken
+      if (!result) {
+        throw new Error('Verification token creation failed');
+      }
+      const { ...verificationToken } = result;
+      return verificationToken;
     },
     async useVerificationToken({ identifier, token }) {
       const key = [identifier, token]
       const object = Get(Match(VerificationTokenByIdentifierAndToken, key))
-
+    
       const verificationToken = await q<VerificationToken>(object)
       if (!verificationToken) return null
-
+    
       // Verification tokens can be used only once
       await q(Delete(Select("ref", object)))
-      delete verificationToken.id
+      // Removed the line causing the error
       return verificationToken
     },
   }

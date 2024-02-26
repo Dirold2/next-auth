@@ -102,13 +102,13 @@ export interface WebAuthnConfig extends CommonProviderOptions {
    */
   enableConditionalUI: boolean
   /**
-   * Version of SimpleWebAuthn browser script to load in the sign in page.
+   * Version of SimpleWebAuthn browser script to load in the authorized page.
    *
    * This is only loaded if the provider has conditional UI enabled. If set to false, it won't load any script.
    * Defaults to `v9.0.0`.
    */
   simpleWebAuthnBrowserVersion: SemverString | false
-  /** Form fields displayed in the default Passkey sign in/up form.
+  /** Form fields displayed in the default Passkey authorized/up form.
    * These are not validated or enforced beyond the default Auth.js authentication page.
    *
    * By default it displays an email field.

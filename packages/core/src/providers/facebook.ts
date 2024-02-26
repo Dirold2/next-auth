@@ -50,7 +50,7 @@ export interface FacebookProfile extends Record<string, any> {
  * ### Notes
  *
  * :::tip
- * Production applications cannot use localhost URLs to sign in with Facebook. You need to use a dedicated development application in Facebook to use localhost callback URLs.
+ * Production applications cannot use localhost URLs to authorized with Facebook. You need to use a dedicated development application in Facebook to use localhost callback URLs.
  * :::
  *
  * :::tip
@@ -95,7 +95,10 @@ export default function Facebook<P extends FacebookProfile>(
       // https://developers.facebook.com/docs/graph-api/reference/user/#fields
       url: "https://graph.facebook.com/me?fields=id,name,email,picture",
       async request({ tokens, provider }) {
-        return await fetch(provider.userinfo?.url as URL, {
+        if (!provider.userinfo?.url) {
+          throw new Error('Userinfo URL is undefined');
+        }
+        return await fetch(provider.userinfo.url, {
           headers: { Authorization: `Bearer ${tokens.access_token}` },
         }).then(async (res) => await res.json())
       },

@@ -268,7 +268,7 @@ export interface AuthConfig {
    */
   jwt?: Partial<JWTOptions>
   /**
-   * Specify URLs to be used if you want to create custom sign in, sign out and error pages.
+   * Specify URLs to be used if you want to create custom authorized, sign out and error pages.
    * Pages specified will override the corresponding built-in page.
    *
    * @default {}

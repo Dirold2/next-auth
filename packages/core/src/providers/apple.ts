@@ -1,7 +1,7 @@
 /**
  * <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
  * <span style={{fontSize: "1.35rem" }}>
- *  Built-in sign in with <b>Apple</b> integration.
+ *  Built-in authorized with <b>Apple</b> integration.
  * </span>
  * <a href="https://apple.com" style={{backgroundColor: "black", padding: "12px", borderRadius: "100%" }}>
  *   <img style={{display: "block"}} src="https://authjs.dev/img/providers/apple.svg" width="24"/>
@@ -124,8 +124,8 @@ export interface AppleProfile extends Record<string, any> {
  * 
  * ### Resources
  * 
- * - Sign in with Apple [Overview](https://developer.apple.com/sign-in-with-apple/get-started/)
- * - Sign in with Apple [REST API](https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api)
+ * - Authorized with Apple [Overview](https://developer.apple.com/sign-in-with-apple/get-started/)
+ * - Authorized with Apple [REST API](https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api)
  * - [How to retrieve](https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/authenticating_users_with_sign_in_with_apple#3383773) the user's information from Apple ID servers
  * - [Learn more about OAuth](https://authjs.dev/concepts/oauth)
 

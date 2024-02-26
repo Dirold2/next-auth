@@ -5,7 +5,7 @@ import type { JSX } from "preact"
 /**
  * Besides providing type safety inside {@link CredentialsConfig.authorize}
  * it also determines how the credentials input fields will be rendered
- * on the default sign in page.
+ * on the default authorized page.
  */
 export interface CredentialInput
   extends Partial<JSX.IntrinsicElements["input"]> {

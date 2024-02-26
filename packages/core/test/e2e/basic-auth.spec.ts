@@ -6,7 +6,7 @@ test.describe("Basic Auth", () => {
       await page.goto("http://localhost:3000/auth/authorized")
       await page.getByLabel("Password").fill("password")
       await page
-        .getByRole("button", { name: "Sign in with Credentials" })
+        .getByRole("button", { name: "Authorized with Credentials" })
         .click()
       const session = await page.locator("pre").textContent()
 
@@ -48,7 +48,7 @@ test.describe("Basic Auth", () => {
         .getByLabel("Username or email")
         .fill(process.env.TEST_KEYCLOAK_USERNAME!)
       await page.locator("#password").fill(process.env.TEST_KEYCLOAK_PASSWORD!)
-      await page.getByRole("button", { name: "Sign In" }).click()
+      await page.getByRole("button", { name: "Authorized" }).click()
       const session = await page.locator("pre").textContent()
 
       expect(JSON.parse(session ?? "{}")).toEqual({

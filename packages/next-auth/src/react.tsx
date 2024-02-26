@@ -24,10 +24,10 @@ import type {
   ClientSafeProvider,
   LiteralUnion,
   SessionProviderProps,
-  SignInAuthorizationParams,
-  SignInOptions,
-  SignInResponse,
-  SignOutParams,
+  SiAuthorizedParams,
+  AuthorizedOptions,
+  AuthorizedResponse,
+  AuthorizedParams,
   SignOutResponse,
   UseSessionOptions,
 } from "./lib/client.js";
@@ -195,9 +195,9 @@ export async function getProviders(): Promise<ProvidersType | null> {
  */
 export async function signIn(
   provider?: string,
-  options?: SignInOptions,
-  authorizationParams?: SignInAuthorizationParams
-): Promise<SignInResponse | undefined> {
+  options?: AuthorizedOptions,
+  authorizationParams?: SiAuthorizedParams
+): Promise<AuthorizedResponse | undefined> {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
   const baseUrl = apiBaseUrl(__NEXTAUTH)
@@ -225,7 +225,7 @@ export async function signIn(
 
   const csrfToken = await getCsrfToken()
   const res = await fetch(
-    `${signInUrl}?${new URLSearchParams(authorizationParams)}`,
+    `${signInUrl}?${new URLSearchParams(authorizationParams as Record<string, string>)}`,
     {
       method: "post",
       headers: {
@@ -281,7 +281,7 @@ export async function signIn(
  * Initiate a signout, by destroying the current session.
  * Handles CSRF protection.
  */
-export async function signOut(options?: SignOutParams): Promise<SignOutResponse | undefined> {
+export async function signOut(options?: AuthorizedParams): Promise<SignOutResponse | undefined> {
   const { callbackUrl = window.location.href } = options ?? {}
   const baseUrl = apiBaseUrl(__NEXTAUTH)
   const csrfToken = await getCsrfToken()

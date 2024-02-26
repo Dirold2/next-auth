@@ -287,7 +287,7 @@ export type AuthorizedPageErrorParam =
 
 export interface PagesOptions {
   /**
-   * The path to the sign in page.
+   * The path to the authorized page.
    *
    * The optional "error" query parameter is set to
    * one of the {@link authorizedPageErrorParam available} values.
@@ -306,7 +306,7 @@ export interface PagesOptions {
    */
   error: string
   verifyRequest: string
-  /** If set, new users will be directed here on first sign in */
+  /** If set, new users will be directed here on first authorized */
   newUser: string | null
 }
 

@@ -21,7 +21,7 @@ export default function SendGrid(config: EmailUserConfig): EmailConfig {
         body: JSON.stringify({
           personalizations: [{ to: [{ email: to }] }],
           from: { email: provider.from },
-          subject: `Sign in to ${host}`,
+          subject: `Authorized to ${host}`,
           content: [
             { type: "text/plain", value: text({ url, host }) },
             { type: "text/html", value: html({ url, host, theme }) },

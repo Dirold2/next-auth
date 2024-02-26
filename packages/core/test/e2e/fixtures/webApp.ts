@@ -43,7 +43,7 @@ export class WebApp {
 
     this.authorizedButton = page
       .getByRole("banner")
-      .getByRole("button", { name: "Sign in" })
+      .getByRole("button", { name: "Authorized" })
 
     this.session = {}
   }

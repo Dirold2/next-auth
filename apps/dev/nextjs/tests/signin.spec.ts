@@ -1,10 +1,11 @@
+// @ts-expect-error
 import { test, expect } from "@playwright/test"
 
-test("Sign in with Auth0", async ({ page }) => {
+test("Authorized with Auth0", async ({ page }) => {
   // Go to NextAuth example app
   await page.goto("https://next-auth-example.vercel.app")
 
-  // Click 'Sign In'
+  // Click 'Authorized'
   await page.click("#__next > header > div > p > a")
 
   // Auth0 Login Provider

@@ -7,7 +7,7 @@ type ErrorType =
   | "ErrorPageLoop"
   | "EventError"
   | "InvalidCallbackUrl"
-  | "Credentialsauthorized"
+  | "CredentialsAuthorized"
   | "InvalidEndpoints"
   | "InvalidCheck"
   | "JWTSessionError"
@@ -191,13 +191,13 @@ export class InvalidCallbackUrl extends AuthError {
  * The `authorize` callback returned `null` in the [Credentials provider](https://authjs.dev/getting-started/providers/credentials-tutorial).
  * We don't recommend providing information about which part of the credentials were wrong, as it might be abused by malicious hackers.
  */
-export class Credentialsauthorized extends authorizedError {
-  static type = "Credentialsauthorized"
+export class CredentialsAuthorized extends authorizedError {
+  static type = "CredentialsAuthorized"
 }
 
 /**
  * One of the configured OAuth or OIDC providers is missing the `authorization`, `token` or `userinfo`, or `issuer` configuration.
- * To perform OAuth or OIDC sign in, at least one of these endpoints is required.
+ * To perform OAuth or OIDC authorized, at least one of these endpoints is required.
  *
  * Learn more at [`OAuth2Config`](https://authjs.dev/reference/core/providers#oauth2configprofile) or [Guide: OAuth Provider](https://authjs.dev/guides/providers/custom-provider)
  */
@@ -254,7 +254,7 @@ export class MissingAdapterMethods extends AuthError {
 
 /**
  * Thrown when a Credentials provider is missing the `authorize` configuration.
- * To perform credentials sign in, the `authorize` method is required.
+ * To perform credentials authorized, the `authorize` method is required.
  *
  * Learn more at [Credentials provider](https://authjs.dev/reference/core/providers/credentials)
  */
@@ -296,7 +296,7 @@ export class OAuthAccountNotLinked extends authorizedError {
 }
 
 /**
- * Thrown when an OAuth provider returns an error during the sign in process.
+ * Thrown when an OAuth provider returns an error during the authorized process.
  * This could happen for example if the user denied access to the application or there was a configuration error.
  *
  * For a full list of possible reasons, check out the specification [Authorization Code Grant: Error Response](https://www.rfc-editor.org/rfc/rfc6749#section-4.1.2.1)
@@ -306,7 +306,7 @@ export class OAuthCallbackError extends authorizedError {
 }
 
 /**
- * This error occurs during an OAuth sign in attempt when the provider's
+ * This error occurs during an OAuth authorized attempt when the provider's
  * response could not be parsed. This could for example happen if the provider's API
  * changed, or the [`OAuth2Config.profile`](https://authjs.dev/reference/core/providers/oauth#profile) method is not implemented correctly.
  */

@@ -21,7 +21,7 @@ export default function Resend(config: EmailUserConfig): EmailConfig {
         body: JSON.stringify({
           from: provider.from,
           to,
-          subject: `Sign in to ${host}`,
+          subject: `Authorized to ${host}`,
           html: html({ url, host, theme }),
           text: text({ url, host }),
         }),

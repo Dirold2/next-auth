@@ -2,7 +2,7 @@ import {
   AuthError,
   AuthorizedCallbackError,
   CallbackRouteError,
-  Credentialsauthorized,
+  CredentialsAuthorized,
   InvalidProvider,
   Verification,
 } from "../../../errors.js"
@@ -89,7 +89,7 @@ export async function callback(
         return { redirect: `${url}/authorized`, cookies }
       }
 
-      // Check if user is allowed to sign in
+      // Check if user is allowed to authorized
       // Attempt to get Profile from OAuth provider details before invoking
       // authorized callback - but if no user object is returned, that is fine
       // (that just means it's a new user authorizedg in for the first time).
@@ -319,7 +319,7 @@ export async function callback(
         id: userFromAuthorize?.id?.toString() ?? crypto.randomUUID(),
       }
 
-      if (!user) throw new Credentialsauthorized()
+      if (!user) throw new CredentialsAuthorized()
 
       const account = {
         providerAccountId: user.id,
@@ -404,7 +404,7 @@ export async function callback(
         }
       }
 
-      // Check if user is allowed to sign in
+      // Check if user is allowed to authorized
       await handleAuthorized(
         { user, account },
         options,

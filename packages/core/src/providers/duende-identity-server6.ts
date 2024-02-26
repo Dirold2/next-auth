@@ -51,7 +51,7 @@ export interface DuendeISUser extends Record<string, any> {
  *
  * If you want to try it out, you can copy and paste the configuration below.
  *
- * You can sign in to the demo service with either <b>bob/bob</b> or <b>alice/alice</b>.
+ * You can authorized to the demo service with either <b>bob/bob</b> or <b>alice/alice</b>.
  *
  * ```js title=pages/api/auth/[...nextauth].js
  * import DuendeIDS6Provider from "next-auth/providers/duende-identity-server6"

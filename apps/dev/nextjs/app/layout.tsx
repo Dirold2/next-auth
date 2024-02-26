@@ -1,4 +1,4 @@
-import { auth, signIn, signOut, unstable_update as update } from "auth"
+import { auth, authorized, signOut, unstable_update as update } from "auth"
 import Footer from "components/footer"
 import { Header } from "components/header"
 import styles from "components/header.module.css"
@@ -27,7 +27,7 @@ export async function AppHeader() {
           action={async () => {
             "use server"
             try {
-              await signIn()
+              await authorized()
             } catch (error) {
               if (error instanceof AuthError) {
                 console.log(error)

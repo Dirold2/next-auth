@@ -66,7 +66,7 @@ describe("pages", () => {
       const render = renderPage({ ...options, query: {}, cookies: [] })
       const authorizedPage = render.authorized()
 
-      expect(authorizedPage.body).toContain(`<title>Sign In</title>`)
+      expect(authorizedPage.body).toContain(`<title>Authorized</title>`)
       expect(authorizedPage.body).toContain(
         `action="http://localhost:3000/auth/authorized/github"`
       )

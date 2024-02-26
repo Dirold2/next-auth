@@ -100,7 +100,7 @@ export interface WorkOSProfile extends Record<string, any> {
  *                   })
  *                 }
  *               >
- *                 Sign in with SSO
+ *                 Authorized with SSO
  *               </button>
  *             </div>
  *           )
@@ -109,7 +109,7 @@ export interface WorkOSProfile extends Record<string, any> {
  *         return (
  *           <div key={provider.id}>
  *             <button onClick={() => authorized(provider.id)}>
- *               Sign in with {provider.name}
+ *               Authorized with {provider.name}
  *             </button>
  *           </div>
  *         )

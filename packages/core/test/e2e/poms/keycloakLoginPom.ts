@@ -14,7 +14,7 @@ export class KeycloakLoginPom {
     this.usernameInput = page.getByLabel("Username or email")
     this.passwordInput = page.locator("#password")
 
-    this.authorizedButton = page.getByRole("button", { name: "Sign In" })
+    this.authorizedButton = page.getByRole("button", { name: "Authorized" })
   }
 
   async login({

@@ -39,7 +39,7 @@ export interface CommonProviderOptions {
   /**
    * The provider name used on the default sign-in page's sign-in button.
    * For example if it's "Google", the corresponding button will say:
-   * "Sign in with Google"
+   * "Authorized with Google"
    */
   name: string
   /** See {@link ProviderType} */

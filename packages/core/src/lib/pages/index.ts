@@ -142,7 +142,7 @@ export default function renderPage(params: RenderPageParams) {
           error,
           ...query,
         }),
-        title: "Sign In",
+        title: "Authorized",
         headTags: simpleWebAuthnBrowserScript,
         status:  200,
       })

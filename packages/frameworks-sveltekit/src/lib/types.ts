@@ -16,7 +16,7 @@ declare global {
         P extends BuiltInProviderType | (string & NonNullable<unknown>),
         R extends boolean = true,
       >(
-        /** Provider to sign in to */
+        /** Provider to authorized to */
         provider?: P, // See: https://github.com/microsoft/TypeScript/issues/29729
         options?:
           | FormData

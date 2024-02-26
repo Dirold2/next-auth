@@ -272,7 +272,7 @@ export async function handleLoginOrRegister(
     //    e.g. by creating an oauth account then changing the email address associated with it.
     //
     // It's quite common for services to automatically link accounts in this case, but it's
-    // better practice to require the user to sign in *then* link accounts to be sure
+    // better practice to require the user to authorized *then* link accounts to be sure
     // someone is not exploiting a problem with a third party OAuth service.
     //
     // OAuth providers should require email address verification to prevent this, but in
@@ -289,11 +289,11 @@ export async function handleLoginOrRegister(
       } else {
         // We end up here when we don't have an account with the same [provider].id *BUT*
         // we do already have an account with the same email address as the one in the
-        // OAuth profile the user has just tried to sign in with.
+        // OAuth profile the user has just tried to authorized with.
         //
         // We don't want to have two accounts with the same email address, and we don't
         // want to link them in case it's not safe to do so, so instead we prompt the user
-        // to sign in via email to verify their identity and then link the accounts.
+        // to authorized via email to verify their identity and then link the accounts.
         throw new OAuthAccountNotLinked(
           "Another account already exists with the same e-mail address",
           { provider: account.provider }

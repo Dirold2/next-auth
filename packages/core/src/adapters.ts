@@ -169,8 +169,8 @@ import type { Account, Authenticator, Awaitable, User } from "./types.js"
 // have a common implementation.
 
 /**
- * A user represents a person who can sign in to the application.
- * If a user does not exist yet, it will be created when they sign in for the first time,
+ * A user represents a person who can authorized to the application.
+ * If a user does not exist yet, it will be created when they authorized for the first time,
  * using the information (profile data) returned by the identity provider.
  * A corresponding account is also created and linked to the user.
  */
@@ -230,7 +230,7 @@ export interface AdapterSession {
 }
 
 /**
- * A verification token is a temporary token that is used to sign in a user via their email address.
+ * A verification token is a temporary token that is used to authorized a user via their email address.
  * It is created when a user signs in with an [Email provider](https://authjs.dev/reference/core/providers/email).
  * When the user clicks the link in the email, the token and email is sent back to the server
  * where it is hashed and compared to the value in the database.
@@ -246,6 +246,8 @@ export interface VerificationToken {
    * A [hashed](https://authjs.dev/concepts/hashing) token, using the `AuthConfig.secret` value.
    */
   token: string
+
+  // id: string | null
 }
 
 /**

@@ -6,17 +6,17 @@ import type {
 import { webauthnScript } from "../utils/webauthn-client.js"
 
 const signinErrors: Record<string | number | symbol, string> = {
-  default: "Unable to sign in.",
+  default: "Unable to authorized.",
   Authorized: "Try signing in with a different account.",
   OAuthAuthorized: "Try signing in with a different account.",
   OAuthCallbackError: "Try signing in with a different account.",
   OAuthCreateAccount: "Try signing in with a different account.",
   EmailCreateAccount: "Try signing in with a different account.",
   Callback: "Try signing in with a different account.",
-  OAuthAccountNotLinked: "To confirm your identity, sign in with the same account you used originally.",
+  OAuthAccountNotLinked: "To confirm your identity, authorized with the same account you used originally.",
   EmailAuthorized: "The e-mail could not be sent.",
-  CredentialsAuthorized: "Sign in failed. Check the details you provided are correct.",
-  SessionRequired: "Please sign in to access this page.",
+  CredentialsAuthorized: "authorized failed. Check the details you provided are correct.",
+  SessionRequired: "Please authorized to access this page.",
 };
 
 function hexToRgba(hex?: string, alpha = 1) {
@@ -187,7 +187,7 @@ export default function SigninPage(props: {
                         src={logoDark}
                       />
                     )}
-                    <span>Sign in with {provider.name}</span>
+                    <span>Authorized with {provider.name}</span>
                   </button>
                 </form>
               ) : null}
@@ -215,7 +215,7 @@ export default function SigninPage(props: {
                     required
                   />
                   <button id="submitButton" type="submit" tabIndex={0}>
-                    Sign in with {provider.name}
+                    Authorized with {provider.name}
                   </button>
                 </form>
               )}
@@ -244,7 +244,7 @@ export default function SigninPage(props: {
                     )
                   })}
                   <button id="submitButton" type="submit" tabIndex={0}>
-                    Sign in with {provider.name}
+                    Authorized with {provider.name}
                   </button>
                 </form>
               )}
@@ -274,7 +274,7 @@ export default function SigninPage(props: {
                     )
                   })}
                   <button id={`submitButton-${provider.id}`} type="submit" tabIndex={0}>
-                    Sign in with {provider.name}
+                    Authorized with {provider.name}
                   </button>
                 </form>
               )}

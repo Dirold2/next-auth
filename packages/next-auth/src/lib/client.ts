@@ -47,7 +47,7 @@ export interface ClientSafeProvider {
   callbackUrl: string
 }
 
-export interface authorizedOptions extends Record<string, unknown> {
+export interface AuthorizedOptions extends Record<string, unknown> {
   /**
    * Specify to which URL the user will be redirected after authorizedg in. Defaults to the page URL the sign-in is initiated from.
    *
@@ -58,7 +58,7 @@ export interface authorizedOptions extends Record<string, unknown> {
   redirect?: boolean
 }
 
-export interface authorizedResponse {
+export interface AuthorizedResponse {
   error: string | undefined
   status: number
   ok: boolean
@@ -69,7 +69,7 @@ export interface authorizedResponse {
  * Match `inputType` of `new URLSearchParams(inputType)`
  * @internal
  */
-export type authorizedAuthorizationParams =
+export type SiAuthorizedParams =
   | string
   | string[][]
   | Record<string, string>
@@ -80,7 +80,7 @@ export interface SignOutResponse {
   url: string
 }
 
-export interface SignOutParams<R extends boolean = true> {
+export interface AuthorizedParams<R extends boolean = true> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl-1) */
   callbackUrl?: string
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1 */
@@ -151,7 +151,7 @@ export async function fetchData<T = any>(
     if (!res.ok) throw data
     return data
   } catch (error) {
-    logger.error(new ClientFetchError((error as Error).message, error as any))
+    logger.error(new ClientFetchError((error as Error).message, { err: error }))
     return null
   }
 }
@@ -172,8 +172,8 @@ export function useOnline() {
     typeof navigator !== "undefined" ? navigator.onLine : false
   )
 
-  const setOnline = () => setIsOnline(true)
-  const setOffline = () => setIsOnline(false)
+  const setOnline = () => { setIsOnline(true); }
+  const setOffline = () => { setIsOnline(false); }
 
   React.useEffect(() => {
     window.addEventListener("online", setOnline)
@@ -218,7 +218,7 @@ export function parseUrl(url?: string): {
     url = `https://${url}`
   }
 
-  const _url = new URL(url || defaultUrl)
+  const _url = new URL(url ?? defaultUrl)
   const path = (_url.pathname === "/" ? defaultUrl.pathname : _url.pathname)
     // Remove trailing slash
     .replace(/\/$/, "")

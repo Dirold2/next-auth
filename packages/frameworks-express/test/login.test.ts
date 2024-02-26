@@ -1,3 +1,4 @@
+// @ts-expect-error
 import { describe, beforeEach, it, expect } from "vitest"
 import supertest from "supertest"
 import express from "express"
@@ -70,7 +71,7 @@ describe("Integration test with login and getSession", () => {
     )
     const csrfTokenValue = csrfTokenCookie.split("%")[0].split("=")[1]
 
-    // Sign in
+    // Authorized
     const responseCredentials = await client
       .post("/auth/callback/credentials")
       .set("Cookie", [csrfTokenCookie, callbackCookie]) // Send the cookie with the request
