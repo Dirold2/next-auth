@@ -241,7 +241,7 @@ export default function FortyTwo<P extends FortyTwoProfile>(
     profile(profile) {
       return {
         id: profile.id.toString(),
-        name: profile.usual_full_name,
+        name: profile.usual_full_name ?? undefined,
         email: profile.email,
         image: profile.image.link,
       }
