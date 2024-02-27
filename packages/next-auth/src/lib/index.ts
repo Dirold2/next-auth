@@ -151,8 +151,13 @@ export function initAuth(
         async (authResponse) => {
           const auth = await authResponse.json()
 
-          for (const cookie of authResponse.headers.getSetCookie())
-            response.headers.append("set-cookie", cookie)
+          if (response.headers) {
+            for (const cookie of authResponse.headers.getSetCookie()) {
+              response.headers.append("set-cookie", cookie);
+            }
+          } else {
+            console.error('response.headers is undefined');
+          }
 
           return auth satisfies Session | null
         }
@@ -198,8 +203,13 @@ export function initAuth(
     ).then(async (authResponse) => {
       const auth = await authResponse.json()
 
-      for (const cookie of authResponse.headers.getSetCookie())
-        response.headers.append("set-cookie", cookie)
+      if (response.headers) {
+        for (const cookie of authResponse.headers.getSetCookie()) {
+          response.headers.append("set-cookie", cookie);
+        }
+      } else {
+        console.error('response.headers is undefined');
+      }
 
       return auth satisfies Session | null
     })
@@ -262,9 +272,13 @@ async function handleAuth(
   });
   
   // Preserve cookies from the session response
-  for (const cookie of sessionResponse.headers.getSetCookie())
-    finalResponse.headers.append("set-cookie", cookie)
-
+  if (response.headers) {
+    for (const cookie of response.headers.getSetCookie()) {
+      response.headers.append("set-cookie", cookie);
+    }
+  } else {
+    console.error('response.headers is undefined');
+  }
   return finalResponse
 }
 

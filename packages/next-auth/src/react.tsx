@@ -275,9 +275,9 @@ export async function logOut<R extends boolean = true>(
   options?: AuthorizedParams<R>
 ): Promise<R extends true ? undefined : AuthorizedParams> {
   try {
-    const { callbackUrl = window.location.href } = options ?? {}
-    const baseUrl = apiBaseUrl(__NEXTAUTH)
-    const csrfToken = await getCsrfToken()
+    const { callbackUrl = window.location.href } = options ?? {};
+    const baseUrl = apiBaseUrl(__NEXTAUTH);
+    const csrfToken = await getCsrfToken();
     const res = await fetch(`${baseUrl}/logout`, {
       method: "post",
       headers: {
@@ -285,25 +285,27 @@ export async function logOut<R extends boolean = true>(
         "X-Auth-Return-Redirect": "1",
       },
       body: new URLSearchParams({ csrfToken, callbackUrl }),
-    })
-    const data = await res.json()
+    });
 
-    broadcast().postMessage({ event: "session", data: { trigger: "logout" } })
+    if (res.ok) {
+      const data = await res.json();
+      broadcast().postMessage({ event: "session", data: { trigger: "logout" } });
+      
+      if (options?.redirect ?? true) {
+        const url = data.url ?? callbackUrl;
+        window.location.href = url;
+        if (url.includes("#")) window.location.reload();
+        return undefined as R extends true ? undefined : AuthorizedParams<boolean>;
+      }
 
-    if (options?.redirect ?? true) {
-      const url = data.url ?? callbackUrl
-      window.location.href = url
-      // If url contains a hash, the browser does not reload the page. We reload manually
-      if (url.includes("#")) window.location.reload()
-      return undefined as R extends true ? undefined : AuthorizedParams<boolean>;
+      await __NEXTAUTH._getSession({ event: "storage" });
+      return data;
+    } else {
+      throw new Error("Failed to log out");
     }
-
-    await __NEXTAUTH._getSession({ event: "storage" })
-
-    return data;
   } catch (error) {
     console.error("[next-auth] Error during logout:", error);
-    return undefined as R extends true ? undefined : AuthorizedParams<boolean>;
+    return null as unknown as R extends true ? undefined : AuthorizedParams<boolean>;
   }
 }
 
