@@ -91,7 +91,7 @@ export async function Auth(
     assertionResult.forEach(logger.warn)
   } else if (assertionResult instanceof Error) {
     logger.error(assertionResult)
-    const htmlPages = ["authorized", "signout", "error", "verify-request"]
+    const htmlPages = ["login", "logout", "error", "verify-request"]
     if (
       !htmlPages.includes(internalRequest.action) ||
       internalRequest.method !== "GET"
@@ -254,8 +254,8 @@ export interface AuthConfig {
    *
    * ```ts
    *   pages: {
-   *     authorized: '/auth/authorized',
-   *     signOut: '/auth/signout',
+   *     authorized: '/auth/login',
+   *     logOut: '/auth/logout',
    *     error: '/auth/error',
    *     verifyRequest: '/auth/verify-request',
    *     newUser: '/auth/new-user'

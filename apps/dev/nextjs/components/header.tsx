@@ -4,12 +4,12 @@ import styles from "./header.module.css"
 
 export function Header({
   session,
-  signIn,
-  signOut,
+  logIn,
+  logOut,
 }: {
   session: Session | null
-  signIn: any
-  signOut: any
+  logIn: any
+  logOut: any
 }) {
   return (
     <header className={styles.header}>
@@ -23,19 +23,19 @@ export function Header({
         {session?.user ? (
           <>
             <span className={styles.signedInText}>
-              <small>Signed in as</small>
+              <small>Loged in as</small>
               <br />
               <strong>{session.user?.email} </strong>
               {session.user?.name ? `(${session.user.name})` : null}
             </span>
-            {signOut}
+            {logOut}
           </>
         ) : (
           <>
             <span className={styles.notSignedInText}>
               You are not signed in
             </span>
-            {signIn}
+            {logIn}
           </>
         )}
       </div>

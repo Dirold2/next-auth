@@ -29,19 +29,23 @@ export interface SolidAuthConfig extends AuthConfig {
   prefix?: string
 }
 
+interface EventWithRequest {
+  request: Request;
+}
+
 const actions: AuthAction[] = [
   "providers",
   "session",
   "csrf",
   "authorized",
-  "signout",
+  "logout",
   "callback",
   "verify-request",
   "error",
 ]
 
 function SolidAuthHandler(prefix: string, authOptions: SolidAuthConfig) {
-  return async (event: any) => {
+  return async (event: EventWithRequest) => {
     const { request } = event
     const url = new URL(request.url)
     const action = url.pathname
@@ -242,10 +246,10 @@ export function SolidAuth(config: SolidAuthConfig) {
   )
   const handler = SolidAuthHandler(prefix, authOptions)
   return {
-    async GET(event: any) {
+    async GET(event: EventWithRequest) {
       return await handler(event)
     },
-    async POST(event: any) {
+    async POST(event: EventWithRequest) {
       return await handler(event)
     },
   }
@@ -265,12 +269,21 @@ export async function getSession(
     new Request(url, { headers: req.headers }),
     options
   )
-
-  const { status = 200 } = response
-
-  const data = await response.json()
-
+ 
+  const { status =  200 } = response
+ 
+  const data: Record<string, unknown> = await response.json()
+ 
   if (!data || !Object.keys(data).length) return null
-  if (status === 200) return data
-  throw new Error(data.message)
+  if (status ===  200) {
+    if (!('expires' in data)) {
+      throw new Error('Session data is missing the "expires" property.')
+    }
+    return data as unknown as Session
+  }
+  if (typeof data.message === 'string') {
+    throw new Error(data.message);
+  } else {
+    throw new Error('An error occurred, but the message is not a string.');
+  }
 }

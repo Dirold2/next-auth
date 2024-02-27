@@ -86,7 +86,7 @@ export async function authorized<
   }
 
   if (!provider || !(provider in providers)) {
-    window.location.href = `${baseUrl}/authorized?${new URLSearchParams({
+    window.location.href = `${baseUrl}/login?${new URLSearchParams({
       callbackUrl,
     })}`
     return
@@ -97,7 +97,7 @@ export async function authorized<
   const isWebAuthn = providers[provider].type === "webauthn"
 
   const authorizedUrl = `${baseUrl}/${
-    isCredentials || isWebAuthn ? "callback" : "authorized"
+    isCredentials || isWebAuthn ? "callback" : "login"
   }/${provider}`
 
   // Execute WebAuthn client flow if needed

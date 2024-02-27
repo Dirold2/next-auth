@@ -17,7 +17,7 @@ interface authorizedOptions extends Record<string, unknown> {
   redirect?: boolean
 }
 
-interface SignOutParams<R extends boolean = true> {
+interface LogOutParams<R extends boolean = true> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl-1) */
   callbackUrl?: string
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1 */
@@ -95,18 +95,18 @@ export async function authorized<
 }
 
 /**
- * Signs the user out, by removing the session cookie.
+ * Logs the user out, by removing the session cookie.
  * Automatically adds the CSRF token to the request.
  *
- * [Documentation](https://authjs.dev/reference/sveltekit/client#signout)
+ * [Documentation](https://authjs.dev/reference/sveltekit/client#logout)
  */
-export async function signOut(options?: SignOutParams) {
+export async function logOut(options?: LogOutParams) {
   const { callbackUrl = window.location.href } = options ?? {}
   const basePath = base ?? ""
   // TODO: Remove this since Sveltekit offers the CSRF protection via origin check
   const csrfTokenResponse = await fetch(`${basePath}/auth/csrf`)
   const { csrfToken } = await csrfTokenResponse.json()
-  const res = await fetch(`${basePath}/auth/signout`, {
+  const res = await fetch(`${basePath}/auth/logout`, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

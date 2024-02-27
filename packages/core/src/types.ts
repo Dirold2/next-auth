@@ -246,7 +246,7 @@ export interface EventCallbacks {
    * - `token`: The JWT for this session.
    * - `session`: The session object from your adapter that is being ended.
    */
-  signOut: (
+  logOut: (
     message:
       | { session: Awaited<ReturnType<Required<Adapter>["deleteSession"]>> }
       | { token: Awaited<ReturnType<JWTOptions["decode"]>> }
@@ -292,10 +292,10 @@ export interface PagesOptions {
    * The optional "error" query parameter is set to
    * one of the {@link authorizedPageErrorParam available} values.
    *
-   * @default "/authorized"
+   * @default "/login"
    */
   authorized: string
-  signOut: string
+  logOut: string
   /**
    * The path to the error page.
    *
@@ -330,8 +330,8 @@ export interface Session {
  * or the second parameter of the `session` callback, when using a database.
  */
 export interface User {
-  id?: string | null
-  name?: string | null
+  id?: string
+  name?: string
   email?: string | null
   image?: string | null
 }
@@ -383,11 +383,11 @@ export interface PublicProvider {
  *   - **`GET**`: Returns the user's session if it exists, otherwise `null`.
  *   - **`POST**`: Updates the user's session and returns the updated session.
  * - **`"authorized"`**:
- *   - **`GET`**: Renders the built-in sign-in page.
- *   - **`POST`**: Initiates the sign-in flow.
- * - **`"signout"`**:
- *   - **`GET`**: Renders the built-in sign-out page.
- *   - **`POST`**: Initiates the sign-out flow. This will invalidate the user's session (deleting the cookie, and if there is a session in the database, it will be deleted as well).
+ *   - **`GET`**: Renders the built-in log-in page.
+ *   - **`POST`**: Initiates the log-in flow.
+ * - **`"logout"`**:
+ *   - **`GET`**: Renders the built-in log-out page.
+ *   - **`POST`**: Initiates the log-out flow. This will invalidate the user's session (deleting the cookie, and if there is a session in the database, it will be deleted as well).
  * - **`"verify-request"`**: Renders the built-in verification request page.
  * - **`"webauthn-options"`**:
  *   - **`GET`**: Returns the options for the WebAuthn authentication and registration flows.
@@ -399,7 +399,7 @@ export type AuthAction =
   | "providers"
   | "session"
   | "authorized"
-  | "signout"
+  | "logout"
   | "verify-request"
   | "webauthn-options"
 

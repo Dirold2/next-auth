@@ -25,7 +25,7 @@ export async function getLoggedInUser(
     if (payload?.sub) {
       return {
         id: payload.sub,
-        name: payload.name,
+        name: payload.name ?? undefined,
         email: payload.email,
         image: payload.picture,
       }

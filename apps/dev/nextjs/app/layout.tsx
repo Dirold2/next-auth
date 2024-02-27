@@ -1,4 +1,4 @@
-import { auth, authorized, signOut, unstable_update as update } from "auth"
+import { auth, authorized, logOut, unstable_update as update } from "auth"
 import Footer from "components/footer"
 import { Header } from "components/header"
 import styles from "components/header.module.css"
@@ -22,7 +22,7 @@ export async function AppHeader() {
   return (
     <Header
       session={session}
-      signIn={
+      logIn={
         <form
           action={async () => {
             "use server"
@@ -36,17 +36,17 @@ export async function AppHeader() {
             }
           }}
         >
-          <button className={styles.buttonPrimary}>Sign in</button>
+          <button className={styles.buttonPrimary}>Log in</button>
         </form>
       }
-      signOut={
+      logOut={
         <form
           action={async () => {
             "use server"
-            await signOut()
+            await logOut()
           }}
         >
-          <button className={styles.buttonPrimary}>Sign out</button>
+          <button className={styles.buttonPrimary}>Log out</button>
         </form>
       }
     />

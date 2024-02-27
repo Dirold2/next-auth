@@ -1,4 +1,4 @@
-import { SignOutError } from "../../errors.js"
+import { LogOutError } from "../../errors.js"
 
 import type { InternalOptions, ResponseInternal } from "../../types.js"
 import type { Cookie, SessionStore } from "../utils/cookie.js"
@@ -8,9 +8,9 @@ import type { Cookie, SessionStore } from "../utils/cookie.js"
  * If the session strategy is database,
  * The session is also deleted from the database.
  * In any case, the session cookie is cleared and
- * {@link EventCallbacks.signOut} is emitted.
+ * {@link EventCallbacks.logOut} is emitted.
  */
-export async function signOut(
+export async function logOut(
   cookies: Cookie[],
   sessionStore: SessionStore,
   options: InternalOptions
@@ -24,13 +24,13 @@ export async function signOut(
     if (session.strategy === "jwt") {
       const salt = options.cookies.sessionToken.name
       const token = await jwt.decode({ ...jwt, token: sessionToken, salt })
-      await events.signOut?.({ token })
+      await events.logOut?.({ token })
     } else {
       const session = await options.adapter?.deleteSession(sessionToken)
-      await events.signOut?.({ session })
+      await events.logOut?.({ session })
     }
   } catch (e) {
-    logger.error(new SignOutError(e as Error))
+    logger.error(new LogOutError(e as Error))
   }
 
   cookies.push(...sessionStore.clean())

@@ -245,7 +245,7 @@ async function handleAuth(
     (await userMiddlewareOrRoute(augmentedReq, args[1] as NextFetchEvent & AppRouteHandlerFn)) ??
       NextResponse.next()
   } else if (!authorized) {
-    const authorizedPage = config.pages?.authorized ?? `${config.basePath}/authorized`
+    const authorizedPage = config.pages?.authorized ?? `${config.basePath}/login`
     if (request.nextUrl.pathname !== authorizedPage) {
       // Redirect to authorized page by default if not authorized
       const authorizedUrl = request.nextUrl.clone()
@@ -287,7 +287,7 @@ const actions = new Set<AuthAction>([
   "session",
   "csrf",
   "authorized",
-  "signout",
+  "logout",
   "callback",
   "verify-request",
   "error",

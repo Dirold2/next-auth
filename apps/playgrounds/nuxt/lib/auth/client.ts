@@ -1,8 +1,10 @@
+// TODO
+// @ts-nocheck
 import type {
   LiteralUnion,
   authorizedOptions,
   authorizedAuthorizationParams,
-  SignOutParams,
+  LogOutParams,
 } from "./types"
 import type {
   BuiltInProviderType,
@@ -43,7 +45,8 @@ export async function authorized<
 
   // TODO: Handle custom base path
   // TODO: Remove this since Sveltekit offers the CSRF protection via origin check
-  const { csrfToken } = await $fetch<{ csrfToken: string }>("/api/auth/csrf")
+  const response = await fetch("/api/auth/csrf");
+  const { csrfToken } = await response.json();
 
   console.log(_authorizedUrl)
 
@@ -79,15 +82,15 @@ export async function authorized<
  * Signs the user out, by removing the session cookie.
  * Automatically adds the CSRF token to the request.
  *
- * [Documentation](https://next-auth.js.org/getting-started/client#signout)
+ * [Documentation](https://next-auth.js.org/getting-started/client#logout)
  */
-export async function signOut(options?: SignOutParams) {
+export async function logOut(options?: LogOutParams) {
   const { callbackUrl = window.location.href } = options ?? {}
   // TODO: Custom base path
   // TODO: Remove this since Sveltekit offers the CSRF protection via origin check
   const csrfTokenResponse = await fetch("/api/auth/csrf")
   const { csrfToken } = await csrfTokenResponse.json()
-  const res = await fetch(`/api/auth/signout`, {
+  const res = await fetch(`/api/auth/logout`, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

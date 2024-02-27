@@ -69,7 +69,7 @@ export interface WorkOSProfile extends Record<string, any> {
  * To add a custom login page, you can use the `pages` option:
  * ```js title="pages/api/auth/[...nextauth].js"
  * pages: {
- *   authorized: "/auth/authorized",
+ *   authorized: "/auth/login",
  * }
  * ```
  * We can then add a custom login page that displays an input where the user can enter their email address.

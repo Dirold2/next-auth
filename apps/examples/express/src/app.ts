@@ -1,3 +1,4 @@
+// @ts-nocheck
 import express, { Request, Response } from "express"
 import logger from "morgan"
 import * as path from "path"

@@ -1,7 +1,7 @@
 import { renderToString } from "preact-render-to-string"
 import ErrorPage from "./error.js"
 import authorizedPage from "./login.js"
-import SignoutPage from "./signout.js"
+import LogOutPage from "./logout.js"
 import css from "./styles.js"
 import VerifyRequestPage from "./verify-request.js"
 import { UnknownAction } from "../../errors.js"
@@ -147,12 +147,12 @@ export default function renderPage(params: RenderPageParams) {
         status:  200,
       })
     },
-    signout() {
-      if (pages?.signOut) return { redirect: pages.signOut, cookies }
+    logout() {
+      if (pages?.logOut) return { redirect: pages.logOut, cookies }
       return send({
         cookies,
         theme,
-        html: SignoutPage({ csrfToken: params.csrfToken, url, theme }),
+        html: LogOutPage({ csrfToken: params.csrfToken, url, theme }),
         title: "Sign Out",
         status:   200,
         headTags: "",

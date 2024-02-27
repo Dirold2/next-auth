@@ -97,7 +97,7 @@ function normalizeOAuth(
 const defaultProfile: ProfileCallback<Profile> = (profile) => {
   return stripUndefined({
     id: profile.sub ?? profile.id ?? crypto.randomUUID(),
-    name: profile.name ?? profile.nickname ?? profile.preferred_username,
+    name: profile.name ?? profile.nickname ?? profile.preferred_username ?? "",
     email: profile.email,
     image: profile.picture,
   })

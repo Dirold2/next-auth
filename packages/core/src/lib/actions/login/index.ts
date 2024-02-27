@@ -1,4 +1,4 @@
-import { getAuthorizationUrl } from "./authorization-url.js"
+import { getAuthorizationUrl } from "./login-url.js"
 import { sendToken } from "./send-token.js"
 
 import type { Cookie } from "../../utils/cookie.js"

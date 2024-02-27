@@ -72,9 +72,9 @@ export async function authorized(
   return res.redirect as any
 }
 
-type SignOutParams = Parameters<App.Locals["signOut"]>
-export async function signOut(
-  options: SignOutParams[0],
+type LogOutParams = Parameters<App.Locals["logOut"]>
+export async function logOut(
+  options: LogOutParams[0],
   config: SvelteKitAuthConfig,
   event: RequestEvent
 ) {
@@ -82,7 +82,7 @@ export async function signOut(
   const headers = new Headers(request.headers)
   headers.set("Content-Type", "application/x-www-form-urlencoded")
 
-  const url = createActionURL("signout", headers, config.basePath)
+  const url = createActionURL("logout", headers, config.basePath)
   const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/"
   const body = new URLSearchParams({ callbackUrl })
   const req = new Request(url, { method: "POST", headers, body })

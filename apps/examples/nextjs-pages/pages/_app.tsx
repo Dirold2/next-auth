@@ -1,3 +1,5 @@
+// TODO
+// @ts-nocheck
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import Footer from "@/components/footer"

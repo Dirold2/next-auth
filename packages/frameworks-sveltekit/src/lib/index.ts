@@ -20,7 +20,7 @@
  * import GitHub from "@auth/sveltekit/providers/github"
  * import { GITHUB_ID, GITHUB_SECRET } from "$env/static/private"
  *
- * export const { handle, authorized, signOut } = SvelteKitAuth({
+ * export const { handle, authorized, logOut } = SvelteKitAuth({
  *   providers: [GitHub({ clientId: GITHUB_ID, clientSecret: GITHUB_SECRET })],
  * })
  * ```
@@ -32,7 +32,7 @@
  * import GitHub from "@auth/sveltekit/providers/github"
  * import type { Handle } from "@sveltejs/kit";
  *
- * export const { handle, authorized, signOut } = SvelteKitAuth(async (event) => {
+ * export const { handle, authorized, logOut } = SvelteKitAuth(async (event) => {
  *   const authOptions = {
  *     providers: [GitHub({ clientId: event.platform.env.GITHUB_ID, clientSecret: event.platform.env.GITHUB_SECRET })]
  *     secret: event.platform.env.AUTH_SECRET,
@@ -63,7 +63,7 @@
  *
  * ```ts
  * <script>
- *   import { authorized, SignOut } from "@auth/sveltekit/components"
+ *   import { authorized, LogOut } from "@auth/sveltekit/components"
  *   import { page } from "$app/stores"
  * </script>
  *
@@ -80,7 +80,7 @@
  *       <small>Signed in as</small><br />
  *       <strong>{$page.data.session.user?.name ?? "User"}</strong>
  *     </span>
- *     <SignOut />
+ *     <LogOut />
  *   {:else}
  *     <span class="notSignedInText">You are not signed in</span>
  *     <authorized provider="github"/>
@@ -90,17 +90,17 @@
  * </p>
  * ```
  *
- * `<authorized />` and `<SignOut />` are components that `@auth/sveltekit` provides out of the box - they handle the sign-in/signout flow, and can be used as-is as a starting point or customized for your own components.
+ * `<authorized />` and `<LogOut />` are components that `@auth/sveltekit` provides out of the box - they handle the sign-in/logout flow, and can be used as-is as a starting point or customized for your own components.
  * To set up the form actions, we need to define the files in `src/routes`:
- * ```ts title="src/routes/authorized/+page.server.ts"
+ * ```ts title="src/routes/login/+page.server.ts"
  * import { authorized } from "../../auth"
  * import type { Actions } from "./$types"
  * export const actions: Actions = { default: authorized }
  * ```
- * ```ts title="src/routes/signout/+page.server.ts"
- * import { signOut } from "../../auth"
+ * ```ts title="src/routes/logout/+page.server.ts"
+ * import { LogOut } from "../../auth"
  * import type { Actions } from "./$types"
- * export const actions: Actions = { default: signOut }
+ * export const actions: Actions = { default: logOut }
  * ```
  *
  * ## Managing the session
@@ -224,7 +224,7 @@ import { env } from "$env/dynamic/private"
 
 import type { SvelteKitAuthConfig } from "./types"
 import { setEnvDefaults } from "./env"
-import { auth, authorized, signOut } from "./actions"
+import { auth, authorized, logOut } from "./actions"
 import { Auth, isAuthAction } from "@auth/core"
 
 export type {
@@ -250,7 +250,7 @@ export function SvelteKitAuth(
 ): {
   handle: Handle
   authorized: Action
-  signOut: Action
+  logOut: Action
 } {
   return {
     authorized: async (event) => {
@@ -278,11 +278,11 @@ export function SvelteKitAuth(
         event
       )
     },
-    signOut: async (event) => {
+    logOut: async (event) => {
       const _config = typeof config === "object" ? config : await config(event)
       setEnvDefaults(env, _config)
       const options = Object.fromEntries(await event.request.formData())
-      await signOut(options, _config, event)
+      await logOut(options, _config, event)
     },
     async handle({ event, resolve }) {
       const _config = typeof config === "object" ? config : await config(event)
@@ -291,7 +291,7 @@ export function SvelteKitAuth(
       const { url, request } = event
 
       event.locals.auth ??= () => auth(event, _config)
-      event.locals.getSession ??= event.locals.auth
+      event.locals.auth ??= event.locals.auth
 
       const action = url.pathname
         .slice(

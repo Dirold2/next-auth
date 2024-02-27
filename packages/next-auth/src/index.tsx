@@ -70,9 +70,9 @@
 import { Auth } from "@auth/core"
 import { reqWithEnvURL, setEnvDefaults } from "./lib/env.js"
 import { initAuth } from "./lib/index.js"
-import { authorized, signOut, update } from "./lib/actions.js"
+import { authorized, logOut, update } from "./lib/actions.js"
 
-import type { Session } from "@auth/core/types"
+import type { ResponseInternal, Session } from "@auth/core/types"
 import type { BuiltInProviderType } from "@auth/core/providers"
 import type {
   GetServerSidePropsContext,
@@ -306,13 +306,13 @@ export interface NextAuthResult {
    *
    * @example
    * ```ts title="app/layout.tsx"
-   * import { signOut } from "../auth"
+   * import { logOut } from "../auth"
    *
    * export default function Layout() {
    *  return (
    *   <form action={async () => {
    *     "use server"
-   *     await signOut()
+   *     await logOut()
    *   }}>
    *    <button>Sign out</button>
    *   </form>
@@ -321,10 +321,10 @@ export interface NextAuthResult {
    *
    *
    */
-  signOut: <R extends boolean = true>(options?: {
+  logOut: <R extends boolean = true>(options?: {
     /** The URL to redirect to after signing out. By default, the user is redirected to the current page. */
     redirectTo?: string
-    /** If set to `false`, the `signOut` method will return the URL to redirect to instead of redirecting automatically. */
+    /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
     redirect?: R
   }) => Promise<R extends false ? any : never>
   unstable_update: (
@@ -380,10 +380,21 @@ export default function NextAuth(
         setEnvDefaults(_config)
         return await authorized(provider, options, authorizationParams, _config)
       },
-      signOut: async (options) => {
+      logOut: async <R extends boolean = true>(options?: {
+        /** The URL to redirect to after logging out. By default, the user is redirected to the current page. */
+        redirectTo?: string | undefined
+        /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
+        redirect?: R | undefined
+      }): Promise<R extends false ? ResponseInternal<any> : never> => {
         const _config = config(undefined)
         setEnvDefaults(_config)
-        return await signOut(options, _config)
+        const result = await logOut(options, _config)
+        if (options?.redirect === false) {
+          return result as any; // Assuming `result` is of type `ResponseInternal<any>` when `redirect` is `false`
+        } else {
+          // Assuming `logOut` does not return a value when `redirect` is `true` or not provided
+          throw new Error("logOut should not return a value when redirect is not false");
+        }
       },
       unstable_update: async (data) => {
         const _config = config(undefined)
@@ -402,8 +413,19 @@ export default function NextAuth(
     authorized: async (provider, options, authorizationParams) => {
       return await authorized(provider, options, authorizationParams, config)
     },
-    signOut: async (options) => {
-      return await signOut(options, config)
+    logOut: async <R extends boolean = true>(options?: {
+      /** The URL to redirect to after logging out. By default, the user is redirected to the current page. */
+      redirectTo?: string | undefined;
+      /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
+      redirect?: R | undefined;
+    }): Promise<R extends false ? any : never> => {
+      const result = await logOut(options, config);
+      if (options?.redirect === false) {
+        return result as any; // Assuming `result` is of type `any` when `redirect` is `false`
+      } else {
+        // Assuming `logOut` does not return a value when `redirect` is `true` or not provided
+        throw new Error("logOut should not return a value when redirect is not false");
+      }
     },
     unstable_update: async (data) => {
       return await update(data, config)

@@ -121,8 +121,9 @@ export function parseActionAndProviderId(
 } {
   const a = pathname.match(new RegExp(`^${base}(.+)`))
 
-  if (a === null)
+  if (!a?.[1]) {
     throw new UnknownAction(`Cannot parse action at ${pathname}`)
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, actionAndProviderId] = a
@@ -137,7 +138,7 @@ export function parseActionAndProviderId(
   if (!isAuthAction(action))
     throw new UnknownAction(`Cannot parse action at ${pathname}`)
 
-  if (providerId && !["authorized", "callback", "webauthn-options"].includes(action))
+  if (providerId && !["login", "callback", "webauthn-options"].includes(action))
     throw new UnknownAction(`Cannot parse action at ${pathname}`)
 
   return { action, providerId }

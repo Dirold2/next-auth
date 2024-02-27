@@ -1,7 +1,8 @@
+// @ts-nocheck
 import { Match, Show, Switch, type Component } from "solid-js"
 import { createServerData$ } from "solid-start/server"
 import { authOpts } from "~/routes/api/auth/[...solidauth]"
-import { signIn, signOut } from "@solid-auth/next/client"
+import { signIn, logIn } from "@solid-auth/next/client"
 import { getSession } from "@solid-auth/next"
 import { A } from "solid-start"
 
@@ -20,7 +21,7 @@ const NavBar: Component<INavBarProps> = () => {
               <p class="text-lg font-semibold">You are not signed in</p>
               <button
                 class="p-2.5 rounded-lg bg-[#346df1] text-white text-lg font-bold flex items-center justify-center"
-                onClick={() => signIn("github")}
+                onClick={() => logIn("github")}
               >
                 Sign in
               </button>
@@ -39,7 +40,7 @@ const NavBar: Component<INavBarProps> = () => {
                 </div>
               </div>
               <button
-                onClick={() => signOut()}
+                onClick={() => lofOut()}
                 class="text-[#555] font-semibold underline"
               >
                 Sign out

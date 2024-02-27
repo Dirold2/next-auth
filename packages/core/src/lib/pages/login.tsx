@@ -5,18 +5,18 @@ import type {
 } from "../../types.js"
 import { webauthnScript } from "../utils/webauthn-client.js"
 
-const signinErrors: Record<string | number | symbol, string> = {
-  default: "Unable to authorized.",
+const loginErrors: Record<string | number | symbol, string> = {
+  default: "Unable to login.",
   Authorized: "Try signing in with a different account.",
   OAuthAuthorized: "Try signing in with a different account.",
   OAuthCallbackError: "Try signing in with a different account.",
   OAuthCreateAccount: "Try signing in with a different account.",
   EmailCreateAccount: "Try signing in with a different account.",
   Callback: "Try signing in with a different account.",
-  OAuthAccountNotLinked: "To confirm your identity, authorized with the same account you used originally.",
+  OAuthAccountNotLinked: "To confirm your identity, login with the same account you used originally.",
   EmailAuthorized: "The e-mail could not be sent.",
-  CredentialsAuthorized: "authorized failed. Check the details you provided are correct.",
-  SessionRequired: "Please authorized to access this page.",
+  CredentialsAuthorized: "login failed. Check the details you provided are correct.",
+  SessionRequired: "Please login to access this page.",
 };
 
 function hexToRgba(hex?: string, alpha = 1) {
@@ -90,7 +90,7 @@ export default function SigninPage(props: {
     )
   }
 
-  const error = errorType && (signinErrors[errorType] ?? signinErrors.default)
+  const error = errorType && (loginErrors[errorType] ?? loginErrors.default)
 
   const providerLogoPath = "https://authjs.dev/img/providers"
 

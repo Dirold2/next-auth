@@ -1,4 +1,4 @@
-import { logIn } from "next-auth/react"
+import { authorized } from "next-auth/react"
 
 export default function AccessDenied() {
   return (
@@ -9,7 +9,7 @@ export default function AccessDenied() {
           href="/api/auth/login"
           onClick={(e) => {
             e.preventDefault()
-            logIn()
+            authorized()
           }}
         >
           You must be signed in to view this page

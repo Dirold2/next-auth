@@ -37,10 +37,10 @@ export declare type authorizedAuthorizationParams =
   | Record<string, string>
   | URLSearchParams
 /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1) */
-export interface SignOutResponse {
+export interface LogOutResponse {
   url: string
 }
-export interface SignOutParams<R extends boolean = true> {
+export interface LogOutParams<R extends boolean = true> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl-1) */
   callbackUrl?: string
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1 */

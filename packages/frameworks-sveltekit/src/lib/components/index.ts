@@ -1,4 +1,4 @@
-import authorized from "./authorized.svelte"
-import SignOut from "./SignOut.svelte"
+import authorized from "./login.svelte"
+import logOut from "./logOut.svelte"
 
-export { authorized, SignOut }
+export { authorized, logOut }

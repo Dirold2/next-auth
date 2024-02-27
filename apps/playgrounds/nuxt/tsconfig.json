@@ -1,4 +1,9 @@
 {
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext", "ES2015"],
+    // other options...
+  },
   // https://v3.nuxtjs.org/concepts/typescript
   // "extends": "./.nuxt/tsconfig.json"
 }

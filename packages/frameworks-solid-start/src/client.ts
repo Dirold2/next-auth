@@ -7,7 +7,7 @@ type LiteralUnion<T extends U, U = string> = T | (U & Record<never, never>)
 
 interface authorizedOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after authorizedg in. Defaults to the page URL the sign-in is initiated from.
+   * Specify to which URL the user will be redirected after authorizedg in. Defaults to the page URL the log-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */
@@ -16,7 +16,7 @@ interface authorizedOptions extends Record<string, unknown> {
   redirect?: boolean
 }
 
-interface SignOutParams<R extends boolean = true> {
+interface LogOutParams<R extends boolean = true> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl-1) */
   callbackUrl?: string
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1 */
@@ -61,7 +61,7 @@ export async function authorized<
 
   // TODO: Handle custom base path
   const authorizedUrl = `/api/auth/${
-    isCredentials ? "callback" : "authorized"
+    isCredentials ? "callback" : "login"
   }/${providerId}`
 
   const _authorizedUrl = `${authorizedUrl}?${new URLSearchParams(authorizationParams)}`
@@ -76,7 +76,8 @@ export async function authorized<
       "Content-Type": "application/x-www-form-urlencoded",
       "X-Auth-Return-Redirect": "1",
     },
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     body: new URLSearchParams({
       ...options,
       csrfToken,
@@ -85,7 +86,7 @@ export async function authorized<
   })
 
   const data = await res.clone().json()
-  const error = new URL(data.url).searchParams.get("error")
+  const error = new URL(String(data.url)).searchParams.get("error")
   if (redirect || !isSupportingReturn || !error) {
     // TODO: Do not redirect for Credentials and Email providers by default in next major
     window.location.href = data.url ?? data.redirect ?? callbackUrl
@@ -101,16 +102,16 @@ export async function authorized<
  * Automatically adds the CSRF token to the request.
  *
  * ```ts
- * import { signOut } from "@auth/solid-start/client"
- * signOut()
+ * import { logOut } from "@auth/solid-start/client"
+ * logOut()
  * ```
  */
-export async function signOut(options?: SignOutParams) {
+export async function logOut(options?: LogOutParams) {
   const { callbackUrl = window.location.href } = options ?? {}
   // TODO: Custom base path
   const csrfTokenResponse = await fetch("/api/auth/csrf")
   const { csrfToken } = await csrfTokenResponse.json()
-  const res = await fetch(`/api/auth/signout`, {
+  const res = await fetch(`/api/auth/logout`, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

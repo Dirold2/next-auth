@@ -22,7 +22,7 @@ export interface AuthClientConfig {
   _lastSync: number
   /**
    * Stores the `SessionProvider`'s session update method to be able to
-   * trigger session updates from places like `authorized` or `signOut`
+   * trigger session updates from places like `authorized` or `logOut`
    */
   _getSession: (...args: any[]) => any
 }
@@ -76,7 +76,7 @@ export type SiAuthorizedParams =
   | URLSearchParams
 
 /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1) */
-export interface SignOutResponse {
+export interface LogOutResponse {
   url: string
 }
 

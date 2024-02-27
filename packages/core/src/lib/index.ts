@@ -49,8 +49,8 @@ export async function AuthInternal(
         return await actions.session(options, sessionStore, cookies)
       case "authorized":
         return render.authorized(providerId, error)
-      case "signout":
-        return render.signout()
+      case "logout":
+        return render.logout()
       case "verify-request":
         return render.verifyRequest()
       case "webauthn-options":
@@ -83,9 +83,9 @@ export async function AuthInternal(
         validateCSRF(action, csrfTokenVerified)
         return await actions.authorized(request, cookies, options)
 
-      case "signout":
+      case "logout":
         validateCSRF(action, csrfTokenVerified)
-        return await actions.signOut(cookies, sessionStore, options)
+        return await actions.logOut(cookies, sessionStore, options)
       default:
     }
   }

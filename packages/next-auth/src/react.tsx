@@ -28,7 +28,6 @@ import type {
   AuthorizedOptions,
   AuthorizedResponse,
   AuthorizedParams,
-  SignOutResponse,
   UseSessionOptions,
 } from "./lib/client.js";
 
@@ -91,12 +90,7 @@ const logger: LoggerInstance = {
   warn: console.warn,
 };
 
-/**
- * React Hook that gives you access to the logged-in user's session data and lets you modify it.
- * You will likely not need `useSession` if you are using the Next.js App Router (`app/`).
- * @param options Options for the hook.
- * @returns An object containing session data and its status.
- */
+
 export function useSession(options?: UseSessionOptions<any>): SessionContextValue {
   // Check if SessionContext is available
   if (!SessionContext) {
@@ -120,7 +114,7 @@ export function useSession(options?: UseSessionOptions<any>): SessionContextValu
   // Redirect to sign-in page if session is required but not available
   React.useEffect(() => {
     if (requiredAndNotLoading) {
-      const url = `${__NEXTAUTH.basePath}/signin?${new URLSearchParams({
+      const url = `${__NEXTAUTH.basePath}/login?${new URLSearchParams({
         error: "SessionRequired",
         callbackUrl: window.location.href,
       })}`;
@@ -145,25 +139,28 @@ export function useSession(options?: UseSessionOptions<any>): SessionContextValu
  * Retrieves the current session data from the server.
  * @param params Parameters for the request.
  * @returns The session data.
- */
+*/
 export async function getSession(params?: GetSessionParams): Promise<Session | null> {
-  // Fetch session data from the server
-  const session = await fetchData<Session>(
-    "session",
-    __NEXTAUTH,
-    logger,
-    params
-  );
+  try {
+    const session = await fetchData<Session>(
+      "session",
+      __NEXTAUTH,
+      logger,
+      params
+    );
 
-  // Broadcast session data to other tabs/windows
-  if (params?.broadcast ?? true) {
-    broadcast().postMessage({
-      event: "session",
-      data: { trigger: "getSession" },
-    });
+    if (params?.broadcast ?? true) {
+      broadcast().postMessage({
+        event: "session",
+        data: { trigger: "getSession" },
+      });
+    }
+
+    return session;
+  } catch (error) {
+    console.error("[next-auth] Error fetching session:", error);
+    return null;
   }
-
-  return session;
 }
 
 /**
@@ -171,20 +168,21 @@ export async function getSession(params?: GetSessionParams): Promise<Session | n
  * required to make requests that changes state. (e.g. signing in or out, or updating the session).
  *
  * [CSRF Prevention: Double Submit Cookie](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie)
- */
+*/
 export async function getCsrfToken(): Promise<string> {
   const response = await fetchData<{ csrfToken: string }>(
     "csrf",
     __NEXTAUTH,
     logger
   )
+
   return response?.csrfToken ?? ""
 }
 
 /**
  * Returns a client-safe configuration object of the currently
  * available providers.
- */
+*/
 export async function getProviders(): Promise<ProvidersType | null> {
   return await fetchData<ProvidersType>("providers", __NEXTAUTH, logger)
 }
@@ -192,122 +190,121 @@ export async function getProviders(): Promise<ProvidersType | null> {
 /**
  * Initiate a signin flow or send the user to the signin page listing all possible providers.
  * Handles CSRF protection.
- */
-export async function logIn(
+*/
+export async function authorized(
   provider?: string,
   options?: AuthorizedOptions,
   authorizationParams?: SiAuthorizedParams
 ): Promise<AuthorizedResponse | undefined> {
-  const { callbackUrl = window.location.href, redirect = true } = options ?? {}
+  try {
+    const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
-  const baseUrl = apiBaseUrl(__NEXTAUTH)
-  const providers = await getProviders()
+    const baseUrl = apiBaseUrl(__NEXTAUTH)
+    const providers = await getProviders()
 
-  if (!providers) {
-    window.location.href = `${baseUrl}/error`
-    return
-  }
-
-  if (!provider || !(provider in providers)) {
-    window.location.href = `${baseUrl}/signin?${new URLSearchParams({
-      callbackUrl,
-    })}`
-    return
-  }
-
-  const isCredentials = providers[provider].type === "credentials"
-  const isEmail = providers[provider].type === "email"
-  const isSupportingReturn = isCredentials || isEmail
-
-  const signInUrl = `${baseUrl}/${
-    isCredentials ? "callback" : "signin"
-  }/${provider}`
-
-  const csrfToken = await getCsrfToken()
-  const res = await fetch(
-    `${signInUrl}?${new URLSearchParams(authorizationParams as Record<string, string>)}`,
-    {
-      method: "post",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "X-Auth-Return-Redirect": "1",
-      },
-      body: new URLSearchParams({
-        ...options,
-        csrfToken,
-        callbackUrl,
-        redirect: String(options?.redirect ?? 'false'),
-      }).toString(),
+    if (!providers) {
+      throw new Error('Failed to fetch providers');
     }
-  )
 
-  const data = await res.json()
+    if (!provider || !(provider in providers)) {
+      throw new Error('Invalid or missing provider');
+    }
 
-  // TODO: Do not redirect for Credentials and Email providers by default in next major
-  if (redirect || !isSupportingReturn) {
-    const url = data.url ?? callbackUrl
-    window.location.href = url
-    // If url contains a hash, the browser does not reload the page. We reload manually
-    if (url.includes("#")) window.location.reload()
-    return
-  }
+    const isCredentials = providers[provider].type === "credentials"
+    const isEmail = providers[provider].type === "email"
+    const isSupportingReturn = isCredentials || isEmail
 
-  const error = typeof data.url === 'string' ? (() => {
-    try {
-      return new URL(data.url as string).searchParams.get("error");
-    } catch (e) {
-      if (e instanceof Error) {
-        logger.error(e);
-      } else {
-        logger.error(new Error(String(e)));
+    const logInUrl = `${baseUrl}/${isCredentials ? "callback" : "login"}/${provider}`
+
+    console.log(provider)
+
+    const csrfToken = await getCsrfToken()
+    const res = await fetch(
+      `${logInUrl}?${new URLSearchParams(authorizationParams as Record<string, string>)}`,
+      {
+        method: "post",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Auth-Return-Redirect": "1",
+        },
+        body: new URLSearchParams({
+          ...options,
+          csrfToken,
+          callbackUrl,
+          redirect: String(options?.redirect ?? 'false'),
+        }).toString(),
       }
-      return null;
+    )
+
+    const data = await res.json()
+
+    if ((redirect || !isSupportingReturn) && options?.redirect !== false) {
+      const url = data.url ?? callbackUrl;
+      if (!isCredentials && !isEmail) {
+        if (url.includes("#")) window.location.reload();
+        window.location.href = url;
+      }
+      return;
     }
-  })() : null;
 
-  if (res.ok) {
-    await __NEXTAUTH._getSession({ event: "storage" })
+    const error = typeof data.url === 'string' ? new URL(data.url as string).searchParams.get("error") : null;
+
+    if (res.ok) {
+      await __NEXTAUTH._getSession({ event: "storage" })
+    }
+
+    return {
+      error,
+      status: res.status,
+      ok: res.ok,
+      url: error ? null : data.url,
+    } as any
+
+  } catch (error) {
+    console.error("[next-auth] Error during authorization:", error);
+    logger.error(error as Error);
+    return undefined;
   }
-
-  return {
-    error,
-    status: res.status,
-    ok: res.ok,
-    url: error ? null : data.url,
-  } as any
 }
 
 /**
- * Initiate a signout, by destroying the current session.
+ * Initiate a logout, by destroying the current session.
  * Handles CSRF protection.
- */
-export async function logOut(options?: AuthorizedParams): Promise<SignOutResponse | undefined> {
-  const { callbackUrl = window.location.href } = options ?? {}
-  const baseUrl = apiBaseUrl(__NEXTAUTH)
-  const csrfToken = await getCsrfToken()
-  const res = await fetch(`${baseUrl}/signout`, {
-    method: "post",
-    headers: {
-      "Content-Type": "application/x-form-urlencoded",
-      "X-Auth-Return-Redirect": "1",
-    },
-    body: new URLSearchParams({ csrfToken, callbackUrl }),
-  })
-  const data = await res.json()
+*/
+export async function logOut<R extends boolean = true>(
+  options?: AuthorizedParams<R>
+): Promise<R extends true ? undefined : AuthorizedParams> {
+  try {
+    const { callbackUrl = window.location.href } = options ?? {}
+    const baseUrl = apiBaseUrl(__NEXTAUTH)
+    const csrfToken = await getCsrfToken()
+    const res = await fetch(`${baseUrl}/logout`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/x-form-urlencoded",
+        "X-Auth-Return-Redirect": "1",
+      },
+      body: new URLSearchParams({ csrfToken, callbackUrl }),
+    })
+    const data = await res.json()
 
-  broadcast().postMessage({ event: "session", data: { trigger: "signout" } })
+    broadcast().postMessage({ event: "session", data: { trigger: "logout" } })
 
-  if (options?.redirect ?? true) {
-    const url = data.url ?? callbackUrl
-    window.location.href = url
-    // If url contains a hash, the browser does not reload the page. We reload manually
-    if (url.includes("#")) window.location.reload()
-    return undefined;
+    if (options?.redirect ?? true) {
+      const url = data.url ?? callbackUrl
+      window.location.href = url
+      // If url contains a hash, the browser does not reload the page. We reload manually
+      if (url.includes("#")) window.location.reload()
+      return undefined as R extends true ? undefined : AuthorizedParams<boolean>;
+    }
+
+    await __NEXTAUTH._getSession({ event: "storage" })
+
+    return data;
+  } catch (error) {
+    console.error("[next-auth] Error during logout:", error);
+    return undefined as R extends true ? undefined : AuthorizedParams<boolean>;
   }
-
-  await __NEXTAUTH._getSession({ event: "storage" })
-
-  return data;
 }
 
 /**
@@ -319,7 +316,7 @@ export async function logOut(options?: AuthorizedParams): Promise<SignOutRespons
  * :::info
  * You will likely not need `SessionProvider` if you are using the [Next.js App Router (`app/`)](https://nextjs.org/blog/next-13-4#nextjs-app-router).
  * :::
- */
+*/
 export function SessionProvider(props: SessionProviderProps) {
   if (!SessionContext) {
     throw new Error("React Context is unavailable in Server Components")
@@ -332,7 +329,7 @@ export function SessionProvider(props: SessionProviderProps) {
   /**
    * If session was `null`, there was an attempt to fetch it,
    * but it failed, but we still treat it as a valid initial value.
-   */
+  */
   const hasInitialSession = props.session !== undefined
 
   /** If session was passed, initialize as already synced */
@@ -394,15 +391,22 @@ export function SessionProvider(props: SessionProviderProps) {
   const online = useOnline();
 
   React.useEffect(() => {
-    if (online) __NEXTAUTH._getSession()
-  }, [online])
+    if (online && !loading) {
+      __NEXTAUTH._getSession();
+    }
+  }, [online, loading]);
 
   React.useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
     if (refetchInterval && refetchInterval > 0 && !loading) {
-      const interval = setInterval(__NEXTAUTH._getSession, refetchInterval)
-      return () => { clearInterval(interval); }
+      interval = setInterval(() => {
+        __NEXTAUTH._getSession();
+      }, refetchInterval);
     }
-  }, [loading, refetchInterval])
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading, refetchInterval]);
 
   return (
     <SessionContext.Provider
@@ -410,13 +414,18 @@ export function SessionProvider(props: SessionProviderProps) {
         data: session ?? null,
         status: loading ? "loading" : session ? "authenticated" : "unauthenticated",
         update: async (data) => {
-          if (data === undefined) {
-            await logOut()
-            return null
+          try {
+            if (data === undefined) {
+              await logOut();
+              return null;
+            }
+            const updatedSession = await getSession();
+            setSession(updatedSession);
+            return updatedSession;
+          } catch (error) {
+            console.error("[next-auth] Error updating session:", error);
+            return null;
           }
-          const updatedSession = await getSession()
-          setSession(updatedSession)
-          return updatedSession
         },
       }}
     >

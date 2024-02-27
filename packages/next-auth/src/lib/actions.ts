@@ -70,15 +70,15 @@ export async function authorized(
   return res.redirect as any
 }
 
-type SignOutParams = Parameters<NextAuthResult["signOut"]>
-export async function signOut(
-  options: SignOutParams[0],
+type LogOutParams = Parameters<NextAuthResult["logOut"]>
+export async function logOut(
+  options: LogOutParams[0],
   config: NextAuthConfig
 ) {
   const headers = new Headers(nextHeaders())
   headers.set("Content-Type", "application/x-www-form-urlencoded")
 
-  const url = createActionURL("signout", headers, config.basePath)
+  const url = createActionURL("logout", headers, config.basePath)
   const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/"
   const body = new URLSearchParams({ callbackUrl })
   const req = new Request(url, { method: "POST", headers, body })
@@ -89,7 +89,7 @@ export async function signOut(
 
   if (options?.redirect ?? true) return redirect(res.redirect!)
 
-  return res as any
+  return res
 }
 
 type UpdateParams = Parameters<NextAuthResult["unstable_update"]>
@@ -104,7 +104,7 @@ export async function update(
   const body = JSON.stringify({ data })
   const req = new Request(url, { method: "POST", headers, body })
 
-  const res: any = await Auth(req, { ...config, raw, skipCSRFCheck })
+  const res = await Auth(req, { ...config, raw, skipCSRFCheck })
 
   for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options)
 

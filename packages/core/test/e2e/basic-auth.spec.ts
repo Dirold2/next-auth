@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test"
 
 test.describe("Basic Auth", () => {
-  test("Credentials authorized / Signout", async ({ page }) => {
+  test("Credentials login / Logout", async ({ page }) => {
     await test.step("should login", async () => {
-      await page.goto("http://localhost:3000/auth/authorized")
+      await page.goto("http://localhost:3000/auth/login")
       await page.getByLabel("Password").fill("password")
       await page
-        .getByRole("button", { name: "Authorized with Credentials" })
+        .getByRole("button", { name: "login with Credentials" })
         .click()
       const session = await page.locator("pre").textContent()
 

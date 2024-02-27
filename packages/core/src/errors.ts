@@ -21,7 +21,7 @@ type ErrorType =
   | "SessionTokenError"
   | "OAuthauthorizedError"
   | "EmailauthorizedError"
-  | "SignOutError"
+  | "LogOutError"
   | "UnknownAction"
   | "UnsupportedStrategy"
   | "InvalidProvider"
@@ -283,7 +283,7 @@ export class MissingSecret extends AuthError {
  * Thrown when an Email address is already associated with an account
  * but the user is trying an OAuth account that is not linked to it.
  *
- * For security reasons, Auth.js does not automatically link OAuth accounts to existing accounts if the user is not signed in.
+ * For security reasons, Auth.js does not automatically link OAuth accounts to existing accounts if the user is not loged in.
  *
  * :::tip
  * If you trust the OAuth provider to have verified the user's email address,
@@ -359,17 +359,17 @@ export class EmailauthorizedError extends authorizedError {
 }
 
 /**
- * Represents an error that occurs during the sign-out process. This error
+ * Represents an error that occurs during the log-out process. This error
  * is logged when there are issues in terminating a user's session, either
  * by failing to delete the session from the database (in database session
- * strategies) or encountering issues during other parts of the sign-out
- * process, such as emitting sign-out events or clearing session cookies.
+ * strategies) or encountering issues during other parts of the log-out
+ * process, such as emitting log-out events or clearing session cookies.
  *
  * The session cookie(s) are emptied even if this error is logged.
  *
  */
-export class SignOutError extends AuthError {
-  static type = "SignOutError"
+export class LogOutError extends AuthError {
+  static type = "logOutError"
 }
 
 /**
@@ -420,7 +420,7 @@ export class Verification extends AuthError {
 }
 
 /**
- * Error for missing CSRF tokens in client-side actions (`authorized`, `signOut`, `useSession#update`).
+ * Error for missing CSRF tokens in client-side actions (`authorized`, `logOut`, `useSession#update`).
  * Thrown when actions lack the double submit cookie, essential for CSRF protection.
  *
  * CSRF ([Cross-Site Request Forgery](https://owasp.org/www-community/attacks/csrf))
@@ -461,7 +461,7 @@ export class WebAuthnVerificationError extends AuthError {
  * Thrown when an Email address is already associated with an account
  * but the user is trying an account that is not linked to it.
  *
- * For security reasons, Auth.js does not automatically link accounts to existing accounts if the user is not signed in.
+ * For security reasons, Auth.js does not automatically link accounts to existing accounts if the user is not loged in.
  */
 export class AccountNotLinked extends authorizedError {
   static type = "AccountNotLinked"

@@ -9,7 +9,7 @@ import Keycloak from "next-auth/providers/keycloak"
 
 declare module "next-auth" {
   interface Session {
-    user?: User;
+    user?: User | null;
   }
   interface User {
     foo?: string;
@@ -43,14 +43,17 @@ export default {
   ].filter(Boolean) as NextAuthConfig["providers"],
   callbacks: {
     jwt({ token, trigger, session }) {
-      if (trigger === "update") token.name = session.user.name
-      return token
+      if (trigger === "update" && token) {
+        token.name = session.user.name;
+      }
+      return token;
     },
     async session({ session, token }) {
       return {
         ...session,
         user: {
           ...token,
+          name: token.name ?? undefined,
         },
       }
     },

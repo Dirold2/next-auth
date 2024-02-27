@@ -38,10 +38,10 @@ declare global {
             any
           : never
       >
-      signOut: <R extends boolean = true>(options?: {
+      logOut: <R extends boolean = true>(options?: {
         /** The URL to redirect to after authorizedg out. By default, the user is redirected to the current page. */
         redirectTo?: string
-        /** If set to `false`, the `signOut` method will return the URL to redirect to instead of redirecting automatically. */
+        /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
         redirect?: R
       }) => Promise<
         R extends false

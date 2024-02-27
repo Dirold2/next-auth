@@ -36,11 +36,11 @@ export const logger: LoggerInstance = {
     if ((error as CustomError).cause && (error as CustomError).cause!.err instanceof Error) {
       const { err, ...data } = (error as CustomError).cause!;
       if (err) {
-        console.error(`${colors.red}[auth][cause]${colorReset}:`, err.stack);
+        console.error(`${colors.red}[auth][cause]${colorReset} \n`, err.stack);
       }
       if (data) {
         console.error(
-          `${colors.red}[auth][details]${colorReset}:`,
+          `${colors.red}[auth][details]${colorReset} \n`,
           JSON.stringify(data, null,  2)
         );
       }
@@ -50,11 +50,11 @@ export const logger: LoggerInstance = {
   },
   warn(code) {
     const url = `https://warnings.authjs.dev#${code}`;
-    console.warn(`${colors.yellow}[auth][warn][${code}]${colorReset}`, `Read more: ${url}`);
+    console.warn(`${colors.yellow}[auth][warn][${code}]${colorReset} \n`, `Read more: ${url}`);
   },
   debug(message, metadata) {
     console.log(
-      `${colors.grey}[auth][debug]:${colorReset} ${message}`,
+      `${colors.grey}[auth][debug] \n${colorReset} ${message}`,
       JSON.stringify(metadata, null, 2)
     );
   }

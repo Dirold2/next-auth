@@ -86,7 +86,7 @@ export async function callback(
       // else in future.
       // TODO: Handle user cancelling authorized
       if (!userFromProvider || !account || !OAuthProfile) {
-        return { redirect: `${url}/authorized`, cookies }
+        return { redirect: `${url}/login`, cookies }
       }
 
       // Check if user is allowed to authorized
