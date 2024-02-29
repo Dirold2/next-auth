@@ -27,7 +27,7 @@ class ExtendedD1Database extends D1Database {
  async query(statement: string): Promise<any> {
     // Implement the query method here
     // This is just a placeholder implementation
-    return db.execute(statement);
+    return db.query(statement);
  }
 }
 
