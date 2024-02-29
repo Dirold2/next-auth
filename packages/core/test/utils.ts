@@ -35,8 +35,8 @@ export const logger: LoggerInstance = {
 }
 
 export const events = {
-  signIn: vi.fn(),
-  signOut: vi.fn(),
+  authorized: vi.fn(),
+  logOut: vi.fn(),
   createUser: vi.fn(),
   updateUser: vi.fn(),
   linkAccount: vi.fn(),

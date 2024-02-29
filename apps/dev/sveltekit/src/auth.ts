@@ -22,7 +22,7 @@ import { UnstorageAdapter } from "@auth/unstorage-adapter"
 
 
 const storage = createStorage()
-export const { handle, signIn, signOut } = SvelteKitAuth({
+export const { handle, authorized, logOut } = SvelteKitAuth({
   adapter: UnstorageAdapter(storage),
   session: {
     strategy: "jwt",
@@ -53,7 +53,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
     LinkedIn,
     Okta,
     Apple,
-    Auth0,
+    // Auth0,
     Spotify,
     Instagram,
     Cognito,

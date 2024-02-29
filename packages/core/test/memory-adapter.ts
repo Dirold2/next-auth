@@ -60,10 +60,15 @@ export function MemoryAdapter(memory?: Memory): Adapter {
     async getUserByAccount(
       providerAccountId: Pick<AdapterAccount, "provider" | "providerAccountId">
     ) {
-      const account = accounts.get(providerAccountId.providerAccountId)
-      if (!account) return null
-
-      return users.get(account.userId) ?? null
+      if (providerAccountId.providerAccountId === null) {
+        // Handle the case where providerAccountId.providerAccountId is null
+        // For example, you might want to return null or throw an error
+        return null;
+      }
+      const account = accounts.get(providerAccountId.providerAccountId);
+      if (!account) return null;
+    
+      return users.get(account.userId) ?? null;
     },
     async updateUser(user: Partial<AdapterUser> & Pick<AdapterUser, "id">) {
       const currentUser = users.get(user.id)
@@ -114,21 +119,22 @@ export function MemoryAdapter(memory?: Memory): Adapter {
       return
     },
     async linkAccount(account: AdapterAccount) {
-      accounts.set(account.providerAccountId, account)
+      if (account.providerAccountId === null) {
+        throw new Error("Provider account ID cannot be null");
+      }
+      accounts.set(account.providerAccountId, account);
 
-      return account
+      return account;
     },
     async unlinkAccount(
       account: Pick<AdapterAccount, "provider" | "providerAccountId">
     ) {
+      if (account.providerAccountId === null) {
+        throw new Error("Provider account ID cannot be null");
+      }
       // Find account
-      const currentAccount = accounts.get(account.providerAccountId)
-      if (!currentAccount) return
-
-      // Delete account
-      accounts.delete(currentAccount.providerAccountId)
-
-      return
+      const currentAccount = accounts.get(account.providerAccountId);
+      if (!currentAccount) return;
     },
     async listLinkedAccounts(userId: string) {
       return Array.from(accounts.values()).filter(

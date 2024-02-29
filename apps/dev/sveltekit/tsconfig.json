@@ -1,3 +1,4 @@
+// TODO
 {
   "compilerOptions": {
     "allowJs": true,
@@ -9,6 +10,10 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "node16",
+    "baseUrl": ".",
+    "paths": {
+      "$components/*": ["src/components/*"]
+    }
   },
   "exclude": [        
     "./.svelte-kit/tsconfig.json"

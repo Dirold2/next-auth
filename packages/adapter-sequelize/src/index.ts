@@ -21,12 +21,13 @@ import type {
   AdapterSession,
   VerificationToken,
 } from "@auth/core/adapters"
-import { Sequelize, Model, ModelCtor } from "sequelize"
+import { type Sequelize, type Model, type ModelCtor } from "sequelize"
 import * as defaultModels from "./models.js"
 
 export { defaultModels as models }
 
 // @see https://sequelize.org/master/manual/typescript.html
+// TODO
 interface AccountInstance
   extends Model<AdapterAccount, Partial<AdapterAccount>>,
     AdapterAccount {}
@@ -214,19 +215,20 @@ export default function SequelizeAdapter(
 
       return userInstance?.get({ plain: true }) ?? null
     },
-    async getUserByAccount({ provider, providerAccountId }) {
+    async getUserByAccount({ provider, providerAccountId }: { provider: string; providerAccountId: string }) {
       await sync()
-
+    
       const accountInstance = await Account.findOne({
+        // TODO
         where: { provider, providerAccountId },
       })
-
+    
       if (!accountInstance) {
         return null
       }
-
+    
       const userInstance = await User.findByPk(accountInstance.userId)
-
+    
       return userInstance?.get({ plain: true }) ?? null
     },
     async updateUser(user) {
