@@ -35,7 +35,7 @@ import authConfig from "auth.config"
 
 export const { handlers, auth, authorized, logOut, update } = NextAuth({
   // adapter: PrismaAdapter(globalThis.prisma),
-  secret: process.env.AUTH_SECRET,
+  // secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
   // debug: true,
   ...authConfig,
