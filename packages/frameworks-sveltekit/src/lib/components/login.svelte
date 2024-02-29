@@ -1,13 +1,13 @@
 <script lang="ts">
   import { enhance } from "$app/forms"
-  import type { signIn } from "$lib/actions"
+  import type { authorized } from "$lib/actions"
 
   export let className = ""
-  export let provider: Parameters<typeof signIn>[0]
+  export let provider: Parameters<typeof authorized>[0]
   /** The path to the FormAction file in your route. @default signin */
   export let signInPage = "signin"
-  export let options: Parameters<typeof signIn>[1] | undefined = undefined
-  export let authorizationParams: Parameters<typeof signIn>[2] | undefined =
+  export let options: Parameters<typeof authorized>[1] | undefined = undefined
+  export let authorizationParams: Parameters<typeof authorized>[2] | undefined =
     undefined
   const callbackUrl =
     options instanceof FormData

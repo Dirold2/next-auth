@@ -16,13 +16,13 @@
  * @module @auth/drizzle-adapter
  */
 
-import { MySqlDatabase, MySqlTableFn } from "drizzle-orm/mysql-core"
-import { PgDatabase, PgTableFn } from "drizzle-orm/pg-core"
-import { BaseSQLiteDatabase, SQLiteTableFn } from "drizzle-orm/sqlite-core"
+import { MySqlDatabase, type MySqlTableFn } from "drizzle-orm/mysql-core"
+import { PgDatabase, type PgTableFn } from "drizzle-orm/pg-core"
+import { BaseSQLiteDatabase, type SQLiteTableFn } from "drizzle-orm/sqlite-core"
 import { mySqlDrizzleAdapter } from "./lib/mysql.js"
 import { pgDrizzleAdapter } from "./lib/pg.js"
 import { SQLiteDrizzleAdapter } from "./lib/sqlite.js"
-import { SqlFlavorOptions, TableFn } from "./lib/utils.js"
+import { type SqlFlavorOptions, type TableFn } from "./lib/utils.js"
 import { is } from "drizzle-orm"
 
 import type { Adapter } from "@auth/core/adapters"

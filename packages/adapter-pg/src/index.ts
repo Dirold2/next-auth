@@ -24,10 +24,14 @@ import type {
 import type { Pool } from "pg"
 
 export function mapExpiresAt(account: any): any {
-  const expires_at: number = parseInt(account.expires_at)
-  return {
-    ...account,
-    expires_at,
+  if (typeof account.expires_at === 'string') {
+    const expires_at: number = parseInt(account.expires_at as string);
+    return {
+      ...account,
+      expires_at,
+    };
+  } else {
+    throw new Error('expires_at must be a string');
   }
 }
 
@@ -283,7 +287,7 @@ export default function PostgresAdapter(client: Pool): Adapter {
       if (result1.rowCount === 0) {
         return null
       }
-      let session: AdapterSession = result1.rows[0]
+      const session: AdapterSession = result1.rows[0]
 
       const result2 = await client.query("select * from users where id = $1", [
         session.userId,

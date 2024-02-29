@@ -242,7 +242,7 @@ const authorizationParamsPrefix = "authorizationParams-"
 /**
  * The main entry point to `@auth/sveltekit`
  * @see https://sveltekit.authjs.dev
- */
+*/
 export function SvelteKitAuth(
   config:
     | SvelteKitAuthConfig
