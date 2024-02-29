@@ -2,7 +2,7 @@
   <a href="https://authjs.dev" target="_blank">
     <img width="96px" src="https://authjs.dev/img/logo/logo-sm.png" alt="Auth.js Logo">
   </a>
-  <h3 align="center">Auth.js</h3>
+  <h3 align="center">Auth.js Ouata</h3>
   <p align="center">Authentication for the Web.</p>
   <p align="center">Open Source. Full Stack. Own Your Data.</p>
 </p>
