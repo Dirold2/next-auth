@@ -2,7 +2,7 @@
 import * as React from "react"
 import { authorized, logOut, useSession } from "next-auth/react"
 import { AuthorizedOptions, AuthorizedResponse } from "next-auth/lib/client.js"
-import { AuthorizedParams } from "next-auth/lib/client.js"
+import { LogOutParams } from "next-auth/lib/client.js"
 
 export default function Page() {
   const [response, setResponse] = React.useState<AuthorizedResponse | undefined>();
@@ -22,7 +22,7 @@ export default function Page() {
     setResponse(response)
   }
 
-  const handleLogout = (options: AuthorizedParams<boolean> | undefined) => async (event: any) => {
+  const handleLogout = (options: LogOutParams<boolean> | undefined) => async (event: any) => {
     if (options && options.redirect) {
       return logOut(options)
     }

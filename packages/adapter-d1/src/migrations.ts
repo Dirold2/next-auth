@@ -1,4 +1,10 @@
-import type { D1Database } from "."
+import type { D1Database } from "./index.js"
+
+interface D1DatabaseWithQuery {
+  query: (statement: string) => Promise<any>;
+ }
+ 
+type D1DatabaseExtended = D1Database & D1DatabaseWithQuery;
 
 export const upSQLStatements = [
   `CREATE TABLE IF NOT EXISTS "accounts" (
@@ -52,15 +58,15 @@ export const down = [
  *
  * @param db
  */
-async function up(db: D1Database) {
+async function up(db: D1DatabaseExtended) {
   // run the migration
-  upSQLStatements.forEach(async (sql) => {
-    try {
-      const res = await db.prepare(sql).run()
-    } catch (e: any) {
-      console.error(e.cause?.message, e.message)
-    }
-  })
-}
+  for (const statement of upSQLStatements) {
+     try {
+       await db.query(statement);
+     } catch (e: any) {
+       console.error(e.cause?.message, e.message)
+     }
+  }
+ }
 
 export { up }

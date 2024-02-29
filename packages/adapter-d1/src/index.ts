@@ -36,6 +36,8 @@ export { up } from "./migrations"
  */
 export type D1Database = WorkerDatabase | MiniflareD1Database
 
+export type BindingValue = string | number;
+
 // all the sqls
 // USER
 export const CREATE_USER_SQL = `INSERT INTO users (id, name, email, emailVerified, image) VALUES (?, ?, ?, ?, ?)`
@@ -85,57 +87,58 @@ export const DELETE_VERIFICATION_TOKEN_SQL = `DELETE FROM verification_tokens WH
 
 // isDate is borrowed from the supabase adapter, graciously
 // depending on error messages ("Invalid Date") is always precarious, but probably fine for a built in native like Date
-function isDate(date: any) {
-  return (
-    new Date(date).toString() !== "Invalid Date" && !isNaN(Date.parse(date))
-  )
-}
+function isDate(date: any): boolean {
+  if (typeof date === 'string' || typeof date === 'number') {
+     return new Date(date).toString() !== "Invalid Date" && !isNaN(Date.parse(date.toString()));
+  }
+  return false;
+ }
 
 // format is borrowed from the supabase adapter, graciously
 function format<T>(obj: Record<string, any>): T {
   for (const [key, value] of Object.entries(obj)) {
-    if (value === null) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete obj[key]
-    }
-
-    if (isDate(value)) {
-      obj[key] = new Date(value)
-    }
+     if (value === null) {
+       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+       delete obj[key]
+     }
+ 
+     if (isDate(value)) {
+       obj[key] = new Date(value as string | number); // Cast value to string | number
+     }
   }
-
+ 
   return obj as T
 }
 
 // D1 doesnt like undefined, it wants null when calling bind
-function cleanBindings(bindings: any[]) {
-  return bindings.map((e) => (e === undefined ? null : e))
+function cleanBindings(bindings: any[]): BindingValue[] {
+  return bindings.map((e) => (e === undefined ? null : e)) as BindingValue[];
 }
 
 export async function createRecord<RecordType>(
   db: D1Database,
   CREATE_SQL: string,
-  bindings: any[],
+  bindings: BindingValue[],
   GET_SQL: string,
-  getBindings: any[]
-) {
+  getBindings: BindingValue[]
+ ) {
   try {
-    bindings = cleanBindings(bindings)
-    await db
-      .prepare(CREATE_SQL)
-      .bind(...bindings)
-      .run()
-    return await getRecord<RecordType>(db, GET_SQL, getBindings)
+     bindings = cleanBindings(bindings);
+     await db
+       .prepare(CREATE_SQL)
+       .bind(...bindings)
+       .run();
+     return await getRecord<RecordType>(db, GET_SQL, getBindings);
   } catch (e: any) {
-    console.error(e.message, e.cause?.message)
-    throw e
+     console.error(e.message, e.cause?.message);
+     throw e;
   }
 }
 
 export async function getRecord<RecordType>(
   db: D1Database,
   SQL: string,
-  bindings: any[]
+  bindings: BindingValue[]
 ): Promise<RecordType | null> {
   try {
     bindings = cleanBindings(bindings)
@@ -143,9 +146,9 @@ export async function getRecord<RecordType>(
       .prepare(SQL)
       .bind(...bindings)
       .first()
-    if (res) {
-      return format<RecordType>(res)
-    } else {
+      if (res) {
+        return format<RecordType>(res as Record<string, any>)
+      } else {
       return null
     }
   } catch (e: any) {
@@ -157,7 +160,7 @@ export async function getRecord<RecordType>(
 export async function updateRecord(
   db: D1Database,
   SQL: string,
-  bindings: any[]
+  bindings: BindingValue[]
 ) {
   try {
     bindings = cleanBindings(bindings)
@@ -174,7 +177,7 @@ export async function updateRecord(
 export async function deleteRecord(
   db: D1Database,
   SQL: string,
-  bindings: any[]
+  bindings: BindingValue[]
 ) {
   // eslint-disable-next-line no-useless-catch
   try {
@@ -251,11 +254,11 @@ export function D1Adapter(db: D1Database): Adapter {
       const id: string = crypto.randomUUID()
       const createBindings = [
         id,
-        user.name,
-        user.email,
-        user.emailVerified?.toISOString(),
-        user.image,
-      ]
+        user.name ?? '',
+        user.email ?? '',
+        user.emailVerified ? user.emailVerified.toISOString() : '',
+        user.image ?? '',
+      ].filter(value => value !== null) as BindingValue[];
       const getBindings = [id]
 
       const newUser = await createRecord<AdapterUser>(
@@ -276,8 +279,8 @@ export function D1Adapter(db: D1Database): Adapter {
     },
     async getUserByAccount({ providerAccountId, provider }) {
       return await getRecord<AdapterUser>(db, GET_USER_BY_ACCOUNTL_SQL, [
-        providerAccountId,
-        provider,
+        providerAccountId ?? '', 
+        provider ?? '',
       ])
     },
     async updateUser(user) {
@@ -289,10 +292,10 @@ export function D1Adapter(db: D1Database): Adapter {
         // covers the scenario where the user arg doesnt have all of the current users properties
         Object.assign(params, user)
         const res = await updateRecord(db, UPDATE_USER_BY_ID_SQL, [
-          params.name,
-          params.email,
-          params.emailVerified?.toISOString(),
-          params.image,
+          params.name ?? '',
+          params.email ?? '',
+          params.emailVerified?.toISOString() ?? '',
+          params.image ?? '',
           params.id,
         ])
         if (res.success) {
@@ -339,7 +342,7 @@ export function D1Adapter(db: D1Database): Adapter {
       return await createRecord<AdapterAccount>(
         db,
         CREATE_ACCOUNT_SQL,
-        createBindings,
+        createBindings.filter(value => value !== undefined) as BindingValue[],
         GET_ACCOUNT_BY_ID_SQL,
         getBindings
       )
@@ -348,7 +351,7 @@ export function D1Adapter(db: D1Database): Adapter {
       await deleteRecord(
         db,
         DELETE_ACCOUNT_BY_PROVIDER_AND_PROVIDER_ACCOUNT_ID_SQL,
-        [provider, providerAccountId]
+        [provider ?? '', providerAccountId ?? '']
       )
     },
     async createSession({ sessionToken, userId, expires }) {
@@ -377,7 +380,7 @@ export function D1Adapter(db: D1Database): Adapter {
       // this shouldnt happen, but just in case
       const user = await getRecord<AdapterUser>(db, GET_USER_BY_ID_SQL, [
         session.userId,
-      ])
+      ] as BindingValue[])
       if (user === null) return null
 
       return { session, user }

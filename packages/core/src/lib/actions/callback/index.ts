@@ -157,7 +157,7 @@ async function handleOAuthCallback(
   } = authorizationResult;
 
   if (!userFromProvider || !account || !OAuthProfile) {
-    return { redirect: `${url}/login`, cookies };
+    return { redirect: `${url}/authorized`, cookies };
   }
 
   let userByAccount: User | null = null;

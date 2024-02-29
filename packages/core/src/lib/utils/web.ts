@@ -76,16 +76,14 @@ export function toResponse(res: ResponseInternal): Response {
     else headers.set("Set-Cookie", cookieHeader)
   })
 
-  let body = res.body
+  let body: BodyInit | null = res.body;
 
   if (headers.get("content-type") === "application/json")
     body = JSON.stringify(res.body)
   else if (headers.get("content-type") === "application/x-www-form-urlencoded")
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    body = new URLSearchParams(res.body).toString()
+    body = new URLSearchParams(res.body as Record<string, string>).toString()
 
   const status = res.redirect ? 302 : res.status ?? 200
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const response = new Response(body, { headers, status })
 
   if (res.redirect) response.headers.set("Location", res.redirect)
@@ -121,9 +119,8 @@ export function parseActionAndProviderId(
 } {
   const a = pathname.match(new RegExp(`^${base}(.+)`))
 
-  if (!a?.[1]) {
+  if (a === null)
     throw new UnknownAction(`Cannot parse action at ${pathname}`)
-  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, actionAndProviderId] = a
@@ -138,7 +135,7 @@ export function parseActionAndProviderId(
   if (!isAuthAction(action))
     throw new UnknownAction(`Cannot parse action at ${pathname}`)
 
-  if (providerId && !["login", "callback", "webauthn-options"].includes(action))
+  if (providerId && !["authorized", "callback", "webauthn-options"].includes(action))
     throw new UnknownAction(`Cannot parse action at ${pathname}`)
 
   return { action, providerId }

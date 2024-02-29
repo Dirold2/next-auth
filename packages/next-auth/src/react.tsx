@@ -29,7 +29,7 @@ import type {
   SiAuthorizedParams,
   AuthorizedOptions,
   AuthorizedResponse,
-  AuthorizedParams,
+  LogOutParams,
   UseSessionOptions,
 } from "./lib/client.js";
 
@@ -204,8 +204,8 @@ export async function getProviders(): Promise<ProvidersType | null> {
  * otherwise it returns `AuthorizedParams`.
  */
 export async function logOut<R extends boolean = true>(
-  options?: AuthorizedParams<R>
-): Promise<R extends true ? undefined : AuthorizedParams> {
+  options?: LogOutParams<R>
+): Promise<R extends true ? undefined : LogOutParams> {
   try {
     const { callbackUrl = window.location.href } = options ?? {};
     const baseUrl = apiBaseUrl(__NEXTAUTH);
@@ -228,7 +228,7 @@ export async function logOut<R extends boolean = true>(
         const url = data.url ?? callbackUrl;
         window.location.href = url;
         if (url.includes("#")) window.location.reload();
-        return undefined as R extends true ? undefined : AuthorizedParams;
+        return undefined as R extends true ? undefined : LogOutParams;
       }
 
       await __NEXTAUTH._getSession({ event: "storage" });
@@ -238,7 +238,7 @@ export async function logOut<R extends boolean = true>(
     }
   } catch (error) {
     console.error("[next-auth] Error during logout:", error);
-    return null as unknown as R extends true ? undefined : AuthorizedParams;
+    return null as unknown as R extends true ? undefined : LogOutParams;
   }
 }
 
@@ -296,7 +296,7 @@ export async function authorized<
   const isSupportingReturn = isCredentials || isEmail
 
   const signInUrl = `${baseUrl}/${
-    isCredentials ? "callback" : "login"
+    isCredentials ? "callback" : "authorized"
   }/${provider}`
 
   const csrfToken = await getCsrfToken()

@@ -33,7 +33,7 @@ export default function parseProviders(params: {
 
     const id = (userOptions?.id ?? defaults.id) as string
     const merged = merge(defaults, userOptions ?? {}, {
-      authorizedUrl: `${url}/login/${id}`,
+      authorizedUrl: `${url}/authorized/${id}`,
       callbackUrl: `${url}/callback/${id}`,
     })
 

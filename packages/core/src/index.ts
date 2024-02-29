@@ -254,7 +254,7 @@ export interface AuthConfig {
    *
    * ```ts
    *   pages: {
-   *     authorized: '/auth/login',
+   *     authorized: '/auth/authorized',
    *     logOut: '/auth/logout',
    *     error: '/auth/error',
    *     verifyRequest: '/auth/verify-request',

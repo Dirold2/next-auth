@@ -292,7 +292,7 @@ export interface PagesOptions {
    * The optional "error" query parameter is set to
    * one of the {@link authorizedPageErrorParam available} values.
    *
-   * @default "/login"
+   * @default "/authorized"
    */
   authorized: string
   logOut: string

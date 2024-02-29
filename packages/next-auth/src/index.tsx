@@ -407,7 +407,7 @@ export default function NextAuth(
       // Initializing authentication with the provided config and setting environment defaults
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
-      auth: initAuth(config, (c) => { setEnvDefaults(c); }),
+      auth: initAuth(config),
       // Authorizing a user with the provided provider, options, and authorizationParams
       authorized: async (provider, options, authorizationParams) => {
         return await authorized(provider, options, authorizationParams, config(undefined));
