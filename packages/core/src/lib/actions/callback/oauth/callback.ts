@@ -20,7 +20,7 @@ import { type OAuth2Error } from "oauth4webapi"
 
 /**
  * Handles OAuth callback.
- */
+*/
 export async function handleOAuth(
   query: RequestInternal["query"],
   cookies: RequestInternal["cookies"],
@@ -111,7 +111,7 @@ export async function handleOAuth(
     for (const challenge of challenges) {
       console.log("challenge", challenge)
     }
-    throw new Error("TODO: Handle www-authenticate challenges as needed")
+    throw new Error("Handle www-authenticate challenges as needed")
   }
 
   // Process tokens and user profile based on provider type
@@ -130,7 +130,7 @@ export async function handleOAuth(
 
     if (o.isOAuth2Error(result)) {
       console.log("error", result)
-      throw new Error("TODO: Handle OIDC response body error")
+      throw new Error("Handle OIDC response body error")
     }
 
     profile = o.getValidatedIdTokenClaims(result)
@@ -145,7 +145,7 @@ export async function handleOAuth(
 
     if (o.isOAuth2Error(tokens as o.OAuth2TokenEndpointResponse | OAuth2Error)) {
       console.log("error", tokens);
-      throw new Error("TODO: Handle OAuth  2.0 response body error");
+      throw new Error("Handle OAuth 2.0 response body error");
     }
 
     // Fetch user profile

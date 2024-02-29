@@ -153,7 +153,7 @@ export default function renderPage(params: RenderPageParams) {
         cookies,
         theme,
         html: LogOutPage({ csrfToken: params.csrfToken, url, theme }),
-        title: "Sign Out",
+        title: "Log Out",
         status:   200,
         headTags: "",
       })
