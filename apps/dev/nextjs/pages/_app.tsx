@@ -25,7 +25,7 @@ function PagesHeader() {
       session={session}
       logIn={
         <button onClick={() => authorized()} className={styles.buttonPrimary}>
-          Log in 1
+          Log in
         </button>
       }
       logOut={
