@@ -59,7 +59,7 @@
       />
     </slot>
   {/if}
-  <button style="width: 100%" type="submit"
-    ><slot name="submitButton">Sign in with {provider}</slot></button
-  >
+  <button type="submit">
+    <slot name="submitButton">Signin{provider ? `with ${provider}` : ""}</slot>
+  </button>
 </form>

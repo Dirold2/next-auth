@@ -108,15 +108,10 @@ export function initAuth(
         async (authResponse) => {
           const auth = await authResponse.json()
 
-          console.log(response.headers)
-
-          if (response.headers) {
-            for (const cookie of authResponse.headers.getSetCookie()) {
-              response.headers.append("set-cookie", cookie);
-            }
-          } else {
-            console.error('response.headers is undefined');
-          }
+          for (const cookie of authResponse.headers.getSetCookie())
+            if ("headers" in response)
+              response.headers.append("set-cookie", cookie)
+            else response.appendHeader("set-cookie", cookie)
 
           return auth satisfies Session | null
         }
@@ -162,13 +157,8 @@ export function initAuth(
     ).then(async (authResponse) => {
       const auth = await authResponse.json()
 
-      if (response.headers) {
-        for (const cookie of authResponse.headers.getSetCookie()) {
-          response.headers.append("set-cookie", cookie);
-        }
-      } else {
-        console.error('response.headers is undefined');
-      }
+      for (const cookie of authResponse.headers.getSetCookie())
+        response.headers.append("set-cookie", cookie)
 
       return auth satisfies Session | null
     })
