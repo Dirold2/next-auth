@@ -1,4 +1,4 @@
-import { auth, unstable_update as update } from "auth"
+import { auth, update } from "auth"
 import { SessionProvider } from "next-auth/react"
 import Client from "./client"
 

@@ -22,7 +22,7 @@ export default function Page() {
         </button>
         <br />
         <p>{response ? "Response:" : "Session:"}</p>
-        <pre style={{ background: "#eee", padding: 16 }}>
+        <pre style={{ background: "#333", padding: 16, borderRadius: 8 }}>
           {JSON.stringify(response ?? session, null, 2)}
         </pre>
       </>
@@ -59,7 +59,7 @@ export default function Page() {
         Login
       </button>
       <p>Response:</p>
-      <pre style={{ background: "#eee", padding: 16 }}>
+      <pre style={{ background: "#333", padding: 16, borderRadius: 8 }}>
         {JSON.stringify(response, null, 2)}
       </pre>
     </>

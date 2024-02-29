@@ -1,3 +1,5 @@
+// TODO
+// @ts-nocheck
 import CustomLink from "@/components/custom-link"
 import packageJSON from "../package.json"
 

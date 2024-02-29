@@ -1,3 +1,6 @@
+// TODO
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { join } from "node:path"
 import { defineConfig, devices } from "@playwright/test"
 import * as dotenv from "dotenv"

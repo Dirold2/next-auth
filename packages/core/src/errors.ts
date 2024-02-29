@@ -40,15 +40,10 @@ type ErrorType =
  * via the [`logger.error`](https://authjs.dev/reference/core#logger) option.
  */
 export class AuthError extends Error {
-  /** The error type. Used to identify the error in the logs. */
-  type: ErrorType
-  /**
-   * Determines on which page an error should be handled. Typically `authorized` errors can be handled in-page.
-   * Default is `"error"`.
-   * @internal
-   */
-  kind?: "authorized" | "error"
-  cause?: Record<string, unknown> & { err?: Error }
+  type: ErrorType;
+  kind?: "authorized" | "error";
+  cause?: Record<string, unknown> & { err?: Error };
+
   constructor(
     message?: string | Error | ErrorOptions,
     errorOptions?: ErrorOptions
@@ -72,13 +67,14 @@ export class AuthError extends Error {
     this.kind = this.constructor.kind ?? "error"
 
     Error.captureStackTrace?.(this, this.constructor)
+    console.error(`Error occurred: ${this.type}`, this.cause)
     const url = `https://errors.authjs.dev#${this.type.toLowerCase()}`
     this.message += `${this.message ? " ." : ""}Read more at ${url}`
   }
 }
 
-export class authorizedError extends AuthError {
-  static kind = "authorized"
+export class AuthorizedError extends AuthError {
+  static kind = "authorized";
 }
 
 /**
@@ -191,7 +187,7 @@ export class InvalidCallbackUrl extends AuthError {
  * The `authorize` callback returned `null` in the [Credentials provider](https://authjs.dev/getting-started/providers/credentials-tutorial).
  * We don't recommend providing information about which part of the credentials were wrong, as it might be abused by malicious hackers.
  */
-export class CredentialsAuthorized extends authorizedError {
+export class CredentialsAuthorized extends AuthorizedError {
   static type = "CredentialsAuthorized"
 }
 
@@ -291,7 +287,7 @@ export class MissingSecret extends AuthError {
  * in the provider configuration.
  * :::
  */
-export class OAuthAccountNotLinked extends authorizedError {
+export class OAuthAccountNotLinked extends AuthorizedError {
   static type = "OAuthAccountNotLinked"
 }
 
@@ -301,7 +297,7 @@ export class OAuthAccountNotLinked extends authorizedError {
  *
  * For a full list of possible reasons, check out the specification [Authorization Code Grant: Error Response](https://www.rfc-editor.org/rfc/rfc6749#section-4.1.2.1)
  */
-export class OAuthCallbackError extends authorizedError {
+export class OAuthCallbackError extends AuthorizedError {
   static type = "OAuthCallbackError"
 }
 
@@ -340,7 +336,7 @@ export class SessionTokenError extends AuthError {
  * ```
  * :::
  */
-export class OAuthauthorizedError extends authorizedError {
+export class OAuthauthorizedError extends AuthorizedError {
   static type = "OAuthauthorizedError"
 }
 
@@ -354,7 +350,7 @@ export class OAuthauthorizedError extends authorizedError {
  * - There was an error with the database:
  *   Check the database logs.
  */
-export class EmailauthorizedError extends authorizedError {
+export class EmailauthorizedError extends AuthorizedError {
   static type = "EmailauthorizedError"
 }
 
@@ -429,7 +425,7 @@ export class Verification extends AuthError {
  * Double submit cookie pattern, a CSRF defense, requires matching values in a cookie
  * and request parameter. More on this at [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/Security/CSRF).
  */
-export class MissingCSRF extends authorizedError {
+export class MissingCSRF extends AuthorizedError {
   static type = "MissingCSRF"
 }
 
@@ -463,7 +459,7 @@ export class WebAuthnVerificationError extends AuthError {
  *
  * For security reasons, Auth.js does not automatically link accounts to existing accounts if the user is not loged in.
  */
-export class AccountNotLinked extends authorizedError {
+export class AccountNotLinked extends AuthorizedError {
   static type = "AccountNotLinked"
 }
 

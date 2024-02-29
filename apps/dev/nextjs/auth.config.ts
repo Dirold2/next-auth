@@ -30,16 +30,19 @@ export default {
         }
       },
     }),
-    GitHub,
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),,
     Google,
     // Keycloak({
     //   clientId: process.env.KEYCLOAK_CLIENT_ID,
     //   clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
     //   issuer: process.env.KEYCLOAK_ISSUER_URL,
     // }),
-    Facebook,
+    // Facebook,
     // Auth0,
-    Twitter,
+    // Twitter,
   ].filter(Boolean) as NextAuthConfig["providers"],
   callbacks: {
     jwt({ token, trigger, session }) {

@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-use-before-define
 import * as React from "react"
-import { logIn, logOut, useSession } from "next-auth/react"
+import { authorized, logOut, useSession } from "next-auth/react"
 import { AuthorizedOptions, AuthorizedResponse } from "next-auth/lib/client.js"
 import { AuthorizedParams } from "next-auth/lib/client.js"
 
@@ -16,9 +16,9 @@ export default function Page() {
     event.preventDefault()
 
     if (options && options.redirect) {
-      return logIn("email", options)
+      return authorized("email", options)
     }
-    const response = await logIn("email", options)
+    const response = await authorized("email", options)
     setResponse(response)
   }
 

@@ -29,8 +29,8 @@ export interface AuthClientConfig {
 
 export interface UseSessionOptions<R extends boolean> {
   required: R
-  /** Defaults to `authorized` */
-  onUnauthenticated?: () => void
+
+  onUnauthenticated?: (url: string) => void;
 }
 
 // Util type that matches some strings literally, but allows any other string as well.

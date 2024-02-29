@@ -92,7 +92,7 @@ export async function logOut(
   return res
 }
 
-type UpdateParams = Parameters<NextAuthResult["unstable_update"]>
+type UpdateParams = Parameters<NextAuthResult["update"]>
 export async function update(
   data: UpdateParams[0],
   config: NextAuthConfig

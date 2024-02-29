@@ -1,14 +1,11 @@
-import type {
-  InternalProvider,
-  AuthorizedPageErrorParam,
-  Theme,
-} from "../../types.js"
-import { webauthnScript } from "../utils/webauthn-client.js"
+import { type InternalProvider , type AuthorizedPageErrorParam , type Theme } from "../../types.js";
+import { webauthnScript } from "../utils/webauthn-client.js";
 
-const loginErrors: Record<string | number | symbol, string> = {
+
+
+const loginErrors: Record<string, string> = {
   default: "Unable to login.",
   Authorized: "Try signing in with a different account.",
-  OAuthAuthorized: "Try signing in with a different account.",
   OAuthCallbackError: "Try signing in with a different account.",
   OAuthCreateAccount: "Try signing in with a different account.",
   EmailCreateAccount: "Try signing in with a different account.",
@@ -23,27 +20,16 @@ function hexToRgba(hex?: string, alpha = 1) {
   if (!hex) {
     return
   }
-  // Remove the "#" character if it's included
   hex = hex.replace(/^#/, "")
-
-  // Expand 3-digit hex codes to their 6-digit equivalents
   if (hex.length === 3) {
     hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
   }
-
-  // Parse the hex value to separate R, G, and B components
   const bigint = parseInt(hex, 16)
   const r = (bigint >> 16) & 255
   const g = (bigint >> 8) & 255
   const b = bigint & 255
-
-  // Ensure the alpha value is within the valid range [0, 1]
   alpha = Math.min(Math.max(alpha, 0), 1)
-
-  // Construct the RGBA string
-  const rgba = `rgba(${r}, ${g}, ${b}, ${alpha})`
-
-  return rgba
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
 function ConditionalUIScript(providerID: string) {
@@ -126,23 +112,11 @@ export default function SigninPage(props: {
         )}
         {theme?.logo && <img src={theme.logo} alt="Logo" className="logo" />}
         {providers.map((provider, i) => {
-          let bg, text, logo, logoDark, bgDark, textDark
+          let bg = ""; let text = ""; let logo = ""; let logoDark = ""; let bgDark = ""; let textDark = "";
           if (provider.type === "oauth" || provider.type === "oidc") {
-            ;({
-              bg = "",
-              text = "",
-              logo = "",
-              bgDark = bg,
-              textDark = text,
-              logoDark = "",
-            } = provider.style as any ?? {})
-
-            logo = logo.startsWith("/") ? providerLogoPath + logo : logo
-            logoDark = logoDark.startsWith("/")
-              ? providerLogoPath + logoDark
-              : logoDark || logo
-
-            logoDark ||= logo
+            ({ bg = "", text = "", logo = "", bgDark = "", textDark = "", logoDark = "" } = provider.style ?? {});
+            logo = logo.startsWith("/") ? providerLogoPath + logo : logo;
+            logoDark = logoDark?.startsWith("/") ? providerLogoPath + logoDark : logoDark || logo;
           }
           return (
             <div key={provider.id} className="provider">

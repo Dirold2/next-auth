@@ -3,4 +3,6 @@
   "openInGitHub.remote.branch": "main",
   "typescript.preferences.importModuleSpecifierEnding": "js",
   "docwriter.style": "Auto-detect",
+  "docwriter.progress.trackClasses": true,
+  "docwriter.progress.trackTypes": true,
 }

@@ -4,6 +4,7 @@ import { authorized, logOut, useSession } from "next-auth/react"
 
 export default function Client() {
   const { data: session, update, status } = useSession()
+
   return (
     <div className="card">
       <div className="card-header">
@@ -31,7 +32,7 @@ export default function Client() {
               <button onClick={() => authorized("github")}>
                 Log in Github
               </button>
-              <button onClick={() => authorized("credentials", {})}>
+              <button onClick={() => authorized("credentials", { password: "password"})}>
                 Log in Credentials
               </button>
             </>

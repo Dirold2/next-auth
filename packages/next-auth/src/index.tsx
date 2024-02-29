@@ -65,14 +65,14 @@
  * :::
  *
  * @module next-auth
- */
+*/
 
 import { Auth } from "@auth/core"
 import { reqWithEnvURL, setEnvDefaults } from "./lib/env.js"
 import { initAuth } from "./lib/index.js"
 import { authorized, logOut, update } from "./lib/actions.js"
 
-import type { ResponseInternal, Session } from "@auth/core/types"
+import type { Session } from "@auth/core/types"
 import type { BuiltInProviderType } from "@auth/core/providers"
 import type {
   GetServerSidePropsContext,
@@ -80,7 +80,7 @@ import type {
   NextApiResponse,
 } from "next"
 import type { AppRouteHandlerFn } from "./lib/types.js"
-import type { NextRequest } from "next/server"
+import { NextRequest } from "next/server"
 import type { NextAuthConfig, NextAuthRequest } from "./lib/index.js"
 export { AuthError } from "@auth/core/errors"
 
@@ -102,7 +102,7 @@ export type { NextAuthConfig }
 /**
  * The result of invoking {@link NextAuth|NextAuth}, initialized with the {@link NextAuthConfig}.
  * It contains methods to set up and interact with NextAuth.js in your Next.js app.
- */
+*/
 export interface NextAuthResult {
   /**
    * The NextAuth.js [Route Handler](https://beta.nextjs.org/docs/routing/route-handlers) methods. These are used to expose an endpoint for OAuth/Email providers,
@@ -122,7 +122,7 @@ export interface NextAuthResult {
    * // ...
    * export const { handlers: { GET, POST }, auth } = NextAuth({...})
    * ```
-   */
+  */
   handlers: AppRouteHandlers
   /**
    * A universal method to interact with NextAuth.js in your Next.js app.
@@ -226,7 +226,7 @@ export interface NextAuthResult {
    *   return { props: {} }
    * }
    * ```
-   */
+  */
   auth: ((
     ...args: [NextApiRequest, NextApiResponse]
   ) => Promise<Session | null>) &
@@ -277,7 +277,7 @@ export interface NextAuthResult {
    * }
    * ```
    *
-   */
+  */
   authorized: <
     P extends BuiltInProviderType | string,
     R extends boolean = true,
@@ -320,14 +320,19 @@ export interface NextAuthResult {
    * ```
    *
    *
-   */
+  */
   logOut: <R extends boolean = true>(options?: {
     /** The URL to redirect to after signing out. By default, the user is redirected to the current page. */
     redirectTo?: string
     /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
     redirect?: R
   }) => Promise<R extends false ? any : never>
-  unstable_update: (
+
+  /* The above code is defining a function called `unstable_update` that takes in a parameter `data` of
+  type `Partial<Session | { user: Partial<Session["user"]> }>`. This function returns a `Promise` that
+  resolves to either a `Session` object or `null`. The function is likely used to update a session
+  object with partial data provided in the `data` parameter. */
+  update: (
     data: Partial<Session | { user: Partial<Session["user"]> }>
   ) => Promise<Session | null>
 }
@@ -356,79 +361,88 @@ export interface NextAuthResult {
  *   },
  * })
  * ```
- */
+*/
 export default function NextAuth(
   config:
     | NextAuthConfig
     | ((request: NextRequest | undefined) => NextAuthConfig)
 ): NextAuthResult {
+  // Common logic for handling config and calling Auth
+  const handleConfigAndAuth = async (
+    req: NextRequest | undefined, 
+    providedConfig?: NextAuthConfig
+  ) => {
+    const _config = typeof config === "function" ? config(req) : providedConfig ?? config;
+    setEnvDefaults(_config);
+    return await Auth(req ? reqWithEnvURL(req) : new NextRequest(req ? (req as NextRequest).nextUrl.href : ''), _config);
+  };
+
+  // Common logic for handling config and calling logOut
+  const handleConfigAndLogOut = async <R extends boolean = true>(
+    options?: {
+       redirectTo?: string;
+       redirect?: R;
+    },
+    providedConfig?: NextAuthConfig
+  ): Promise<R extends false ? any : never> => {
+    const _config = typeof config === "function" ? config(undefined) : providedConfig ?? config;
+    setEnvDefaults(_config);
+    const result = await logOut(options, _config);
+    if (options?.redirect === false) {
+       return result as any;
+    } else {
+       throw new Error("logOut should not return a value when redirect is not false");
+    }
+  };
+
+  // Handling configuration and calling Auth for the case when config is a function
   if (typeof config === "function") {
     const httpHandler = async (req: NextRequest) => {
-      const _config = config(req)
-      setEnvDefaults(_config)
-      return await Auth(reqWithEnvURL(req), _config)
-    }
+      return await handleConfigAndAuth(req);
+    };
 
     return {
+      // Defining handlers for GET and POST methods
       handlers: { GET: httpHandler, POST: httpHandler } as const,
+      // Initializing authentication with the provided config and setting environment defaults
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       auth: initAuth(config, (c) => { setEnvDefaults(c); }),
-
+      // Authorizing a user with the provided provider, options, and authorizationParams
       authorized: async (provider, options, authorizationParams) => {
-        const _config = config(undefined)
-        setEnvDefaults(_config)
-        return await authorized(provider, options, authorizationParams, _config)
+        return await authorized(provider, options, authorizationParams, config(undefined));
       },
-      logOut: async <R extends boolean = true>(options?: {
-        /** The URL to redirect to after logging out. By default, the user is redirected to the current page. */
-        redirectTo?: string | undefined
-        /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
-        redirect?: R | undefined
-      }): Promise<R extends false ? ResponseInternal<any> : never> => {
-        const _config = config(undefined)
-        setEnvDefaults(_config)
-        const result = await logOut(options, _config)
-        if (options?.redirect === false) {
-          return result as any; // Assuming `result` is of type `ResponseInternal<any>` when `redirect` is `false`
-        } else {
-          // Assuming `logOut` does not return a value when `redirect` is `true` or not provided
-          throw new Error("logOut should not return a value when redirect is not false");
-        }
+      // Logging out a user with optional redirection options
+      logOut: handleConfigAndLogOut,
+      // Updating user data asynchronously
+      update: async (data) => {
+        return await update(data, config(undefined));
       },
-      unstable_update: async (data) => {
-        const _config = config(undefined)
-        setEnvDefaults(_config)
-        return await update(data, _config)
-      },
-    }
+    };
   }
-  setEnvDefaults(config)
-  const httpHandler = async (req: NextRequest) => await Auth(reqWithEnvURL(req), config)
+
+  // Handling configuration and calling Auth for the case when config is an object
+  setEnvDefaults(config);
+  const httpHandler = async (req: NextRequest) => {
+    return await handleConfigAndAuth(req);
+  };
+
   return {
+    // Defining handlers for GET and POST methods
     handlers: { GET: httpHandler, POST: httpHandler } as const,
+    // Initializing authentication with the provided config and setting environment defaults
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     auth: initAuth(config),
+    // Authorizing a user with the provided provider, options, and authorizationParams
     authorized: async (provider, options, authorizationParams) => {
-      return await authorized(provider, options, authorizationParams, config)
+      return await authorized(provider, options, authorizationParams, config);
     },
-    logOut: async <R extends boolean = true>(options?: {
-      /** The URL to redirect to after logging out. By default, the user is redirected to the current page. */
-      redirectTo?: string | undefined;
-      /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
-      redirect?: R | undefined;
-    }): Promise<R extends false ? any : never> => {
-      const result = await logOut(options, config);
-      if (options?.redirect === false) {
-        return result as any; // Assuming `result` is of type `any` when `redirect` is `false`
-      } else {
-        // Assuming `logOut` does not return a value when `redirect` is `true` or not provided
-        throw new Error("logOut should not return a value when redirect is not false");
-      }
+    // Logging out a user with optional redirection options
+    logOut: handleConfigAndLogOut,
+    // Updating user data asynchronously
+    update: async (data) => {
+      return await update(data, config);
     },
-    unstable_update: async (data) => {
-      return await update(data, config)
-    },
-  }
+  };
 }

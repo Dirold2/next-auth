@@ -91,55 +91,57 @@ const logger: LoggerInstance = {
 };
 
 
+/**
+ * The function `useSession` in TypeScript React is used to manage session state and handle
+ * authentication logic.
+ * @param [options] - The `options` parameter in the `useSession` function is an optional object that
+ * can contain the following properties:
+ * @returns The `useSession` function returns the session context value. If the session is required and
+ * not loading, it returns an object with the session data, update function, and status set to
+ * "loading". Otherwise, it returns the actual session context value.
+ */
 export function useSession(options?: UseSessionOptions<any>): SessionContextValue {
   // Check if SessionContext is available
-  if (!SessionContext) {
-    throw new Error("React Context is unavailable in Server Components");
+  const value: SessionContextValue | undefined = React.useContext(SessionContext);
+
+  // Return loading state if context is not available
+  if (!value) {
+    return { data: null, update: async () => await Promise.resolve(null), status: "loading" };
   }
 
-  // Get the context value
-  const value: SessionContextValue = React.useContext(SessionContext)!;
-
-  // Throw an error if SessionContext is not provided
-  if (!value && process.env.NODE_ENV !== "production") {
-    throw new Error("[next-auth]: `useSession` must be wrapped in a <SessionProvider />");
-  }
-
-  // Destructure the options or set default values
   const { required, onUnauthenticated } = options ?? {};
 
-  // Check if session is required and not loading
-  const requiredAndNotLoading = required && value && value.status === "unauthenticated";
+  // Check if session is required and not available
+  const requiredAndNotLoading = required && value.status === "unauthenticated";
 
-  // Redirect to sign-in page if session is required but not available
   React.useEffect(() => {
-    if (requiredAndNotLoading) {
+    if (requiredAndNotLoading && onUnauthenticated) {
       const url = `${__NEXTAUTH.basePath}/login?${new URLSearchParams({
         error: "SessionRequired",
         callbackUrl: window.location.href,
       })}`;
-      if (onUnauthenticated) onUnauthenticated();
-      else window.location.href = url;
+      onUnauthenticated(url);
     }
   }, [requiredAndNotLoading, onUnauthenticated]);
 
   // Return session data
   if (requiredAndNotLoading) {
-    return {
-      data: value.data,
-      update: value.update,
-      status: "loading",
-    };
+    return { data: value.data, update: value.update, status: "loading" };
   }
 
   return value;
 }
 
+
+
 /**
- * Retrieves the current session data from the server.
- * @param params Parameters for the request.
- * @returns The session data.
-*/
+ * The function `getSession` fetches a session data and broadcasts a message if specified.
+ * @param {GetSessionParams} [params] - The `params` parameter in the `getSession` function is an
+ * optional parameter of type `GetSessionParams`. It is used to pass additional parameters to customize
+ * the behavior of the session retrieval process.
+ * @returns The `getSession` function is returning a `Promise` that resolves to either a `Session`
+ * object or `null`.
+ */
 export async function getSession(params?: GetSessionParams): Promise<Session | null> {
   try {
     const session = await fetchData<Session>(
@@ -169,28 +171,94 @@ export async function getSession(params?: GetSessionParams): Promise<Session | n
  *
  * [CSRF Prevention: Double Submit Cookie](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie)
 */
-export async function getCsrfToken(): Promise<string> {
+export async function getCsrfToken() {
   const response = await fetchData<{ csrfToken: string }>(
     "csrf",
     __NEXTAUTH,
     logger
   )
-
   return response?.csrfToken ?? ""
 }
 
+
 /**
- * Returns a client-safe configuration object of the currently
- * available providers.
-*/
+ * This function asynchronously fetches providers data using TypeScript in a React application.
+ * @returns The `getProviders` function is returning a Promise that resolves to either a
+ * `ProvidersType` object or `null`. The function is fetching data of type `ProvidersType` from the
+ * "providers" endpoint using the `fetchData` function, `__NEXTAUTH`, and `logger`.
+ */
 export async function getProviders(): Promise<ProvidersType | null> {
   return await fetchData<ProvidersType>("providers", __NEXTAUTH, logger)
 }
 
+
 /**
- * Initiate a signin flow or send the user to the signin page listing all possible providers.
- * Handles CSRF protection.
-*/
+ * The `logOut` function in TypeScript React handles user logout by sending a POST request to the
+ * server and updating the session accordingly.
+ * @param [options] - The `options` parameter in the `logOut` function is an object that contains
+ * optional parameters for the logout operation. It has the following properties:
+ * @returns The `logOut` function returns a Promise that resolves to either `undefined` or
+ * `AuthorizedParams` based on the generic type `R`. If `R` is `true`, it returns `undefined`,
+ * otherwise it returns `AuthorizedParams`.
+ */
+export async function logOut<R extends boolean = true>(
+  options?: AuthorizedParams<R>
+): Promise<R extends true ? undefined : AuthorizedParams> {
+  try {
+    const { callbackUrl = window.location.href } = options ?? {};
+    const baseUrl = apiBaseUrl(__NEXTAUTH);
+    const csrfToken = await getCsrfToken();
+    const res = await fetch(`${baseUrl}/logout`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Auth-Return-Redirect": "1",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: new URLSearchParams({ csrfToken, callbackUrl }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      broadcast().postMessage({ event: "session", data: { trigger: "logout" } });
+      
+      if (options?.redirect !== false) {
+        const url = data.url ?? callbackUrl;
+        window.location.href = url;
+        if (url.includes("#")) window.location.reload();
+        return undefined as R extends true ? undefined : AuthorizedParams;
+      }
+
+      await __NEXTAUTH._getSession({ event: "storage" });
+      return data;
+    } else {
+      throw new Error("Failed to log out");
+    }
+  } catch (error) {
+    console.error("[next-auth] Error during logout:", error);
+    return null as unknown as R extends true ? undefined : AuthorizedParams;
+  }
+}
+
+/**
+ * The function `authorized` in TypeScript React handles authorization with different providers and
+ * options, including fetching providers, generating login URLs, and processing authorization
+ * responses.
+ * @param {string} [provider] - The `provider` parameter in the `authorized` function is used to
+ * specify the authentication provider that the user wants to authorize with. It is a string that
+ * represents the name of the provider. This could be a social provider like Google, Facebook, or a
+ * custom provider like credentials or email.
+ * @param {AuthorizedOptions} [options] - The `options` parameter in the `authorized` function is an
+ * object that can contain the following properties:
+ * @param {SiAuthorizedParams} [authorizationParams] - The `authorizationParams` parameter in the
+ * `authorized` function is used to pass additional parameters for the authorization process. These
+ * parameters are typically specific to the authentication provider being used and may include things
+ * like client IDs, scopes, or any other necessary information for authentication.
+ * @returns The `authorized` function returns a Promise that resolves to an `AuthorizedResponse` object
+ * or `undefined`. The `AuthorizedResponse` object contains properties such as `error`, `status`, `ok`,
+ * and `url`. If an error occurs during the authorization process, the function will catch the error,
+ * log it, and return `undefined`.
+ */
 export async function authorized(
   provider?: string,
   options?: AuthorizedOptions,
@@ -214,7 +282,7 @@ export async function authorized(
     const isEmail = providers[provider].type === "email"
     const isSupportingReturn = isCredentials || isEmail
 
-    const logInUrl = `${baseUrl}/${isCredentials ? "callback" : "login"}/${provider}`
+    const logInUrl = `${baseUrl}/${isCredentials ? "callback" : "signin"}/${provider}`
 
     console.log(provider)
 
@@ -231,7 +299,7 @@ export async function authorized(
           ...options,
           csrfToken,
           callbackUrl,
-          redirect: String(options?.redirect ?? 'false'),
+          redirect: String(options?.redirect ?? false),
         }).toString(),
       }
     )
@@ -240,7 +308,7 @@ export async function authorized(
 
     if ((redirect || !isSupportingReturn) && options?.redirect !== false) {
       const url = data.url ?? callbackUrl;
-      if (!isCredentials && !isEmail) {
+      if (isCredentials && !isEmail) {
         if (url.includes("#")) window.location.reload();
         window.location.href = url;
       }
@@ -267,47 +335,6 @@ export async function authorized(
   }
 }
 
-/**
- * Initiate a logout, by destroying the current session.
- * Handles CSRF protection.
-*/
-export async function logOut<R extends boolean = true>(
-  options?: AuthorizedParams<R>
-): Promise<R extends true ? undefined : AuthorizedParams> {
-  try {
-    const { callbackUrl = window.location.href } = options ?? {};
-    const baseUrl = apiBaseUrl(__NEXTAUTH);
-    const csrfToken = await getCsrfToken();
-    const res = await fetch(`${baseUrl}/logout`, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/x-form-urlencoded",
-        "X-Auth-Return-Redirect": "1",
-      },
-      body: new URLSearchParams({ csrfToken, callbackUrl }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      broadcast().postMessage({ event: "session", data: { trigger: "logout" } });
-      
-      if (options?.redirect ?? true) {
-        const url = data.url ?? callbackUrl;
-        window.location.href = url;
-        if (url.includes("#")) window.location.reload();
-        return undefined as R extends true ? undefined : AuthorizedParams<boolean>;
-      }
-
-      await __NEXTAUTH._getSession({ event: "storage" });
-      return data;
-    } else {
-      throw new Error("Failed to log out");
-    }
-  } catch (error) {
-    console.error("[next-auth] Error during logout:", error);
-    return null as unknown as R extends true ? undefined : AuthorizedParams<boolean>;
-  }
-}
 
 /**
  * [React Context](https://react.dev/learn/passing-data-deeply-with-context) provider to wrap the app (`pages/`) to make session data available anywhere.
@@ -346,7 +373,7 @@ export function SessionProvider(props: SessionProviderProps) {
   const [loading] = React.useState(!hasInitialSession)
 
   React.useEffect(() => {
-    __NEXTAUTH._getSession = async (...args: unknown[]) => {
+    __NEXTAUTH._getSession = async (...args: [any?]) => {
       if (args[0] && typeof args[0] === 'object') {
         const { event } = args[0] as { event?: any };
         try {
@@ -415,7 +442,7 @@ export function SessionProvider(props: SessionProviderProps) {
       value={{
         data: session ?? null,
         status: loading ? "loading" : session ? "authenticated" : "unauthenticated",
-        update: async (data) => {
+        update: async (data: Partial<Session> | undefined): Promise<Session | null> => {
           try {
             if (data === undefined) {
               await logOut();

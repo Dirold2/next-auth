@@ -1,4 +1,4 @@
-import { auth, authorized, logOut, unstable_update as update } from "auth"
+import { auth, authorized, logOut, update } from "auth"
 import Footer from "components/footer"
 import { Header } from "components/header"
 import styles from "components/header.module.css"
@@ -8,6 +8,10 @@ import AuthError from "next-auth"
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html>
+      <head>
+        <title>AuthJS</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body>
         <AppHeader />
         <main>{props.children}</main>
