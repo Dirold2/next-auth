@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /**
  * <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16}}>
  *  <p style={{fontWeight: "normal"}}>Official <a href="https://docs.fauna.com/fauna/current/">Fauna</a> adapter for Auth.js / NextAuth.js.</p>
@@ -10,40 +9,18 @@
  * ## Installation
  *
  * ```bash npm2yarn
- * npm install @auth/fauna-adapter faunadb
+ * npm install @auth/fauna-adapter fauna
  * ```
  *
  * @module @auth/fauna-adapter
  */
-import {
-  type Client as FaunaClient,
-  type ExprArg,
-  Collection,
-  Create,
-  Delete,
-  Exists,
-  Get,
-  If,
-  Index,
-  Let,
-  Match,
-  Ref,
-  Select,
-  Time,
-  Update,
-  Var,
-  Paginate,
-  Lambda,
-  Do,
-  Foreach,
-  type errors,
-} from "faunadb"
+import { Client, TimeStub, fql, NullDocument, QueryValue, QueryValueObject } from "fauna"
 
 import {
-  type Adapter,
-  type AdapterSession,
-  type AdapterUser,
-  type VerificationToken,
+  Adapter,
+  AdapterSession,
+  AdapterUser,
+  VerificationToken,
 } from "@auth/core/adapters"
 
 export const collections = {
@@ -86,10 +63,9 @@ export const format = {
     for (const key in object) {
       const value = object[key]
       if (value?.value && typeof value.value === "string") {
-        newObject[key] = new Date(value.value as string);
+        newObject[key] = new Date(value.value)
       } else {
-        console.error(`Expected string for date conversion, but got: ${value.value}`);
-        newObject[key] = value;
+        newObject[key] = value
       }
     }
     return newObject as T
@@ -129,22 +105,20 @@ export function query(f: FaunaClient, format: (...args: any) => any) {
  *
  * ## Setup
  *
- * This is the Fauna Adapter for [`next-auth`](https://authjs.dev). This package can only be used in conjunction with the primary `next-auth` package. It is not a standalone package.
+ * This is the Fauna Adapter for [Auth.js](https://authjs.dev). This package can only be used in conjunction with the primary `next-auth` and other framework packages. It is not a standalone package.
  *
- * You can find the Fauna schema and seed information in the docs at [authjs.dev/reference/core/adapters/fauna](https://authjs.dev/reference/core/adapters/fauna).
+ * You can find the Fauna schema and seed information in the docs at [authjs.dev/reference/adapter/fauna](https://authjs.dev/reference/adapter/fauna).
  *
  * ### Configure Auth.js
  *
  * ```javascript title="pages/api/auth/[...nextauth].js"
  * import NextAuth from "next-auth"
- * import { Client as FaunaClient } from "faunadb"
+ * import { Client } from "fauna"
  * import { FaunaAdapter } from "@auth/fauna-adapter"
  *
- * const client = new FaunaClient({
+ * const client = new Client({
  *   secret: "secret",
- *   scheme: "http",
- *   domain: "localhost",
- *   port: 8443,
+ *   endpoint: new URL('http://localhost:8443')
  * })
  *
  * // For more information on each option (and a full list of options) go to
@@ -159,42 +133,128 @@ export function query(f: FaunaClient, format: (...args: any) => any) {
  *
  * ### Schema
  *
- * Run the following commands inside of the `Shell` tab in the Fauna dashboard to setup the appropriate collections and indexes.
+ * Run the following FQL code inside the `Shell` tab in the Fauna dashboard to set up the appropriate collections and indexes.
  *
  * ```javascript
- * CreateCollection({ name: "accounts" })
- * CreateCollection({ name: "sessions" })
- * CreateCollection({ name: "users" })
- * CreateCollection({ name: "verification_tokens" })
+ * Collection.create({
+ *   name: "Account",
+ *   indexes: {
+ *     byUserId: {
+ *       terms: [
+ *         { field: "userId" }
+ *       ]
+ *     },
+ *     byProviderAndProviderAccountId: {
+ *       terms [
+ *         { field: "provider" },
+ *         { field: "providerAccountId" }
+ *       ]
+ *     },
+ *   }
+ * })
+ * Collection.create({
+ *   name: "Session",
+ *   constraints: [
+ *     {
+ *       unique: ["sessionToken"],
+ *       status: "active",
+ *     }
+ *   ],
+ *   indexes: {
+ *     bySessionToken: {
+ *       terms: [
+ *         { field: "sessionToken" }
+ *       ]
+ *     },
+ *     byUserId: {
+ *       terms [
+ *         { field: "userId" }
+ *       ]
+ *     },
+ *   }
+ * })
+ * Collection.create({
+ *   name: "User",
+ *   constraints: [
+ *     {
+ *       unique: ["email"],
+ *       status: "active",
+ *     }
+ *   ],
+ *   indexes: {
+ *     byEmail: {
+ *       terms [
+ *         { field: "email" }
+ *       ]
+ *     },
+ *   }
+ * })
+ * Collection.create({
+ *   name: "VerificationToken",
+ *   indexes: {
+ *     byIdentifierAndToken: {
+ *       terms [
+ *         { field: "identifier" },
+ *         { field: "token" }
+ *       ]
+ *     },
+ *   }
+ * })
  * ```
  *
+ * > This schema is adapted for use in Fauna and based upon our main [schema](https://authjs.dev/reference/core/adapters#models)
+ *
+ * ### Migrating from v1
+ * In v2, we've renamed the collections to use uppercase naming, in accordance with Fauna best practices. If you're migrating from v1, you'll need to rename your collections to match the new naming scheme.
+ * Additionally, we've renamed the indexes to match the new method-like index names.
+ *
+ * #### Migration script
+ * Run this FQL script inside a Fauna shell for the database you're migrating from v1 to v2 (it will rename your collections and indexes to match):
+ *
  * ```javascript
- * CreateIndex({
- *   name: "account_by_provider_and_provider_account_id",
- *   source: Collection("accounts"),
- *   unique: true,
- *   terms: [
- *     { field: ["data", "provider"] },
- *     { field: ["data", "providerAccountId"] },
- *   ],
+ * Collection.byName("accounts")!.update({
+ *   name: "Account"
+ *   indexes: {
+ *     byUserId: {
+ *         terms: [{ field: "userId" }]
+ *     },
+ *     byProviderAndProviderAccountId: {
+ *         terms: [{ field: "provider" }, { field: "providerAccountId" }]
+ *     },
+ *     account_by_provider_and_provider_account_id: null,
+ *     accounts_by_user_id: null
+ *   }
  * })
- * CreateIndex({
- *   name: "session_by_session_token",
- *   source: Collection("sessions"),
- *   unique: true,
- *   terms: [{ field: ["data", "sessionToken"] }],
+ * Collection.byName("sessions")!.update({
+ *   name: "Session",
+ *   indexes: {
+ *     bySessionToken: {
+ *         terms: [{ field: "sessionToken" }]
+ *     },
+ *     byUserId: {
+ *         terms: [{ field: "userId" }]
+ *     },
+ *     session_by_session_token: null,
+ *     sessions_by_user_id: null
+ *   }
  * })
- * CreateIndex({
- *   name: "user_by_email",
- *   source: Collection("users"),
- *   unique: true,
- *   terms: [{ field: ["data", "email"] }],
+ * Collection.byName("users")!.update({
+ *   name: "User",
+ *   indexes: {
+ *     byEmail: {
+ *         terms: [{ field: "email" }]
+ *     },
+ *     user_by_email: null
+ *   }
  * })
- * CreateIndex({
- *   name: "verification_token_by_identifier_and_token",
- *   source: Collection("verification_tokens"),
- *   unique: true,
- *   terms: [{ field: ["data", "identifier"] }, { field: ["data", "token"] }],
+ * Collection.byName("verification_tokens")!.update({
+ *   name: "VerificationToken",
+ *   indexes: {
+ *     byIdentifierAndToken: {
+ *         terms: [{ field: "identifier" }, { field: "token" }]
+ *     },
+ *     verification_token_by_identifier_and_token: null
+ *   }
  * })
  * ```
  *
@@ -210,10 +270,10 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
     UserByEmail,
     VerificationTokenByIdentifierAndToken,
   } = indexes
-  const { to: toFormat, from: fromFormat } = { to: format.to.bind(format), from: format.from.bind(format) };
-  const q = query(f, fromFormat)
+  const { to, from } = format
+  const q = query(f, from)
   return {
-    createUser: async (data) => (await q(Create(Users, { data: toFormat(data) })))!,
+    createUser: async (data) => (await q(Create(Users, { data: to(data) })))!,
     getUser: async (id) => await q(Get(Ref(Users, id))),
     getUserByEmail: async (email) => await q(Get(Match(UserByEmail, email))),
     async getUserByAccount({ provider, providerAccountId }) {
@@ -232,24 +292,21 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
       return user
     },
     updateUser: async (data) =>
-      (await q(Update(Ref(Users, data.id), { data: toFormat(data) })))!,
+      (await q(Update(Ref(Users, data.id), { data: to(data) })))!,
     async deleteUser(userId) {
-      await f.query(
-        Do(
-          Foreach(
-            Paginate(Match(SessionsByUser, userId)),
-            Lambda("ref", Delete(Var("ref")))
-          ),
-          Foreach(
-            Paginate(Match(AccountsByUser, userId)),
-            Lambda("ref", Delete(Var("ref")))
-          ),
-          Delete(Ref(Users, userId))
-        )
-      )
+      await client.query(fql`
+        // Delete the user's sessions
+        Session.byUserId(${userId}).forEach(session => session.delete())
+        
+        // Delete the user's accounts
+        Account.byUserId(${userId}).forEach(account => account.delete())
+        
+        // Delete the user
+        User.byId(${userId}).delete()
+      `)
     },
     linkAccount: async (data) =>
-      (await q(Create(Accounts, { data: toFormat(data) })))!,
+      (await q(Create(Accounts, { data: to(data) })))!,
     async unlinkAccount({ provider, providerAccountId }) {
       const id = [provider, providerAccountId]
       await q(
@@ -259,27 +316,44 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
       )
     },
     createSession: async (data) =>
-      (await q<AdapterSession>(Create(Sessions, { data: toFormat(data) })))!,
+      (await q<AdapterSession>(Create(Sessions, { data: to(data) })))!,
     async getSessionAndUser(sessionToken) {
-      const session = await q<AdapterSession>(
-        Get(Match(SessionByToken, sessionToken))
+      const response = await client.query<[FaunaUser, FaunaSession]>(fql`
+        let session = Session.bySessionToken(${sessionToken}).first()
+        if (session != null) {
+          let user = User.byId(session.userId)
+          if (user != null) {
+            [user, session]
+          } else {
+            null
+          }
+        } else {
+          null
+        }
+      `)
+      if (response.data === null) return null
+      const [user, session] = response.data ?? []
+      return { session: format.from(session), user: format.from(user) }
+    },
+    async createSession(session) {
+      await client.query<FaunaSession>(
+        fql`Session.create(${format.to(session)})`,
       )
-      if (!session) return null
-
-      const user = await q<AdapterUser>(Get(Ref(Users, session.userId)))
-
-      return { session, user: user! }
+      return session
     },
     async updateSession(data) {
       const ref = Select("ref", Get(Match(SessionByToken, data.sessionToken)))
-      return await q(Update(ref, { data: toFormat(data) }))
+      return await q(Update(ref, { data: to(data) }))
     },
     async deleteSession(sessionToken) {
-      await q(Delete(Select("ref", Get(Match(SessionByToken, sessionToken)))))
+      await client.query(
+        fql`Session.bySessionToken(${sessionToken}).first().delete()`,
+      )
     },
     async createVerificationToken(data) {
-      const result = await q<VerificationToken>(
-        Create(VerificationTokens, { data: toFormat(data) })
+      // @ts-expect-error
+      const { id: _id, ...verificationToken } = await q<VerificationToken>(
+        Create(VerificationTokens, { data: to(data) })
       )
       if (!result) {
         throw new Error('Verification token creation failed');
@@ -290,13 +364,15 @@ export function FaunaAdapter(f: FaunaClient): Adapter {
     async useVerificationToken({ identifier, token }) {
       const key = [identifier, token]
       const object = Get(Match(VerificationTokenByIdentifierAndToken, key))
-    
+
       const verificationToken = await q<VerificationToken>(object)
       if (!verificationToken) return null
-    
+
       // Verification tokens can be used only once
       await q(Delete(Select("ref", object)))
-      // Removed the line causing the error
+
+      // @ts-expect-error
+      delete verificationToken.id
       return verificationToken
     },
   }
