@@ -13,7 +13,7 @@ import TabItem from "@theme/TabItem"
 
 The goal of Auth.js is that you can add authentication easily to your project with just a few lines of code.
 
-The fastest way to set up Auth.js is with an [OAuth](/concepts/oauth) provider. In this tutorial, we'll be setting Auth.js in a web application to be able to log in with **GitHub**.
+The fastest way to set up Auth.js is with an [OAuth](/concepts/oauth) provider. In this tutorial, we'll be setting Auth.js in a web application to be able to sign in with **GitHub**.
 
 :::info
 Auth.js comes with a list of [built-in providers](/getting-started/providers) (Google, Facebook, Twitter, etc.). You can also integrate it with your OAuth service by [building a custom provider](/guides/providers/custom-provider).
@@ -321,7 +321,7 @@ We need to register our new app in GitHub, so that when NextAuth.js forwards the
 
 <img src={creatingOauthAppImg} />
 
-Log in to **GitHub**, go to [`Settings / Developers / OAuth Apps`](https://github.com/settings/developers) and click "New OAuth App"
+Sign in to **GitHub**, go to [`Settings / Developers / OAuth Apps`](https://github.com/settings/developers) and click "New OAuth App"
 
 Next, you'll be presented with a screen to add details about your new application. Fill in the required fields, but pay extra attention to the **Authorization Callback URL** one:
 
@@ -387,7 +387,7 @@ As noted previously, NextAuth.js has built-in support for multiple OAuth provide
 
 Note that, for each provider, the configuration process will be similar to what we just did:
 
-1. Log in to the provider
+1. Sign in to the provider
 2. Create create your OAuth application within it
 3. Set the callback URL
 4. Get the Client ID and Generate a Client Secret
@@ -469,7 +469,7 @@ Once inserted and correct, GitHub will redirect the user to our app and NextAuth
 
 <img src={nextAuthUserLoggedIn} />
 
-Great! We have completed the whole E2E authentication flow setup so that users can log in to our application through GitHub!
+Great! We have completed the whole E2E authentication flow setup so that users can sign in to our application through GitHub!
 
 ## 4. Deploying to production
 

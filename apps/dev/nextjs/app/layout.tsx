@@ -26,7 +26,7 @@ export async function AppHeader() {
   return (
     <Header
       session={session}
-      logIn={
+      signIn={
         <form
           action={async () => {
             "use server"
@@ -40,17 +40,17 @@ export async function AppHeader() {
             }
           }}
         >
-          <button className={styles.buttonPrimary}>Log in</button>
+          <button className={styles.buttonPrimary}>Sign in</button>
         </form>
       }
-      logOut={
+      signOut={
         <form
           action={async () => {
             "use server"
             await signout()
           }}
         >
-          <button className={styles.buttonPrimary}>Log out</button>
+          <button className={styles.buttonPrimary}>Sign out</button>
         </form>
       }
     />

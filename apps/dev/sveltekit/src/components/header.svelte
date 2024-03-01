@@ -16,21 +16,19 @@
     <div class="nav-right">
       {#if $page.data.session}
         <span class="header-text">
-          <small>Log in as</small><br />
+          <small>Sign in as</small><br />
           <strong>
             {$page.data.session.user?.email ?? $page.data.session.user?.name}
           </strong>
         </span>
         <LogOut>
-          <!-- TODO -->
           <!-- svelte-ignore ts7053 -->
           <div class="buttonPrimary" slot="submitButton">Log out</div>
         </LogOut>
       {:else}
-        <span class="header-text">You are not log in</span>
-        <!-- TODO -->
+        <span class="header-text">You are not sign in</span>
         <Authorized provider="google">
-          <div class="buttonPrimary" slot="submitButton">Log in</div>
+          <div class="buttonPrimary" slot="submitButton">Sign in</div>
          </Authorized>
       {/if}
     </div>

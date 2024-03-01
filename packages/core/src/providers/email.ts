@@ -12,7 +12,7 @@ import type { NodemailerConfig, NodemailerUserConfig } from "./nodemailer.js"
  *
  * Import this provider from the `providers/nodemailer` submodule instead of `providers/email`.
  *
- * To log in with nodemailer, change `signin("email")` to `signin("nodemailer")`
+ * To Sign in with nodemailer, change `signin("email")` to `signin("nodemailer")`
  */
 export default function Email(config: NodemailerUserConfig): NodemailerConfig {
   return {

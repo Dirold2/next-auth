@@ -28,7 +28,7 @@ export default async function Page() {
           ) : null}
         </div>
         <div className="card-footer">
-          Note: The "Log in" button in the header is using{" "}
+          Note: The "Sign in" button in the header is using{" "}
           <b>server form actions</b>.
         </div>
       </div>

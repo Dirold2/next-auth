@@ -65,7 +65,7 @@ export interface AsgardeoProfile extends Record<string, any> {
  *
  * Follow these steps:
  *
- * 1. Log into the [Asgardeo console](https://console.asgardeo.io)
+ * 1. Sign into the [Asgardeo console](https://console.asgardeo.io)
  * 2. Next, go to "Application" tab (more info [here](https://wso2.com/asgardeo/docs/guides/applications/register-oidc-web-app/))
  * 3. Register a standard based, Open ID connect, application
  * 4. Add the **callback URLs**: `http://localhost:3000/api/auth/callback/asgardeo` (development) and `https://{YOUR_DOMAIN}.com/api/auth/callback/asgardeo` (production)

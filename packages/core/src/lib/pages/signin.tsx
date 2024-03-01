@@ -161,7 +161,7 @@ export default function SignInPage(props: {
                         src={logoDark}
                       />
                     )}
-                    <span>Log in with {provider.name}</span>
+                    <span>Sign in with {provider.name}</span>
                   </button>
                 </form>
               ) : null}
@@ -189,7 +189,7 @@ export default function SignInPage(props: {
                     required
                   />
                   <button id="submitButton" type="submit" tabIndex={0}>
-                    Log in with {provider.name}
+                    Sign in with {provider.name}
                   </button>
                 </form>
               )}
@@ -218,7 +218,7 @@ export default function SignInPage(props: {
                     )
                   })}
                   <button id="submitButton" type="submit" tabIndex={0}>
-                    Log in with {provider.name}
+                    Sign in with {provider.name}
                   </button>
                 </form>
               )}
@@ -248,7 +248,7 @@ export default function SignInPage(props: {
                     )
                   })}
                   <button id={`submitButton-${provider.id}`} type="submit" tabIndex={0}>
-                    Log in with {provider.name}
+                    Sign in with {provider.name}
                   </button>
                 </form>
               )}

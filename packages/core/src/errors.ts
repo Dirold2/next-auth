@@ -126,9 +126,9 @@ export class SignInCallbackError extends AuthError {
  * - The provided email/token combination was invalid/missing:
  *   Check if the provider's `sendVerificationRequest` method correctly sends the email.
  * - The provided email/token combination has expired:
- *   Ask the user to log in again.
+ *   Ask the user to Sign in again.
  * - There was an error with the database:
- *   Check the database logs.
+ *   Check the database Signs.
  *
  * For a [Credentials provider](https://authjs.dev/reference/core/providers/credentials), possible causes are:
  * - The `authorize` method threw an uncaught error:
@@ -346,9 +346,9 @@ export class OAuthSignInError extends SignInError {
  * Possible causes are:
  * - The email sent from the client is invalid, could not be normalized by [`EmailConfig.normalizeIdentifier`](https://authjs.dev/reference/core/providers/email#normalizeidentifier)
  * - The provided email/token combination has expired:
- *   Ask the user to log in again.
+ *   Ask the user to Sign in again.
  * - There was an error with the database:
- *   Check the database logs.
+ *   Check the database Signs.
  */
 export class EmailSignInError extends SignInError {
   static type = "EmailSignInError"
@@ -409,7 +409,7 @@ export class UntrustedHost extends AuthError {
 /**
  * The user's email/token combination was invalid.
  * This could be because the email/token combination was not found in the database,
- * or because the token has expired. Ask the user to log in again.
+ * or because the token has expired. Ask the user to Sign in again.
  */
 export class Verification extends AuthError {
   static type = "Verification"

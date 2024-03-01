@@ -1,32 +1,32 @@
 // eslint-disable-next-line no-use-before-define
 import * as React from "react"
-import { authorized, logOut, useSession } from "next-auth/react"
-import { AuthorizedOptions, AuthorizedResponse } from "next-auth/lib/client.js"
-import { LogOutParams } from "next-auth/lib/client.js"
+import { signin, signout, useSession } from "next-auth/react"
+import { SignInOptions, SignInResponse } from "next-auth/lib/client.js"
+import { SignOutParams } from "next-auth/lib/client.js"
 
 export default function Page() {
-  const [response, setResponse] = React.useState<AuthorizedResponse | undefined>();
+  const [response, setResponse] = React.useState<SignInResponse | undefined>();
   const [email, setEmail] = React.useState("")
 
   const handleChange = (event: { target: { value: React.SetStateAction<string> } }) => {
     setEmail(event.target.value)
   }
 
-  const handleLogin = (options: AuthorizedOptions | undefined) => async (event: { preventDefault: () => void }) => {
+  const handleLogin = (options: SignInOptions | undefined) => async (event: { preventDefault: () => void }) => {
     event.preventDefault()
 
     if (options && options.redirect) {
-      return authorized("email", options)
+      return signin("email", options)
     }
-    const response = await authorized("email", options)
+    const response = await signin("email", options)
     setResponse(response)
   }
 
-  const handleLogout = (options: LogOutParams<boolean> | undefined) => async (event: any) => {
+  const handleLogout = (options: SignOutParams<boolean> | undefined) => async (event: any) => {
     if (options && options.redirect) {
-      return logOut(options)
+      return signout(options)
     }
-    const response = await logOut(options)
+    const response = await signout(options)
     // @ts-expect-error
     setResponse(response)
   }

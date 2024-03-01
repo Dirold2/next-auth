@@ -66,7 +66,7 @@ export interface DescopeProfile {
  *
  * Follow these steps:
  *
- * 1. Log into the [Descope console](https://app.descope.com)
+ * 1. Sign into the [Descope console](https://app.descope.com)
  * 2. Follow the [OIDC instructions](https://docs.descope.com/customize/auth/oidc)
  *
  * Then, create a `.env.local` file in the project root add the following entries:

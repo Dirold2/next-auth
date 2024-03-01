@@ -30,10 +30,10 @@ export default function Client() {
           ) : (
             <>
               <button onClick={() => signin("github")}>
-                Log in Github
+                Sign in Github
               </button>
               <button onClick={() => signin("credentials", { password: "password"})}>
-                Log in Credentials
+                Sign in Credentials
               </button>
             </>
           )}

@@ -1,10 +1,10 @@
 import * as React from "react"
-import { authorized, logOut, useSession } from "next-auth/react"
-import { AuthorizedResponse, LogOutResponse } from "next-auth/lib/client.js"
+import { signin, signout, useSession } from "next-auth/react"
+import { SignInResponse, SignOutResponse } from "next-auth/lib/client.js"
 
 export default function Page() {
   const [response, setResponse] = React.useState<
-    AuthorizedResponse | LogOutResponse
+    SignInResponse | SignOutResponse
   >()
 
   const { data: session } = useSession()
@@ -14,10 +14,10 @@ export default function Page() {
       <>
         <h1>Test different flows for Credentials logout</h1>
         <span className="spacing">Default: </span>
-        <button onClick={() => logOut()}>Logout</button>
+        <button onClick={() => signout()}>Logout</button>
         <br />
         <span className="spacing">No redirect: </span>
-        <button onClick={() => logOut({ redirect: false }).then(response => setResponse(response as AuthorizedResponse | LogOutResponse | undefined))}>
+        <button onClick={() => signout({ redirect: false }).then(response => setResponse(response as SignInResponse | SignOutResponse | undefined))}>
           Logout
         </button>
         <br />
@@ -33,14 +33,14 @@ export default function Page() {
     <>
       <h1>Test different flows for Credentials login</h1>
       <span className="spacing">Default: </span>
-      <button onClick={() => authorized("credentials", { password: "password" })}>
+      <button onClick={() => signin("credentials", { password: "password" })}>
         Login
       </button>
       <br />
       <span className="spacing">No redirect: </span>
       <button
         onClick={() =>
-          authorized("credentials", { redirect: false, password: "password" }).then(
+          signin("credentials", { redirect: false, password: "password" }).then(
             setResponse
           )
         }
@@ -51,7 +51,7 @@ export default function Page() {
       <span className="spacing">No redirect, wrong password: </span>
       <button
         onClick={() =>
-          authorized("credentials", { redirect: false, password: "wrong" }).then(
+          signin("credentials", { redirect: false, password: "wrong" }).then(
             setResponse
           )
         }

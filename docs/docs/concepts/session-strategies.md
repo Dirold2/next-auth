@@ -2,7 +2,7 @@
 title: Session strategies
 ---
 
-When a user logs into your application, you usually want them to not need to log in for some time. This is called a session. Auth.js libraries support different session strategies, which are described below.
+When a user logs into your application, you usually want them to not need to sign in for some time. This is called a session. Auth.js libraries support different session strategies, which are described below.
 
 :::note
 Both strategies have advantages and disadvantages which you have to evaluate based on your requirements

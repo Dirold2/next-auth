@@ -1,7 +1,7 @@
 // @ts-expect-error
 import { test, expect } from "@playwright/test"
 
-test("Log in with Auth0", async ({ page }) => {
+test("Sign in with Auth0", async ({ page }) => {
   // Go to NextAuth example app
   await page.goto("https://next-auth-example.vercel.app")
 

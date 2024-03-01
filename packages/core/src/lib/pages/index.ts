@@ -142,7 +142,7 @@ export default function renderPage(params: RenderPageParams) {
           error,
           ...query,
         }),
-        title: "Log in",
+        title: "Sign in",
         headTags: simpleWebAuthnBrowserScript,
         status:  200,
       })
@@ -153,7 +153,7 @@ export default function renderPage(params: RenderPageParams) {
         cookies,
         theme,
         html: SignOutPage({ csrfToken: params.csrfToken, url, theme }),
-        title: "Log Out",
+        title: "Sign Out",
         status:   200,
         headTags: "",
       })

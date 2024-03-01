@@ -23,14 +23,14 @@ function PagesHeader() {
   return (
     <Header
       session={session}
-      logIn={
+      signIn={
         <button onClick={() => signin()} className={styles.buttonPrimary}>
-          Log in
+          Sign in
         </button>
       }
-      logOut={
-        <button onClick={() => signout()} className={styles.button}>
-          Log out
+      signOut={
+        <button onClick={() => signout()} className={styles.buttonPrimary}>
+          Sign out
         </button>
       }
     />
