@@ -9,8 +9,8 @@ import type { AuthAction } from "@auth/core/types"
 import type { SvelteKitAuthConfig } from "./types"
 import { setEnvDefaults } from "./env"
 
-type SignInParams = Parameters<App.Locals["signIn"]>
-export async function signIn(
+type SignInParams = Parameters<App.Locals["signin"]>
+export async function signin(
   provider: SignInParams[0],
   options: SignInParams[1] = {},
   authorizationParams: SignInParams[2],
@@ -72,8 +72,8 @@ export async function signIn(
   return res.redirect as any
 }
 
-type SignOutParams = Parameters<App.Locals["signOut"]>
-export async function signOut(
+type SignOutParams = Parameters<App.Locals["signout"]>
+export async function signout(
   options: SignOutParams[0],
   config: SvelteKitAuthConfig,
   event: RequestEvent

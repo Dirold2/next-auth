@@ -16,7 +16,7 @@
  */
 import { client as dgraphClient } from "./lib/client"
 import { format } from "./lib/utils"
-import type { Adapter } from "@auth/core/adapters"
+import type { Adapter, AdapterAccount, AdapterSession, AdapterUser, VerificationToken } from "@auth/core/adapters"
 import type { DgraphClientParams } from "./lib/client"
 import * as defaultFragments from "./lib/graphql/fragments"
 
@@ -227,7 +227,7 @@ export { format }
  *
  *  ### The nextAuth secret
  *
- *  The `$nextAuth` secret is securely generated using the `jwtSecret` and injected by the DgraphAdapter in order to allow interacting with the JWT DgraphClient for anonymous user requests made within the system `ie. login, register`. This allows
+ *  The `$nextAuth` secret is securely generated using the `jwtSecret` and injected by the DgraphAdapter in order to allow interacting with the JWT DgraphClient for anonymous user requests made within the system `ie. signin, register`. This allows
  *  secure interactions to be made with all the auth types required by next-auth. You have to specify it for each auth rule of
  *  each type defined in your secure schema.
  *
@@ -281,7 +281,7 @@ export function DgraphAdapter(
 
   const fragments = { ...defaultFragments, ...options?.fragments }
   return {
-    async createUser(input) {
+    async createUser(input: AdapterUser): Promise<AdapterUser> {
       const result = await c.run<{ user: any[] }>(
         /* GraphQL */ `
           mutation ($input: [AddUserInput!]!) {
@@ -295,8 +295,20 @@ export function DgraphAdapter(
         `,
         { input }
       )
-
-      return format.from<any>(result?.user[0])
+    
+      // Assuming `result?.user[0]` is the user data you want to return
+      // You need to transform this data into an AdapterUser object
+      const userData = result?.user[0];
+      const adapterUser: AdapterUser = {
+        // Map the fields from `userData` to the AdapterUser type
+        // For example:
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        emailVerified: null
+      };
+    
+      return adapterUser;
     },
     async getUser(id) {
       const result = await c.run<any>(
@@ -311,23 +323,27 @@ export function DgraphAdapter(
         { id }
       )
 
-      return format.from<any>(result)
+      return format.from<any>(result as Record<string, any>);
     },
     async getUserByEmail(email) {
-      const [user] = await c.run<any>(
+
+       
+       // Assuming `user` is of type `User | undefined`
+       const user: AdapterUser | undefined = await c.run<any>(
         /* GraphQL */ `
-          query ($email: String = "") {
-            queryUser(filter: { email: { eq: $email } }) {
-              ...UserFragment
-            }
-          }
-          ${fragments.User}
+           query ($email: String = "") {
+             queryUser(filter: { email: { eq: $email } }) {
+               ...UserFragment
+             }
+           }
+           ${fragments.User}
         `,
         { email }
-      )
-      return format.from<any>(user)
+       );
+       
+       return format.from<AdapterUser>(user);
     },
-    async getUserByAccount(provider_providerAccountId) {
+    async getUserByAccount(provider_providerAccountId: Pick<AdapterAccount, "provider" | "providerAccountId">): Promise<AdapterUser | null> {
       const [account] = await c.run<any>(
         /* GraphQL */ `
           query ($providerAccountId: String = "", $provider: String = "") {
@@ -349,9 +365,20 @@ export function DgraphAdapter(
         `,
         provider_providerAccountId
       )
-      return format.from<any>(account?.user)
+      if (account?.user) {
+        // Transform the account.user object into an AdapterUser object
+        const adapterUser: AdapterUser = {
+          id: account.user.id,
+          name: account.user.name,
+          email: account.user.email,
+          emailVerified: account.user.emailVerified // Assuming emailVerified is available in your GraphQL response
+        };
+        return adapterUser;
+      } else {
+        return null;
+      }
     },
-    async updateUser({ id, ...input }) {
+    async updateUser({ id, ...input }: Partial<AdapterUser> & Pick<AdapterUser, "id">): Promise<AdapterUser> {
       const result = await c.run<any>(
         /* GraphQL */ `
           mutation ($id: [ID!] = "", $input: UserPatch) {
@@ -365,7 +392,18 @@ export function DgraphAdapter(
         `,
         { id, input }
       )
-      return format.from<any>(result.user[0])
+      // Assuming `result?.user[0]` is the user data you want to return
+      // You need to transform this data into an AdapterUser object
+      const userData = result?.user[0];
+      const adapterUser: AdapterUser = {
+        // Map the fields from `userData` to the AdapterUser type
+        // For example:
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        emailVerified: null // Assuming emailVerified is not directly available in your GraphQL response
+      };
+      return adapterUser;
     },
     async deleteUser(id) {
       const result = await c.run<any>(
@@ -386,9 +424,9 @@ export function DgraphAdapter(
         `,
         { id }
       )
-
-      const deletedUser = format.from<any>(result.user[0])
-
+    
+      const deletedUser = format.from<Record<string, any>>(result.user[0] as Record<string, any>);
+    
       await c.run<any>(
         /* GraphQL */ `
           mutation ($accounts: [ID!], $sessions: [ID!]) {
@@ -401,12 +439,10 @@ export function DgraphAdapter(
           }
         `,
         {
-          sessions: deletedUser.sessions.map((x: any) => x.id),
-          accounts: deletedUser.accounts.map((x: any) => x.id),
+          sessions: deletedUser ? deletedUser.sessions.map((x: any) => x.id) : [],
+          accounts: deletedUser ? deletedUser.accounts.map((x: any) => x.id) : [],
         }
       )
-
-      return deletedUser
     },
 
     async linkAccount(data) {
@@ -445,9 +481,8 @@ export function DgraphAdapter(
         provider_providerAccountId
       )
     },
-
     async getSessionAndUser(sessionToken) {
-      const [sessionAndUser] = await c.run<any>(
+     const [sessionAndUser] = await c.run<any>(
         /* GraphQL */ `
           query ($sessionToken: String = "") {
             querySession(filter: { sessionToken: { eq: $sessionToken } }) {
@@ -457,19 +492,23 @@ export function DgraphAdapter(
               }
             }
           }
-          ${fragments.User}
-          ${fragments.Session}
         `,
         { sessionToken }
-      )
-      if (!sessionAndUser) return null
+     );
+     if (!sessionAndUser) return null;
 
-      const { user, ...session } = sessionAndUser
+     const { user, ...session } = sessionAndUser;
 
-      return {
-        user: format.from<any>(user),
-        session: { ...format.from<any>(session), userId: user.id },
-      }
+     // Ensure user is always of type AdapterUser, not null
+     const adapterUser: AdapterUser | null = format.from<AdapterUser>(user as Record<string, any>);
+     if (!adapterUser) {
+         throw new Error('User is null');
+     }
+
+     return {
+        user: adapterUser,
+        session: { ...format.from<AdapterSession>(session as Record<string, any> | undefined), userId: user.id, sessionToken: session.sessionToken, expires: session.expires },
+     };
     },
     async createSession(data) {
       const { userId, ...input } = data
@@ -490,7 +529,7 @@ export function DgraphAdapter(
 
       return data as any
     },
-    async updateSession({ sessionToken, ...input }) {
+    async updateSession({ sessionToken, ...input }: Partial<AdapterSession> & Pick<AdapterSession, "sessionToken">): Promise<AdapterSession | null | undefined> {
       const result = await c.run<any>(
         /* GraphQL */ `
           mutation ($input: SessionPatch = {}, $sessionToken: String) {
@@ -512,11 +551,12 @@ export function DgraphAdapter(
         `,
         { sessionToken, input }
       )
-      const session = format.from<any>(result.session[0])
-
-      if (!session?.user?.id) return null
-
-      return { ...session, userId: session.user.id }
+      const session = result.session[0] ? format.from<Record<string, any>>(result.session[0] as Record<string, any>) : undefined;
+    
+      if (!session?.user?.id) return null;
+    
+      // Ensure the returned object matches the AdapterSession type
+      return { ...session, userId: session.user.id, sessionToken, expires: session.expires };
     },
     async deleteSession(sessionToken) {
       await c.run<any>(
@@ -531,21 +571,36 @@ export function DgraphAdapter(
       )
     },
 
-    async createVerificationToken(input) {
+    async createVerificationToken(input: VerificationToken): Promise<VerificationToken | null | undefined> {
       const result = await c.run<any>(
-        /* GraphQL */ `
-          mutation ($input: [AddVerificationTokenInput!]!) {
-            addVerificationToken(input: $input) {
-              numUids
-            }
-          }
-        `,
-        { input }
-      )
-      return format.from<any>(result)
+         /* GraphQL */ `
+           mutation ($input: [AddVerificationTokenInput!]!) {
+             addVerificationToken(input: $input) {
+               numUids
+             }
+           }
+         `,
+         { input }
+      );
+     
+      // Assuming the result contains the necessary fields to construct a VerificationToken object
+      // You might need to adjust this part based on the actual structure of your result
+      if (result && result.numUids > 0) {
+         // Construct a VerificationToken object based on the result
+         // This is just an example; you need to map the actual fields from your result
+         const verificationToken: VerificationToken = {
+           identifier: input.identifier, // Assuming input has an identifier field
+           token: input.token, // Assuming input has a token field
+           expires: input.expires, // Assuming input has an expires field
+         };
+         return verificationToken;
+    } else {
+         // Return null or undefined based on your logic
+         return null;
+      }
     },
 
-    async useVerificationToken(params) {
+    async useVerificationToken(params): Promise<VerificationToken | null> {
       const result = await c.run<any>(
         /* GraphQL */ `
           mutation ($token: String = "", $identifier: String = "") {
@@ -563,8 +618,20 @@ export function DgraphAdapter(
         `,
         params
       )
-
-      return format.from<any>(result.verificationToken[0])
+    
+      if (result.verificationToken[0]) {
+        // Map the result to the VerificationToken type
+        const verificationToken: VerificationToken = {
+          identifier: result.verificationToken[0].identifier,
+          token: result.verificationToken[0].token,
+          expires: result.verificationToken[0].expires,
+        };
+        return verificationToken;
+      } else {
+        // Handle the case where result.verificationToken[0] is undefined
+        // For example, return null or throw an error
+        return null;
+      }
     },
   }
 }

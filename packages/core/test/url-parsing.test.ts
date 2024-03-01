@@ -21,13 +21,13 @@ describe("parse the action and provider id", () => {
       basePath: "/auth",
     },
     {
-      path: "/api/auth/signinn",
-      error: "Cannot parse action at /api/auth/signinn",
+      path: "/api/auth/signin",
+      error: "Cannot parse action at /api/auth/signin",
       basePath: "/api/auth",
     },
     {
-      path: "/api/auth/signinn/github",
-      error: "Cannot parse action at /api/auth/signinn/github",
+      path: "/api/auth/signin/github",
+      error: "Cannot parse action at /api/auth/signin/github",
       basePath: "/api/auth",
     },
     {

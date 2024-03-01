@@ -8,11 +8,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
-import { SignIn, SignOut } from "./auth-components"
+import { logIn, logOut } from "./auth-components"
 
 export default async function UserButton() {
   const session = await auth()
-  if (!session?.user) return <SignIn />
+  if (!session?.user) return <logIn />
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -40,7 +40,7 @@ export default async function UserButton() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuItem>
-          <SignOut />
+          <logOut />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

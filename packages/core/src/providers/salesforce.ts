@@ -78,8 +78,8 @@ export default function Salesforce<P extends SalesforceProfile>(
     profile(profile) {
       return {
         id: profile.user_id,
-        name: null,
-        email: null,
+        name: profile.nickname || undefined,
+        email: profile.email || undefined,
         image: profile.picture,
       }
     },

@@ -1,4 +1,4 @@
-import { getAuthorizationUrl } from "./authorization-url.js"
+import { getAuthorizationUrl } from "./signin-url.js"
 import { sendToken } from "./send-token.js"
 
 import type { Cookie } from "../../utils/cookie.js"
@@ -8,14 +8,14 @@ import type {
   ResponseInternal,
 } from "../../../types.js"
 
-export async function signIn(
+export async function signin(
   request: RequestInternal,
   cookies: Cookie[],
   options: InternalOptions
 ): Promise<ResponseInternal> {
-  const signInUrl = `${options.url.origin}${options.basePath}/signin`
+  const signinUrl = `${options.url.origin}${options.basePath}/signin`
 
-  if (!options.provider) return { redirect: signInUrl, cookies }
+  if (!options.provider) return { redirect: signinUrl, cookies }
 
   switch (options.provider.type) {
     case "oauth":
@@ -32,6 +32,6 @@ export async function signIn(
       return { ...response, cookies }
     }
     default:
-      return { redirect: signInUrl, cookies }
+      return { redirect: signinUrl, cookies }
   }
 }

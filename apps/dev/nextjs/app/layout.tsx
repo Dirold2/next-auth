@@ -1,13 +1,17 @@
-import { auth, signIn, signOut, unstable_update as update } from "auth"
+import { auth, signin, signout, update } from "auth"
 import Footer from "components/footer"
 import { Header } from "components/header"
 import styles from "components/header.module.css"
 import "./styles.css"
-import { AuthError } from "next-auth"
+import AuthError from "next-auth"
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html>
+      <head>
+        <title>AuthJS</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body>
         <AppHeader />
         <main>{props.children}</main>
@@ -22,12 +26,12 @@ export async function AppHeader() {
   return (
     <Header
       session={session}
-      signIn={
+      logIn={
         <form
           action={async () => {
             "use server"
             try {
-              await signIn()
+              await signin()
             } catch (error) {
               if (error instanceof AuthError) {
                 console.log(error)
@@ -36,17 +40,17 @@ export async function AppHeader() {
             }
           }}
         >
-          <button className={styles.buttonPrimary}>Sign in</button>
+          <button className={styles.buttonPrimary}>Log in</button>
         </form>
       }
-      signOut={
+      logOut={
         <form
           action={async () => {
             "use server"
-            await signOut()
+            await signout()
           }}
         >
-          <button className={styles.buttonPrimary}>Sign out</button>
+          <button className={styles.buttonPrimary}>Log out</button>
         </form>
       }
     />

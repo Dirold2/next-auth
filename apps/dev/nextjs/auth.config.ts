@@ -8,18 +8,11 @@ import Twitter from "next-auth/providers/twitter"
 import Keycloak from "next-auth/providers/keycloak"
 
 declare module "next-auth" {
-  /**
-   * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
-   */
   interface Session {
-    user: {
-      /** The user's postal address. */
-      address: string
-    } & User
+    user?: User | null;
   }
-
   interface User {
-    foo?: string
+    address?: string;
   }
 }
 
@@ -38,21 +31,28 @@ export default {
     }),
     GitHub,
     Google,
-    Keycloak,
-    Facebook,
+    // Keycloak({
+    //   clientId: process.env.KEYCLOAK_CLIENT_ID,
+    //   clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+    //   issuer: process.env.KEYCLOAK_ISSUER_URL,
+    // }),
+    // Facebook,
     // Auth0,
-    Twitter,
+    // Twitter,
   ].filter(Boolean) as NextAuthConfig["providers"],
   callbacks: {
     jwt({ token, trigger, session }) {
-      if (trigger === "update") token.name = session.user.name
-      return token
+      if (trigger === "update" && token) {
+        token.name = session.user.name;
+      }
+      return token;
     },
-    async session({ session, token, trigger }) {
+    async session({ session, token }) {
       return {
         ...session,
         user: {
           ...token,
+          name: token.name ?? undefined,
         },
       }
     },

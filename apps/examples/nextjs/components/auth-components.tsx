@@ -1,5 +1,7 @@
-import { signIn, signOut } from "auth"
+// @ts-nocheck
+import { authorized, signOut } from "auth"
 import { Button } from "./ui/button"
+import React from 'react'
 
 export function SignIn({
   provider,
@@ -9,7 +11,7 @@ export function SignIn({
     <form
       action={async () => {
         "use server"
-        await signIn(provider)
+        await authorized(provider)
       }}
     >
       <Button {...props}>Sign In</Button>

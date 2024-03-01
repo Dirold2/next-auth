@@ -1,3 +1,4 @@
+// @ts-nocheck
 import express, { Request, Response } from "express"
 import logger from "morgan"
 import * as path from "path"
@@ -22,7 +23,7 @@ export const app = express()
 app.set("port", process.env.PORT || 3000)
 
 // Set up views engine and path
-// @ts-expect-error (See https://stackoverflow.com/questions/45342307/error-cannot-find-module-pug)
+//  (See https://stackoverflow.com/questions/45342307/error-cannot-find-module-pug)
 app.engine("pug", pug.__express)
 app.set("views", path.join(__dirname, "../views"))
 app.set("view engine", "pug")

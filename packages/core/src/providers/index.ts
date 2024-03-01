@@ -1,10 +1,11 @@
-import { Profile } from "../types.js"
-import CredentialsProvider from "./credentials.js"
 import type {
+  CredentialsProvider,
   CredentialsConfig,
   CredentialsProviderType,
-} from "./credentials.js"
-import type EmailProvider from "./email.js"
+} from "./credentials.js";
+import { type Profile } from "../types.js"
+
+import type EmailProvider from "./nodemailer.js"
 import type { EmailConfig, EmailProviderType } from "./email.js"
 import type {
   OAuth2Config,
@@ -12,7 +13,7 @@ import type {
   OAuthProviderType,
   OIDCConfig,
 } from "./oauth.js"
-import { WebAuthnConfig, WebAuthnProviderType } from "./webauthn.js"
+import { type WebAuthnConfig, type WebAuthnProviderType } from "./webauthn.js"
 
 export * from "./credentials.js"
 export * from "./email.js"
@@ -38,7 +39,7 @@ export interface CommonProviderOptions {
   /**
    * The provider name used on the default sign-in page's sign-in button.
    * For example if it's "Google", the corresponding button will say:
-   * "Sign in with Google"
+   * "Authorized with Google"
    */
   name: string
   /** See {@link ProviderType} */
@@ -77,7 +78,7 @@ export type BuiltInProviders = Record<
   OAuthProviderType,
   (config: Partial<OAuthConfig<any>>) => OAuthConfig<any>
 > &
-  Record<CredentialsProviderType, typeof CredentialsProvider> &
+  Record<CredentialsProviderType, CredentialsProvider> &
   Record<EmailProviderType, typeof EmailProvider> &
   Record<WebAuthnProviderType, (config: Partial<WebAuthnConfig>) => WebAuthnConfig>
 

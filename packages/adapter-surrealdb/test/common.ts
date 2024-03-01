@@ -8,7 +8,8 @@ import {
   toSurrealId,
 } from "../src/index"
 import type { UserDoc, AccountDoc, SessionDoc } from "../src/index"
-import { randomUUID } from "utils/adapter"
+import { randomUUID } from "../../utils/adapter"
+import { RawQueryResult } from "surrealdb.js/script/types"
 
 export const config = (
   clientPromise: Promise<Surreal | ExperimentalSurrealHTTP<typeof fetch>>
@@ -55,10 +56,10 @@ export const config = (
     },
     async account({ provider, providerAccountId }) {
       const surreal = await clientPromise
-      const accounts = await surreal.query<[AccountDoc[]]>(
+      const accounts = await surreal.query<RawQueryResult[]>(
         `SELECT * FROM account WHERE provider = $provider AND providerAccountId = $providerAccountId`,
         { provider, providerAccountId }
-      )
+      ) as unknown as AccountDoc[]
       const account = accounts[0]
       if (account?.[0] !== undefined) return docToAccount(account[0])
       return null

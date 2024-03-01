@@ -22,7 +22,7 @@ import type {
   AdapterSession,
   VerificationToken,
 } from "@auth/core/adapters"
-import {
+import type{
   GetTableEntityResponse,
   TableClient,
   TableEntityResult,
@@ -40,16 +40,15 @@ export const keys = {
 
 export function withoutKeys<T>(
   entity: GetTableEntityResponse<TableEntityResult<T>>
-): T {
-  delete entity.partitionKey
-  delete entity.rowKey
-  // @ts-expect-error
-  delete entity.etag
-  delete entity.timestamp
-  // @ts-expect-error
-  delete entity["odata.metadata"]
-
-  return entity
+ ): T {
+  const entityAsAny = entity as any;
+  delete entityAsAny.partitionKey;
+  delete entityAsAny.rowKey;
+  delete entityAsAny.etag;
+  delete entityAsAny.timestamp;
+  delete entityAsAny["odata.metadata"];
+ 
+  return entity;
 }
 /**
  *
@@ -168,8 +167,8 @@ export const TableStorageAdapter = (client: TableClient): Adapter => {
         const accounts = withoutKeys(
           await client.getEntity<AdapterAccount>(keys.accountByUserId, userId)
         )
-        const deleteAccounts = Object.keys(accounts).map((property) =>
-          client.deleteEntity(keys.account, `${accounts[property]}_${property}`)
+        const deleteAccounts = Object.keys(accounts).map(async (property) =>
+          await client.deleteEntity(keys.account, `${accounts[property]}_${property}`)
         )
         await Promise.allSettled([
           client.deleteEntity(keys.userByEmail, user.email),
@@ -194,7 +193,7 @@ export const TableStorageAdapter = (client: TableClient): Adapter => {
         await client.upsertEntity({
           partitionKey: keys.accountByUserId,
           rowKey: account.userId,
-          [account.provider]: account.providerAccountId,
+          [account.provider!]: account.providerAccountId,
         })
         return account
       } catch {

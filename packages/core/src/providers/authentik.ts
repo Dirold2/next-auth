@@ -32,7 +32,7 @@ export interface AuthentikProfile extends Record<string, any> {
 }
 
 /**
- * Add Authentik login to your page.
+ * Add Authentik signin to your page.
  *
  * ### Setup
  *

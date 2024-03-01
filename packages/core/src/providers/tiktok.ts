@@ -8,7 +8,7 @@
  *
  * @module providers/tiktok
  */
-import { TokenSet } from "../types.js"
+import { type TokenSet } from "../types.js"
 import type { OAuthConfig, OAuthUserConfig } from "./index.js"
 
 /**
@@ -157,7 +157,7 @@ export interface TiktokProfile extends Record<string, any> {
  *
  * :::tip
  *
- * Production applications cannot use localhost URLs to sign in with Tiktok. You need add the domain and Callback/Redirect url's to your Tiktok app and have them review and approved by the Tiktok Team.
+ * Production applications cannot use localhost URLs to signin with Tiktok. You need add the domain and Callback/Redirect url's to your Tiktok app and have them review and approved by the Tiktok Team.
  *
  * :::
  *
@@ -203,7 +203,7 @@ export default function Tiktok<P extends TiktokProfile>(
     authorization: {
       url: "https://www.tiktok.com/v2/auth/authorize",
       params: {
-        client_key: options.clientId,
+        client_key: options.clientId!,
         scope: "user.info.profile",
         response_type: "code",
       },
@@ -218,13 +218,13 @@ export default function Tiktok<P extends TiktokProfile>(
             "Content-Type": "application/x-www-form-urlencoded",
           },
           body: new URLSearchParams({
-            client_key: provider.clientId!,
+            client_key: provider.clientId,
             client_secret: provider.clientSecret!,
-            code: params.code!,
+            code: String(params.code),
             grant_type: "authorization_code",
-            redirect_uri: provider.callbackUrl!,
+            redirect_uri: provider.callbackUrl,
           }),
-        }).then((res) => res.json())
+        }).then(async (res) => await res.json())
 
         const tokens: TokenSet = {
           access_token: res.access_token,
@@ -243,7 +243,7 @@ export default function Tiktok<P extends TiktokProfile>(
     userinfo: {
       url: "https://open.tiktokapis.com/v2/user/info/?fields=open_id,avatar_url,display_name,username",
       async request({ tokens, provider }) {
-        return await fetch(provider.userinfo?.url as URL, {
+        return await fetch(provider.userinfo?.url ?? 'https://example.com', {
           headers: { Authorization: `Bearer ${tokens.access_token}` },
         }).then(async (res) => await res.json())
       },
@@ -253,7 +253,7 @@ export default function Tiktok<P extends TiktokProfile>(
         id: profile.data.user.open_id,
         name: profile.data.user.display_name,
         image: profile.data.user.avatar_url,
-        email: profile.data.user.email || null,
+        email: profile.data.user.email ?? null,
       }
     },
     style: {

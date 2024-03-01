@@ -24,13 +24,18 @@ export interface DgraphClientParams {
   authHeader?: string
 }
 
-export class DgraphClientError extends Error {
-  name = "DgraphClientError"
-  constructor(errors: any[], query: string, variables: any) {
-    super(errors.map((error) => error.message).join("\n"))
-    console.error({ query, variables })
+interface ErrorDetail {
+  message: string;
+  // Add other properties as needed
+ }
+
+ export class DgraphClientError extends Error {
+  name = "DgraphClientError";
+  constructor(errors: ErrorDetail[], query: string, variables: Record<string, unknown>) {
+     super(errors.map((error) => error.message).join("\n"));
+     console.error({ query, variables });
   }
-}
+ }
 
 export function client(params: DgraphClientParams) {
   if (!params.authToken) {
@@ -71,7 +76,12 @@ export function client(params: DgraphClientParams) {
 
       const { data = {}, errors } = await response.json()
       if (errors?.length) {
-        throw new DgraphClientError(errors, query, variables)
+        // Ensure errors is of type ErrorDetail[]
+        const typedErrors: ErrorDetail[] = errors.map((error: { message: any }) => ({
+          message: error.message || 'Unknown error',
+          // Add other properties as needed
+        }));
+        throw new DgraphClientError(typedErrors, query, variables || {});
       }
       return Object.values(data)[0] as any
     },

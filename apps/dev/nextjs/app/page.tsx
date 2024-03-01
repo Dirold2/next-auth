@@ -1,4 +1,4 @@
-import { auth, unstable_update as update } from "auth"
+import { auth, update } from "auth"
 import { SessionProvider } from "next-auth/react"
 import Client from "./client"
 
@@ -28,7 +28,7 @@ export default async function Page() {
           ) : null}
         </div>
         <div className="card-footer">
-          Note: The "Sign in" button in the header is using{" "}
+          Note: The "Log in" button in the header is using{" "}
           <b>server form actions</b>.
         </div>
       </div>

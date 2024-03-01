@@ -2,6 +2,5 @@
   import Header from "$components/header.svelte"
   import "../style.css"
 </script>
-
-<Header />
+  <Header />
 <slot />

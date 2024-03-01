@@ -49,13 +49,13 @@
   },
   "devDependencies": {
     "@libsql/client": "0.4.0-pre.5",
-    "@types/better-sqlite3": "^7.6.4",
-    "@types/uuid": "^8.3.3",
-    "better-sqlite3": "^8.6.0",
-    "drizzle-kit": "^0.20.6",
-    "drizzle-orm": "^0.29.1",
-    "mysql2": "^3.2.0",
-    "postgres": "^3.3.4",
-    "tsx": "^4.7.0"
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/uuid": "^9.0.8",
+    "better-sqlite3": "^9.4.3",
+    "drizzle-kit": "^0.20.14",
+    "drizzle-orm": "^0.29.4",
+    "mysql2": "^3.9.1",
+    "postgres": "^3.4.3",
+    "tsx": "^4.7.1"
   }
 }

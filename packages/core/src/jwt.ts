@@ -39,7 +39,7 @@
 import { hkdf } from "@panva/hkdf"
 import { EncryptJWT, base64url, calculateJwkThumbprint, jwtDecrypt } from "jose"
 import { SessionStore } from "./lib/utils/cookie.js"
-import { Awaitable } from "./types.js"
+import { type Awaitable } from "./types.js"
 import type { LoggerInstance } from "./lib/utils/logger.js"
 import { MissingSecret } from "./errors.js"
 import { parse } from "cookie"
@@ -161,7 +161,7 @@ export async function getToken(
   const sessionStore = new SessionStore(
     { name: cookieName, options: { secure: secureCookie } },
     parse(headers.get("cookie") ?? ""),
-    logger
+    logger as Console
   )
 
   let token = sessionStore.value

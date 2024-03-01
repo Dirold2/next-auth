@@ -1,11 +1,21 @@
 {
-  "extends": "utils/tsconfig.json",
+  "extends": "../utils/tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": ".",
-    "rootDir": "src"
+    "rootDir": "src",
+    "module": "esnext",
+    "target": "es6",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"],
+      "@auth/core/*": ["./packages/core/*"],
+      "next-auth/*": ["./packages/next-auth/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["*.js", "*.d.ts", "lib", "providers"]

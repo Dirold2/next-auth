@@ -1,7 +1,7 @@
 /**
  * <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
  * <span style={{fontSize: "1.35rem" }}>
- *  Built-in sign in with <b>Descope</b> integration.
+ *  Built-in signin with <b>Descope</b> integration.
  * </span>
  * <a href="https://descope.com" style={{backgroundColor: "#000000", padding: "12px", borderRadius: "100%" }}>
  *   <img style={{display: "block"}} src="https://authjs.dev/img/providers/descope.svg" width="24"/>

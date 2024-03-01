@@ -1,10 +1,16 @@
 {
-  "extends": "utils/tsconfig.json",
+  "extends": "../utils/tsconfig.json",
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "jsx": "react-jsx",
     "outDir": ".",
-    "rootDir": "src"
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"],
+      "@auth/core/*": ["./packages/core/*"],
+      "next-auth/*": ["./packages/next-auth/*"]
+    },
   },
   "include": ["src/**/*"],
   "exclude": ["*.js", "*.d.ts"]

@@ -76,12 +76,12 @@ export function toResponse(res: ResponseInternal): Response {
     else headers.set("Set-Cookie", cookieHeader)
   })
 
-  let body = res.body
+  let body: BodyInit | null = res.body;
 
   if (headers.get("content-type") === "application/json")
     body = JSON.stringify(res.body)
   else if (headers.get("content-type") === "application/x-www-form-urlencoded")
-    body = new URLSearchParams(res.body).toString()
+    body = new URLSearchParams(res.body as Record<string, string>).toString()
 
   const status = res.redirect ? 302 : res.status ?? 200
   const response = new Response(body, { headers, status })
@@ -122,6 +122,7 @@ export function parseActionAndProviderId(
   if (a === null)
     throw new UnknownAction(`Cannot parse action at ${pathname}`)
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, actionAndProviderId] = a
 
   const b = actionAndProviderId.replace(/^\//, "").split("/")

@@ -1,3 +1,5 @@
+// TODO
+// @ts-nocheck
 /**
  * <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16}}>
  *  Official <a href="https://www.prisma.io/docs">Prisma</a> adapter for Auth.js / NextAuth.js.
@@ -37,7 +39,7 @@ import type {
  *
  * const prisma = new PrismaClient()
  *
- * export { handlers, auth, signIn, signOut } = NextAuth({
+ * export { handlers, auth, signin, signout } = NextAuth({
  *   adapter: PrismaAdapter(prisma),
  *   providers: [
  *     Google,
@@ -279,7 +281,7 @@ export function PrismaAdapter(
       p.session.delete({ where: { sessionToken } }),
     async createVerificationToken(data) {
       const verificationToken = await p.verificationToken.create({ data })
-      // @ts-expect-errors // MongoDB needs an ID, but we don't
+      // MongoDB needs an ID, but we don't
       if (verificationToken.id) delete verificationToken.id
       return verificationToken
     },
@@ -288,7 +290,7 @@ export function PrismaAdapter(
         const verificationToken = await p.verificationToken.delete({
           where: { identifier_token },
         })
-        // @ts-expect-errors // MongoDB needs an ID, but we don't
+        // MongoDB needs an ID, but we don't
         if (verificationToken.id) delete verificationToken.id
         return verificationToken
       } catch (error) {

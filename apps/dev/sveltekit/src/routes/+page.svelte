@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores"
-  import { SignIn, SignOut } from "@auth/sveltekit/components"
-  import { signIn, signOut } from "@auth/sveltekit/client"
+  import { Authorized } from "@auth/sveltekit/components"
+  import { authorized } from "@auth/sveltekit/client"
 
   let password = ""
 </script>
@@ -24,13 +24,13 @@
         <code>@auth/sveltekit/components</code> to run via form actions.
       </p>
       <div class="actions">
-        <SignIn provider="github">
+        <Authorized provider="github">
           <span slot="submitButton">Sign In with GitHub</span>
-        </SignIn>
-        <SignIn provider="discord">
+        </Authorized>
+        <Authorized provider="discord">
           <span slot="submitButton">Sign In with Discord</span>
-        </SignIn>
-        <SignIn
+        </Authorized>
+        <Authorized
           provider="credentials"
           authorizationParams={{
             foo: "bar",
@@ -41,7 +41,7 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required />
           </div>
-        </SignIn>
+        </Authorized>
       </div>
     </div>
   </div>
@@ -56,10 +56,10 @@
       </p>
       <div class="actions">
         <div class="wrapper-form">
-          <button on:click={() => signIn("github")}>Sign In with GitHub</button>
+          <button on:click={() => authorized("github")}>Sign In with GitHub</button>
         </div>
         <div class="wrapper-form">
-          <button on:click={() => signIn("discord")}
+          <button on:click={() => authorized("discord")}
             >Sign In with Discord</button
           >
         </div>
@@ -74,7 +74,7 @@
               required
             />
           </div>
-          <button on:click={() => signIn("credentials", { password })}>
+          <button on:click={() => authorized("credentials", { password })}>
             Sign In with Credentials
           </button>
         </div>

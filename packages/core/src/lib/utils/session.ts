@@ -22,10 +22,10 @@ export async function getLoggedInUser(
     const salt = options.cookies.sessionToken.name
     const payload = await jwt.decode({ ...jwt, token: sessionToken, salt })
 
-    if (payload && payload.sub) {
+    if (payload?.sub) {
       return {
         id: payload.sub,
-        name: payload.name,
+        name: payload.name ?? undefined,
         email: payload.email,
         image: payload.picture,
       }

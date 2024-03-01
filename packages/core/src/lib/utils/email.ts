@@ -4,7 +4,7 @@ import type { Theme } from "../../types.js"
  * Email HTML body
  * Insert invisible space into domains from being turned into a hyperlink by email
  * clients like Outlook and Apple mail, as this is confusing because it seems
- * like they are supposed to click on it to sign in.
+ * like they are supposed to click on it to signin.
  *
  * @note We don't add the email address to avoid needing to escape it, if you do, remember to sanitize it!
  */
@@ -34,7 +34,7 @@ export function html(params: { url: string; host: string; theme: Theme }) {
     <tr>
       <td align="center"
         style="padding: 10px 0px; font-size: 22px; font-family: Helvetica, Arial, sans-serif; color: ${color.text};">
-        Sign in to <strong>${escapedHost}</strong>
+        Authorized to <strong>${escapedHost}</strong>
       </td>
     </tr>
     <tr>
@@ -62,5 +62,5 @@ export function html(params: { url: string; host: string; theme: Theme }) {
 
 /** Email Text body (fallback for email clients that don't render HTML, e.g. feature phones) */
 export function text({ url, host }: { url: string; host: string }) {
-  return `Sign in to ${host}\n${url}\n\n`
+  return `Authorized to ${host}\n${url}\n\n`
 }

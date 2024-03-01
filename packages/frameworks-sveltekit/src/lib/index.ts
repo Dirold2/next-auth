@@ -20,7 +20,7 @@
  * import GitHub from "@auth/sveltekit/providers/github"
  * import { GITHUB_ID, GITHUB_SECRET } from "$env/static/private"
  *
- * export const { handle, signIn, signOut } = SvelteKitAuth({
+ * export const { handle, signin, signout } = SvelteKitAuth({
  *   providers: [GitHub({ clientId: GITHUB_ID, clientSecret: GITHUB_SECRET })],
  * })
  * ```
@@ -32,7 +32,7 @@
  * import GitHub from "@auth/sveltekit/providers/github"
  * import type { Handle } from "@sveltejs/kit";
  *
- * export const { handle, signIn, signOut } = SvelteKitAuth(async (event) => {
+ * export const { handle, signin, signout } = SvelteKitAuth(async (event) => {
  *   const authOptions = {
  *     providers: [GitHub({ clientId: event.platform.env.GITHUB_ID, clientSecret: event.platform.env.GITHUB_SECRET })]
  *     secret: event.platform.env.AUTH_SECRET,
@@ -56,14 +56,14 @@
  * [origin]/auth/callback/[provider]
  * ```
  *
- * ## Signing in and signing out
+ * ## sign in and sign out
  *
  * The data for the current session in this example was made available through the `$page` store which can be set through the root `+page.server.ts` file.
  * It is not necessary to store the data there, however, this makes it globally accessible throughout your application simplifying state management.
  *
  * ```ts
  * <script>
- *   import { SignIn, SignOut } from "@auth/sveltekit/components"
+ *   import { signin, signout } from "@auth/sveltekit/components"
  *   import { page } from "$app/stores"
  * </script>
  *
@@ -80,27 +80,27 @@
  *       <small>Signed in as</small><br />
  *       <strong>{$page.data.session.user?.name ?? "User"}</strong>
  *     </span>
- *     <SignOut />
+ *     <signout />
  *   {:else}
  *     <span class="notSignedInText">You are not signed in</span>
- *     <SignIn provider="github"/>
- *     <SignIn provider="google"/>
- *     <SignIn provider="facebook"/>
+ *     <signin provider="github"/>
+ *     <signin provider="google"/>
+ *     <signin provider="facebook"/>
  *   {/if}
  * </div>
  * ```
  *
- * `<SignIn />` and `<SignOut />` are components that `@auth/sveltekit` provides out of the box - they handle the sign-in/signout flow, and can be used as-is as a starting point or customized for your own components.
+ * `<signin />` and `<signout />` are components that `@auth/sveltekit` provides out of the box - they handle the sign-in/signout flow, and can be used as-is as a starting point or customized for your own components.
  * To set up the form actions, we need to define the files in `src/routes`:
- * ```ts title="src/routes/signin/+page.server.ts"
- * import { signIn } from "../../auth"
+ * ```ts title="src/routes/login/+page.server.ts"
+ * import { signin } from "../../auth"
  * import type { Actions } from "./$types"
- * export const actions: Actions = { default: signIn }
+ * export const actions: Actions = { default: signin }
  * ```
  * ```ts title="src/routes/signout/+page.server.ts"
- * import { signOut } from "../../auth"
+ * import { signout } from "../../auth"
  * import type { Actions } from "./$types"
- * export const actions: Actions = { default: signOut }
+ * export const actions: Actions = { default: signout }
  * ```
  *
  * ## Managing the session
@@ -224,7 +224,7 @@ import { env } from "$env/dynamic/private"
 
 import type { SvelteKitAuthConfig } from "./types"
 import { setEnvDefaults } from "./env"
-import { auth, signIn, signOut } from "./actions"
+import { auth, signin, signout } from "./actions"
 import { Auth, isAuthAction } from "@auth/core"
 
 export type {
@@ -242,26 +242,26 @@ const authorizationParamsPrefix = "authorizationParams-"
 /**
  * The main entry point to `@auth/sveltekit`
  * @see https://sveltekit.authjs.dev
- */
+*/
 export function SvelteKitAuth(
   config:
     | SvelteKitAuthConfig
     | ((event: RequestEvent) => PromiseLike<SvelteKitAuthConfig>)
 ): {
   handle: Handle
-  signIn: Action
-  signOut: Action
+  signin: Action
+  signout: Action
 } {
   return {
-    signIn: async (event) => {
+    signin: async (event) => {
       const { request } = event
       const _config = typeof config === "object" ? config : await config(event)
       setEnvDefaults(env, _config)
       const formData = await request.formData()
       const { providerId: provider, ...options } = Object.fromEntries(formData)
       // get the authorization params from the options prefixed with `authorizationParams-`
-      let authorizationParams: Parameters<typeof signIn>[2] = {}
-      let _options: Parameters<typeof signIn>[1] = {}
+      let authorizationParams: Parameters<typeof signin>[2] = {}
+      let _options: Parameters<typeof signin>[1] = {}
       for (const key in options) {
         if (key.startsWith(authorizationParamsPrefix)) {
           authorizationParams[key.slice(authorizationParamsPrefix.length)] =
@@ -270,7 +270,7 @@ export function SvelteKitAuth(
           _options[key] = options[key]
         }
       }
-      await signIn(
+      await signin(
         provider as string,
         _options,
         authorizationParams,
@@ -278,11 +278,11 @@ export function SvelteKitAuth(
         event
       )
     },
-    signOut: async (event) => {
+    signout: async (event) => {
       const _config = typeof config === "object" ? config : await config(event)
       setEnvDefaults(env, _config)
       const options = Object.fromEntries(await event.request.formData())
-      await signOut(options, _config, event)
+      await signout(options, _config, event)
     },
     async handle({ event, resolve }) {
       const _config = typeof config === "object" ? config : await config(event)
@@ -291,7 +291,7 @@ export function SvelteKitAuth(
       const { url, request } = event
 
       event.locals.auth ??= () => auth(event, _config)
-      event.locals.getSession ??= event.locals.auth
+      event.locals.auth ??= event.locals.auth
 
       const action = url.pathname
         .slice(

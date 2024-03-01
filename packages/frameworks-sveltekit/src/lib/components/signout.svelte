@@ -1,18 +1,18 @@
 <script lang="ts">
   import { enhance } from "$app/forms"
-  import type { signOut } from "$lib/actions"
+  import type { signout } from "$lib/actions"
 
   export let className = ""
-  export let options: Parameters<typeof signOut>[0] = undefined
-  export let signOutPage = "signout"
+  export let options: Parameters<typeof signout>[0] = undefined
+  export let SignOutPage = "signout"
   
 </script>
 
 <form
   method="POST"
-  action={`/${signOutPage}`}
+  action={`/${SignOutPage}`}
   use:enhance
-  class={`signOutButton ${className}`}
+  class={`logOutButton ${className}`}
   {...$$restProps}
 >
   {#if options}

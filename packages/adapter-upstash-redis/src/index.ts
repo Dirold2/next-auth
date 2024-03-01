@@ -72,15 +72,15 @@ export const defaultOptions = {
 
 const isoDateRE =
   /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/
-function isDate(value: any) {
-  return value && isoDateRE.test(value) && !isNaN(Date.parse(value))
-}
+  function isDate(value: any): boolean {
+    return typeof value === 'string' && isoDateRE.test(value) && !isNaN(Date.parse(value));
+  }
 
 export function hydrateDates(json: object) {
-  return Object.entries(json).reduce((acc, [key, val]) => {
+  return Object.entries(json).reduce<any>((acc, [key, val]) => {
     acc[key] = isDate(val) ? new Date(val as string) : val
     return acc
-  }, {} as any)
+  }, {})
 }
 
 /**
@@ -203,7 +203,7 @@ export function UpstashRedisAdapter(
     user: AdapterUser
   ): Promise<AdapterUser> => {
     await setObjectAsJson(userKeyPrefix + id, user)
-    await client.set(`${emailKeyPrefix}${user.email as string}`, id)
+    await client.set(`${emailKeyPrefix}${user.email}`, id)
     return user
   }
 
@@ -233,10 +233,10 @@ export function UpstashRedisAdapter(
         `${account.provider}:${account.providerAccountId}`
       )
       if (!dbAccount) return null
-      return await getUser(dbAccount.userId)
+      return await getUser(dbAccount.userId as string)
     },
     async updateUser(updates) {
-      const userId = updates.id as string
+      const userId = updates.id 
       const user = await getUser(userId)
       return await setUser(userId, { ...(user as AdapterUser), ...updates })
     },
@@ -244,18 +244,19 @@ export function UpstashRedisAdapter(
       const id = `${account.provider}:${account.providerAccountId}`
       return await setAccount(id, { ...account, id })
     },
-    createSession: (session) => setSession(session.sessionToken, session),
+    createSession: async (session) => await setSession(session.sessionToken, session),
     async getSessionAndUser(sessionToken) {
       const session = await getSession(sessionToken)
       if (!session) return null
-      const user = await getUser(session.userId)
+      const user = await getUser(session.userId as string)
       if (!user) return null
       return { session, user }
     },
-    async updateSession(updates) {
+    async updateSession(updates: Partial<AdapterSession> & Pick<AdapterSession, "sessionToken">) {
       const session = await getSession(updates.sessionToken)
       if (!session) return null
-      return await setSession(updates.sessionToken, { ...session, ...updates })
+      const updatedSession: AdapterSession = { ...session, ...updates }
+      return await setSession(updates.sessionToken, updatedSession)
     },
     async deleteSession(sessionToken) {
       await client.del(sessionKeyPrefix + sessionToken)
@@ -304,9 +305,9 @@ export function UpstashRedisAdapter(
       await client.del(
         userKeyPrefix + userId,
         `${emailKeyPrefix}${user.email as string}`,
-        accountKey as string,
+        accountKey!,
         accountByUserKey,
-        sessionKey as string,
+        sessionKey!,
         sessionByUserIdKey
       )
     },

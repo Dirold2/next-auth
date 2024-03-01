@@ -1,11 +1,11 @@
 /**
  * Auth.js can be integrated with _any_ data layer (database, ORM, or backend API, HTTP client)
- * in order to automatically create users, handle account linking automatically, support passwordless login,
+ * in order to automatically create users, handle account linking automatically, support passwordless signin,
  * and to store session information.
  *
  * This module contains utility functions and types to create an Auth.js compatible adapter.
  *
- * Auth.js supports 2 session strategies to persist the login state of a user.
+ * Auth.js supports 2 session strategies to persist the signin state of a user.
  * The default is to use a cookie + {@link https://authjs.dev/concepts/session-strategies#jwt JWT}
  * based session store (`strategy: "jwt"`),
  * but you can also use a database adapter to store the session in a database.
@@ -148,29 +148,29 @@
  * in the core library.
  * [This guide](https://authjs.dev/guides/basics/refresh-token-rotation#database-strategy) should provide the necessary steps to do this in user land.
  *
- * ### Federated logout
+ * ### Federated signout
  *
- * Auth.js _currently_ does not support {@link https://authjs.dev/concepts/oauth#federated-logout federated logout} out of the box.
+ * Auth.js _currently_ does not support {@link https://authjs.dev/concepts/oauth#federated-signout federated signout} out of the box.
  * This means that even if an active session is deleted from the database, the user will still be signed in to the identity provider,
  * they will only be signed out of the application.
  * Eg. if you use Google as an identity provider, and you delete the session from the database,
  * the user will still be signed in to Google, but they will be signed out of your application.
  *
- * If your users might be using the application from a publicly shared computer (eg: library), you might want to implement federated logout.
- * {@link https://authjs.dev/guides/providers/federated-logout This guide} should provide the necessary steps.
+ * If your users might be using the application from a publicly shared computer (eg: library), you might want to implement federated signout.
+ * {@link https://authjs.dev/guides/providers/federated-signout This guide} should provide the necessary steps.
  *
  * @module adapters
  */
 
-import { ProviderType } from "./providers/index.js"
+import { type ProviderType } from "./providers/index.js"
 import type { Account, Authenticator, Awaitable, User } from "./types.js"
 // TODO: Discuss if we should expose methods to serialize and deserialize
 // the data? Many adapters share this logic, so it could be useful to
 // have a common implementation.
 
 /**
- * A user represents a person who can sign in to the application.
- * If a user does not exist yet, it will be created when they sign in for the first time,
+ * A user represents a person who can signin to the application.
+ * If a user does not exist yet, it will be created when they signin for the first time,
  * using the information (profile data) returned by the identity provider.
  * A corresponding account is also created and linked to the user.
  */
@@ -184,6 +184,9 @@ export interface AdapterUser extends User {
    * It is `null` if the user has not signed in with the Email provider yet, or the date of the first successful signin.
    */
   emailVerified: Date | null
+
+  role?: string | null
+  phone?: string | null
 }
 
 /**
@@ -227,7 +230,7 @@ export interface AdapterSession {
 }
 
 /**
- * A verification token is a temporary token that is used to sign in a user via their email address.
+ * A verification token is a temporary token that is used to signin a user via their email address.
  * It is created when a user signs in with an [Email provider](https://authjs.dev/reference/core/providers/email).
  * When the user clicks the link in the email, the token and email is sent back to the server
  * where it is hashed and compared to the value in the database.
@@ -243,6 +246,8 @@ export interface VerificationToken {
    * A [hashed](https://authjs.dev/concepts/hashing) token, using the `AuthConfig.secret` value.
    */
   token: string
+
+  // id: string | null
 }
 
 /**
@@ -429,7 +434,15 @@ export interface Adapter {
   ): Awaitable<AdapterAuthenticator>
 }
 
+export interface SessionPayload {
+  user: AdapterUser;
+  expires: Date;
+  sessionToken: string;
+  userId: string;
+}
+
 // For compatibility with older versions of NextAuth.js
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 declare module "next-auth/adapters" {
   type JsonObject = {

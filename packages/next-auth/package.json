@@ -1,6 +1,6 @@
 {
   "name": "next-auth",
-  "version": "5.0.0-beta.13",
+  "version": "5.0.0.7-quta",
   "description": "Authentication for Next.js",
   "homepage": "https://nextjs.authjs.dev",
   "repository": "https://github.com/nextauthjs/next-auth.git",
@@ -82,8 +82,8 @@
   "peerDependencies": {
     "@simplewebauthn/browser": "^9.0.1",
     "@simplewebauthn/server": "^9.0.2",
-    "next": "^14",
-    "nodemailer": "^6.6.5",
+    "next": "^14.1.0",
+    "nodemailer": "^6.9.10",
     "react": "^18.2.0"
   },
   "peerDependenciesMeta": {
@@ -98,9 +98,9 @@
     }
   },
   "devDependencies": {
-    "@types/react": "18.0.37",
-    "next": "14.0.3-canary.1",
-    "nodemailer": "^6.9.3",
+    "@types/react": "^18.2.58",
+    "next": "^14.1.0",
+    "nodemailer": "^6.9.10",
     "react": "^18.2.0"
   }
 }

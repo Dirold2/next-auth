@@ -5,12 +5,25 @@ import type { JSX } from "preact"
 /**
  * Besides providing type safety inside {@link CredentialsConfig.authorize}
  * it also determines how the credentials input fields will be rendered
- * on the default sign in page.
+ * on the default signin page.
  */
 export interface CredentialInput
   extends Partial<JSX.IntrinsicElements["input"]> {
   label?: string
 }
+// Assuming CredentialsProvider is defined somewhere in your project
+export type CredentialsProvider = (config: CredentialsConfig) => CredentialsConfig;
+// Определение типа CredentialsProvider
+// export interface CredentialsProvider {
+//   // Здесь должны быть поля, соответствующие конфигурации провайдера учетных данных
+//   // Например:
+//   id: string;
+//   name: string;
+//   credentials: {
+//     username: string;
+//     password: string;
+//   };
+
 
 /** The Credentials Provider needs to be configured. */
 export interface CredentialsConfig<
@@ -121,7 +134,7 @@ export type CredentialsProviderType = "Credentials"
  * })
  * ```
  * @see [Username/Password Example](https://authjs.dev/guides/providers/credentials#example---username--password)
- * @see [Web3/Signin With Ethereum Example](https://authjs.dev/guides/providers/credentials#example---web3--signin-with-ethereum)
+ * @see [Web3/login With Ethereum Example](https://authjs.dev/guides/providers/credentials#example---web3--signin-with-ethereum)
  */
 export default function Credentials<
   CredentialsInputs extends Record<string, CredentialInput> = Record<
@@ -135,6 +148,7 @@ export default function Credentials<
     type: "credentials",
     credentials: {},
     authorize: () => null,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     options: config,
   }

@@ -8,7 +8,7 @@ type LiteralUnion<T extends U, U = string> = T | (U & Record<never, never>)
 
 interface SignInOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after signing in. Defaults to the page URL the sign-in is initiated from.
+   * Specify to which URL the user will be redirected after signin in. Defaults to the page URL the sign-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */
@@ -38,7 +38,7 @@ export type SignInAuthorizationParams =
  *
  * [Documentation](https://authjs.dev/reference/sveltekit/client#signin)
  */
-export async function signIn<
+export async function signin<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   providerId?: LiteralUnion<
@@ -57,17 +57,17 @@ export async function signIn<
   const isSupportingReturn = isCredentials || isEmail
 
   const basePath = base ?? ""
-  const signInUrl = `${basePath}/auth/${
+  const signinUrl = `${basePath}/auth/${
     isCredentials ? "callback" : "signin"
   }/${providerId}`
 
-  const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`
+  const _signinUrl = `${signinUrl}?${new URLSearchParams(authorizationParams)}`
 
   // TODO: Remove this since Sveltekit offers the CSRF protection via origin check
   const csrfTokenResponse = await fetch(`${basePath}/auth/csrf`)
   const { csrfToken } = await csrfTokenResponse.json()
 
-  const res = await fetch(_signInUrl, {
+  const res = await fetch(_signinUrl, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -95,12 +95,12 @@ export async function signIn<
 }
 
 /**
- * Signs the user out, by removing the session cookie.
+ * Logs the user out, by removing the session cookie.
  * Automatically adds the CSRF token to the request.
  *
  * [Documentation](https://authjs.dev/reference/sveltekit/client#signout)
  */
-export async function signOut(options?: SignOutParams) {
+export async function signout(options?: SignOutParams) {
   const { callbackUrl = window.location.href } = options ?? {}
   const basePath = base ?? ""
   // TODO: Remove this since Sveltekit offers the CSRF protection via origin check

@@ -15,8 +15,8 @@
  * # Install the Xata CLI globally if you don't already have it
  * npm install --location=global @xata.io/cli
  *
- * # Login
- * xata auth login
+ * # signin
+ * xata auth signin
  * ```
  *
  * @module @auth/xata-adapter
@@ -264,17 +264,17 @@ export function XataAdapter(client: XataClient): Adapter {
       return user ?? null
     },
     async updateUser(user) {
-      const result = await client.db.nextauth_users.update(user.id!, user)
+      const result = await client.db.nextauth_users.update(user.id, user)
       return (
         result ?? {
           ...user,
-          id: user.id!,
+          id: user.id,
           emailVerified: user.emailVerified ?? null,
         }
       )
     },
     async deleteUser(id) {
-      return await client.db.nextauth_users.delete(id)
+      return client.db.nextauth_users.delete(id)
     },
     async linkAccount(initialAccount) {
       const { userId, ...account } = initialAccount
@@ -301,7 +301,7 @@ export function XataAdapter(client: XataClient): Adapter {
       if (!connectedAccount) {
         return
       }
-      return await client.db.nextauth_users_accounts.delete(connectedAccount.id)
+      return client.db.nextauth_users_accounts.delete(connectedAccount.id)
     },
     async createSession(initialSession) {
       const { userId, ...session } = initialSession

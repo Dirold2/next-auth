@@ -47,6 +47,6 @@
     "@azure/data-tables": "^13.2.1"
   },
   "devDependencies": {
-    "@azure/data-tables": "^13.2.1"
+    "@azure/data-tables": "^13.2.2"
   }
 }

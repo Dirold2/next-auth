@@ -1,11 +1,11 @@
 import { createHash, randomString, toRequest } from "../../utils/web.js"
-import { AuthorizedCallbackError } from "../../../errors.js"
+import { SignInCallbackError } from "../../../errors.js"
 
-import type { InternalOptions, RequestInternal } from "../../../types.js"
-import type { Account } from "../../../types.js"
+import type { InternalOptions, RequestInternal , Account } from "../../../types.js"
+
 
 /**
- * Starts an e-mail login flow, by generating a token,
+ * Starts an e-mail signin flow, by generating a token,
  * and sending it to the user's e-mail (with the help of a DB adapter).
  * At the end, it returns a redirect to the `verify-request` page.
  */
@@ -16,7 +16,7 @@ export async function sendToken(
   const { body } = request
   const { provider, callbacks, adapter } = options
   const normalizer = provider.normalizeIdentifier ?? defaultNormalizer
-  const email = normalizer(body?.email)
+  const email = normalizer(String(body?.email ?? ''))
 
   const defaultUser = { id: crypto.randomUUID(), email, emailVerified: null }
   const user = (await adapter!.getUserByEmail(email)) ?? defaultUser
@@ -28,21 +28,21 @@ export async function sendToken(
     provider: provider.id,
   } satisfies Account
 
-  let authorized
+  let signin
   try {
-    authorized = await callbacks.signIn({
+    signin = await callbacks.signin({
       user,
       account,
       email: { verificationRequest: true },
     })
   } catch (e) {
-    throw new AuthorizedCallbackError(e as Error)
+    throw new SignInCallbackError(e as Error)
   }
-  if (!authorized) throw new AuthorizedCallbackError("AccessDenied")
-  if (typeof authorized === "string") {
+  if (!signin) throw new SignInCallbackError("AccessDenied")
+  if (typeof signin === "string") {
     return {
       redirect: await callbacks.redirect({
-        url: authorized,
+        url: signin,
         baseUrl: options.url.origin,
       }),
     }

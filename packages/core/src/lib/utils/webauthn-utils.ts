@@ -1,4 +1,6 @@
-import type { WebAuthnProviderType } from "../../providers/webauthn.js"
+import type { WebAuthnProviderType, 
+  GetUserInfo 
+} from "../../providers/webauthn.js"
 import type {
   Account,
   Authenticator,
@@ -16,7 +18,8 @@ import {
   MissingAdapter,
   WebAuthnVerificationError,
 } from "../../errors.js"
-import { webauthnChallenge } from "../actions/callback/oauth/checks.js"
+import { webauthnChallenge 
+} from "../actions/callback/oauth/checks.js"
 import type {
   AuthenticationResponseJSON,
   PublicKeyCredentialCreationOptionsJSON,
@@ -28,7 +31,6 @@ import type {
   AdapterAccount,
   AdapterAuthenticator,
 } from "../../adapters.js"
-import type { GetUserInfo } from "../../providers/webauthn.js"
 import { randomString } from "./web.js"
 import type {
   VerifiedAuthenticationResponse,
@@ -254,7 +256,7 @@ export async function verifyAuthenticate(
       expectedRPID: relayingParty.id,
     })
   } catch (e: any) {
-    throw new WebAuthnVerificationError(e)
+    throw new WebAuthnVerificationError(e.message as string)
   }
 
   const { verified, authenticationInfo } = verification
@@ -282,7 +284,7 @@ export async function verifyAuthenticate(
           newCounter: authenticationInfo.newCounter,
         }
       )}`,
-      e
+      { err: e }
     )
   }
 
@@ -359,7 +361,7 @@ export async function verifyRegister(
       expectedRPID: relayingParty.id,
     })
   } catch (e: any) {
-    throw new WebAuthnVerificationError(e)
+    throw new WebAuthnVerificationError(e.message as string)
   }
 
   // Make sure the response was verified
@@ -417,7 +419,7 @@ async function getAuthenticationOptions(
 
   // Get the user's authenticators.
   const authenticators =
-    user && user["id"]
+    user?.id
       ? await adapter.listAuthenticatorsByUserId(user.id)
       : null
 
@@ -451,7 +453,7 @@ async function getRegistrationOptions(
   const { provider, adapter } = options
 
   // Get the user's authenticators.
-  const authenticators = user["id"]
+  const authenticators = user.id
     ? await adapter.listAuthenticatorsByUserId(user.id)
     : null
 

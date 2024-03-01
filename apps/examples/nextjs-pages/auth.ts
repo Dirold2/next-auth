@@ -37,7 +37,7 @@ import GitHub from "next-auth/providers/github"
 // import Naver from "next-auth/providers/naver"
 // import Netlify from "next-auth/providers/netlify"
 // import Okta from "next-auth/providers/okta"
-// import Onelogin from "next-auth/providers/onelogin"
+// import OneSignin from "next-auth/providers/oneSignin"
 // import Osso from "next-auth/providers/osso"
 // import Osu from "next-auth/providers/osu"
 // import Passage from "next-auth/providers/passage"
@@ -107,7 +107,7 @@ export const config = {
     // Naver,
     // Netlify,
     // Okta,
-    // Onelogin,
+    // OneSignin,
     // Osso,
     // Osu,
     // Passage,
@@ -134,7 +134,7 @@ export const config = {
     // Zoom,
   ],
   callbacks: {
-    authorized({ request, auth }) {
+    signIn({ request, auth }) {
       const { pathname } = request.nextUrl
       if (pathname === "/middleware-example") return !!auth
       return true

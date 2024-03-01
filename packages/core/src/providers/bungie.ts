@@ -107,7 +107,7 @@ import type { OAuthConfig, OAuthUserConfig } from "./index.js"
  *
  * Create directory `certificates` and place `localhost.key` and `localhost.crt`
  *
- * You can create a `server.js` in the root of your project and run it with `node server.js` to test Sign in with Bungie integration locally:
+ * You can create a `server.js` in the root of your project and run it with `node server.js` to test signin with Bungie integration locally:
  *
  * ```js
  * const { createServer } = require("https")

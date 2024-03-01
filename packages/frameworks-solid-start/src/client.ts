@@ -7,7 +7,7 @@ type LiteralUnion<T extends U, U = string> = T | (U & Record<never, never>)
 
 interface SignInOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after signing in. Defaults to the page URL the sign-in is initiated from.
+   * Specify to which URL the user will be redirected after signin in. Defaults to the page URL the log-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */
@@ -36,12 +36,12 @@ export type SignInAuthorizationParams =
  * Automatically adds the CSRF token to the request.
  *
  * ```ts
- * import { signIn } from "@auth/solid-start/client"
- * signIn()
- * signIn("provider") // example: signIn("github")
+ * import { signin } from "@auth/solid-start/client"
+ * signin()
+ * signin("provider") // example: signin("github")
  * ```
  */
-export async function signIn<
+export async function signin<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   providerId?: LiteralUnion<
@@ -60,23 +60,24 @@ export async function signIn<
   const isSupportingReturn = isCredentials || isEmail
 
   // TODO: Handle custom base path
-  const signInUrl = `/api/auth/${
-    isCredentials ? "callback" : "signin"
+  const signinUrl = `/api/auth/${
+    isCredentials ? "callback" : "login"
   }/${providerId}`
 
-  const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`
+  const _signinUrl = `${signinUrl}?${new URLSearchParams(authorizationParams)}`
 
   // TODO: Handle custom base path
   const csrfTokenResponse = await fetch("/api/auth/csrf")
   const { csrfToken } = await csrfTokenResponse.json()
 
-  const res = await fetch(_signInUrl, {
+  const res = await fetch(_signinUrl, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       "X-Auth-Return-Redirect": "1",
     },
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     body: new URLSearchParams({
       ...options,
       csrfToken,
@@ -85,7 +86,7 @@ export async function signIn<
   })
 
   const data = await res.clone().json()
-  const error = new URL(data.url).searchParams.get("error")
+  const error = new URL(String(data.url)).searchParams.get("error")
   if (redirect || !isSupportingReturn || !error) {
     // TODO: Do not redirect for Credentials and Email providers by default in next major
     window.location.href = data.url ?? data.redirect ?? callbackUrl
@@ -101,11 +102,11 @@ export async function signIn<
  * Automatically adds the CSRF token to the request.
  *
  * ```ts
- * import { signOut } from "@auth/solid-start/client"
- * signOut()
+ * import { signout } from "@auth/solid-start/client"
+ * signout()
  * ```
  */
-export async function signOut(options?: SignOutParams) {
+export async function signout(options?: SignOutParams) {
   const { callbackUrl = window.location.href } = options ?? {}
   // TODO: Custom base path
   const csrfTokenResponse = await fetch("/api/auth/csrf")

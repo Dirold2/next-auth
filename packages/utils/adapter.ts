@@ -1,7 +1,14 @@
 import { test, expect, beforeAll, afterAll } from "vitest"
 
-import type { Adapter } from "@auth/core/adapters"
+import type { Adapter, AdapterAccount, AdapterUser } from "@auth/core/adapters"
 import { createHash, randomInt, randomUUID } from "crypto"
+
+interface ExpectedSessionType {
+  id: any;
+  sessionToken: string;
+  userId: string;
+  expires: Date;
+}
 
 export interface TestOptions {
   adapter: Adapter
@@ -63,7 +70,7 @@ export async function runBasicTests(options: TestOptions) {
     await options.db.connect?.()
   })
 
-  const { adapter: _adapter, db, skipTests: skipTests = [], testWebAuthnMethods } = options
+  const { adapter: _adapter, db, skipTests = [], testWebAuthnMethods } = options
   const adapter = _adapter as Required<Adapter>
 
   if (!testWebAuthnMethods) {
@@ -75,12 +82,6 @@ export async function runBasicTests(options: TestOptions) {
       "updateAuthenticatorCounter"
     ])
   }
-
-  const maybeTest = (
-    method: keyof Adapter,
-    ...args: Parameters<typeof test> extends [any, ...infer U] ? U : never
-  ) =>
-    skipTests.includes(method) ? test.skip(method, ...args) : test(method, ...args)
 
   afterAll(async () => {
     // @ts-expect-error This is only used for the TypeORM adapter
@@ -94,7 +95,7 @@ export async function runBasicTests(options: TestOptions) {
     image: "https://www.fillmurray.com/460/300",
     name: "Fill Murray",
     emailVerified: new Date(),
-  }
+  };
 
   if (process.env.CUSTOM_MODEL === "1") {
     user.role = "admin"
@@ -102,11 +103,11 @@ export async function runBasicTests(options: TestOptions) {
   }
 
   const session: any = options.fixtures?.session ?? {
-    sessionToken: id(),
+    sessionToken: randomUUID(),
     expires: ONE_WEEK_FROM_NOW,
   }
 
-  const account: any = options.fixtures?.account ?? {
+  const account: AdapterAccount = {
     provider: "github",
     providerAccountId: id(),
     type: "oauth",
@@ -116,7 +117,7 @@ export async function runBasicTests(options: TestOptions) {
     refresh_token: id(),
     token_type: "bearer",
     scope: "user",
-    session_state: id(),
+    session_state: randomUUID(),
   }
 
   // All adapters must define these methods
@@ -159,7 +160,7 @@ export async function runBasicTests(options: TestOptions) {
   })
 
   test("createSession", async () => {
-    const { sessionToken } = await adapter.createSession(session)
+    const { sessionToken } = await adapter.createSession(session);
     const dbSession = await db.session(sessionToken)
 
     expect(dbSession).toEqual({ ...session, id: dbSession.id })
@@ -213,8 +214,8 @@ export async function runBasicTests(options: TestOptions) {
   test("linkAccount", async () => {
     await adapter.linkAccount(account)
     const dbAccount = await db.account({
-      provider: account.provider,
-      providerAccountId: account.providerAccountId,
+      provider: account.provider ?? "default-provider",
+      providerAccountId: account.providerAccountId ?? "default-provider-account-id",
     })
     expect(dbAccount).toEqual({ ...account, id: dbAccount.id })
   })
@@ -311,8 +312,8 @@ export async function runBasicTests(options: TestOptions) {
 
   test("unlinkAccount", async () => {
     let dbAccount = await db.account({
-      provider: account.provider,
-      providerAccountId: account.providerAccountId,
+      provider: account.provider ?? "default-provider",
+      providerAccountId: account.providerAccountId ?? "default-provider-account-id",
     })
     expect(dbAccount).toEqual({ ...account, id: dbAccount.id })
 
@@ -321,39 +322,42 @@ export async function runBasicTests(options: TestOptions) {
       providerAccountId: account.providerAccountId,
     })
     dbAccount = await db.account({
-      provider: account.provider,
-      providerAccountId: account.providerAccountId,
+      provider: account.provider ?? "default-provider",
+      providerAccountId: account.providerAccountId ?? "default-provider-account-id",
     })
     expect(dbAccount).toBeNull()
   })
 
-  maybeTest("deleteUser", async () => {
+  test("deleteUser", async () => {
+    if (skipTests.includes("deleteUser")) {
+      return; // Skip the test
+    }
     let dbUser = await db.user(user.id)
     expect(dbUser).toEqual(user)
-
+  
     // Re-populate db with session and account
     delete session.id
     await adapter.createSession(session)
     await adapter.linkAccount(account)
-
+  
     await adapter.deleteUser?.(user.id)
     dbUser = await db.user(user.id)
     // User should not exist after it is deleted
     expect(dbUser).toBeNull()
-
+  
     const dbSession = await db.session(session.sessionToken)
     // Session should not exist after user is deleted
     expect(dbSession).toBeNull()
-
+  
     const dbAccount = await db.account({
-      provider: account.provider,
-      providerAccountId: account.providerAccountId,
+      provider: account.provider ?? "default-provider",
+      providerAccountId: account.providerAccountId ?? "default-provider-account-id",
     })
     // Account should not exist after user is deleted
     expect(dbAccount).toBeNull()
   })
 
-  maybeTest("getAccount", async () => {
+  test("getAccount", async () => {
     // Setup
     const providerAccountId = randomUUID()
     const provider = "auth0"
@@ -383,9 +387,10 @@ export async function runBasicTests(options: TestOptions) {
       provider,
       providerAccountId,
     })
-    expect(dbAccount).toMatchObject(validAccount || {})
-  })
-  maybeTest("createAuthenticator", async () => {
+    expect(dbAccount).toMatchObject(validAccount ?? {})
+  });
+
+  test("createAuthenticator", async () => {
     // Setup
     const credentialID = randomUUID()
     const localUser = await adapter.createUser({
@@ -420,7 +425,7 @@ export async function runBasicTests(options: TestOptions) {
     ) : undefined
     expect(dbAuthenticator).toMatchObject(newAuthenticator)
   })
-  maybeTest("getAuthenticator", async () => {
+  test("getAuthenticator", async () => {
     // Setup
     const credentialID = randomUUID()
     const localUser = await adapter.createUser({
@@ -454,9 +459,9 @@ export async function runBasicTests(options: TestOptions) {
     const dbAuthenticator = db.authenticator ? await db.authenticator(
       credentialID
     ) : undefined
-    expect(dbAuthenticator).toMatchObject(validAuthenticator || {})
+    expect(dbAuthenticator).toMatchObject(validAuthenticator ?? {})
   })
-  maybeTest("listAuthenticatorsByUserId", async () => {
+  test("listAuthenticatorsByUserId", async () => {
     // Setup
     const user1 = await adapter.createUser({
       id: randomUUID(),
@@ -532,7 +537,7 @@ export async function runBasicTests(options: TestOptions) {
     expect(authenticators2).not.toBeNull()
     expect([authenticator3]).toMatchObject(authenticators2 || [])
   })
-  maybeTest("updateAuthenticatorCounter", async () => {
+  test("updateAuthenticatorCounter", async () => {
     // Setup
     const credentialID = randomUUID()
     const localUser = await adapter.createUser({

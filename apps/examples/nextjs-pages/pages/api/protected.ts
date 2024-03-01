@@ -1,5 +1,6 @@
 // import { auth } from "../../auth"
 // import { getSession } from "next-auth/react"
+// @ts-ignore
 import { NextApiRequest, NextApiResponse } from "next"
 
 export default async function handler(

@@ -1,58 +1,62 @@
 /**
- *
- * NextAuth.js methods and components that work in [Client components](https://nextjs.org/docs/app/building-your-application/rendering/client-components) and the [Pages Router](https://nextjs.org/docs/pages).
- *
- * For use in [Server Actions](https://nextjs.org/docs/app/api-reference/functions/server-actions), check out [these methods](https://authjs.dev/guides/upgrade-to-v5#methods)
- *
+ * NextAuth.js methods and components that work in Client components and the Pages Router.
+ * For use in Server Actions, check out these methods.
  * @module react
  */
 
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
-  apiBaseUrl,
   ClientSessionError,
+  apiBaseUrl,
   fetchData,
   now,
   parseUrl,
   useOnline,
-} from "./lib/client.js"
+} from "./lib/client.js";
 
 import type {
   BuiltInProviderType,
   RedirectableProviderType,
-} from "@auth/core/providers"
-import type { LoggerInstance, Session } from "@auth/core/types"
+} from "../../core/providers";
+import type { LoggerInstance, Session } from "../../core/types";
 import type {
   AuthClientConfig,
   ClientSafeProvider,
   LiteralUnion,
   SessionProviderProps,
-  SignInAuthorizationParams,
+  SignInAuthorizedParams,
   SignInOptions,
   SignInResponse,
   SignOutParams,
-  SignOutResponse,
   UseSessionOptions,
-} from "./lib/client.js"
+} from "./lib/client.js";
 
-// TODO: Remove/move to core?
-export type {
-  LiteralUnion,
-  SignInOptions,
-  SignInAuthorizationParams,
-  SignOutParams,
-  SignInResponse,
+// Define the structure of the context value returned by useSession hook
+export interface SessionContextValue {
+  update: UpdateSession;
+  data: Session | null;
+  status: "authenticated" | "unauthenticated" | "loading";
 }
 
-export { SessionProviderProps }
-// This behaviour mirrors the default behaviour for getting the site name that
-// happens server side in server/index.js
-// 1. An empty value is legitimate when the code is being invoked client side as
-//    relative URLs are valid in that context and so defaults to empty.
-// 2. When invoked server side the value is picked up from an environment
-//    variable and defaults to 'http://localhost:3000'.
+// Create a context for session data
+export const SessionContext = React.createContext<SessionContextValue | undefined>(undefined);
+
+// Define the function signature for updating session data
+export type UpdateSession = (data?: any) => Promise<Session | null>;
+
+// Define the parameters for the getSession function
+export interface GetSessionParams {
+  event?: "storage" | "timer" | "hidden" | string;
+  triggerEvent?: boolean;
+  broadcast?: boolean;
+}
+
+// Define the structure of the providers object
+type ProvidersType = Record<LiteralUnion<BuiltInProviderType>, ClientSafeProvider>;
+
+// Define the configuration object for NextAuth.js
 export const __NEXTAUTH: AuthClientConfig = {
   baseUrl: parseUrl(process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL).origin,
   basePath: parseUrl(process.env.NEXTAUTH_URL).path,
@@ -67,116 +71,100 @@ export const __NEXTAUTH: AuthClientConfig = {
   _lastSync: 0,
   _session: undefined,
   _getSession: () => {},
-}
+};
 
+// Function to create a broadcast channel
 function broadcast() {
   if (typeof BroadcastChannel !== "undefined") {
-    return new BroadcastChannel("next-auth")
+    return new BroadcastChannel("next-auth");
   }
   return {
     postMessage: () => {},
     addEventListener: () => {},
     removeEventListener: () => {},
-  }
+  };
 }
 
-// TODO:
+// Logger instance for logging messages
 const logger: LoggerInstance = {
   debug: console.debug,
   error: console.error,
   warn: console.warn,
-}
+};
 
-/** @todo Document */
-export type UpdateSession = (data?: any) => Promise<Session | null>
 
 /**
- * useSession() returns an object containing three things: a method called {@link UpdateSession|update}, `data` and `status`.
+ * The function `useSession` in TypeScript React is used to manage session state and handle
+ * authentication logic.
+ * @param [options] - The `options` parameter in the `useSession` function is an optional object that
+ * can contain the following properties:
+ * @returns The `useSession` function returns the session context value. If the session is required and
+ * not loading, it returns an object with the session data, update function, and status set to
+ * "loading". Otherwise, it returns the actual session context value.
  */
-export type SessionContextValue<R extends boolean = false> = R extends true
-  ?
-      | { update: UpdateSession; data: Session; status: "authenticated" }
-      | { update: UpdateSession; data: null; status: "loading" }
-  :
-      | { update: UpdateSession; data: Session; status: "authenticated" }
-      | {
-          update: UpdateSession
-          data: null
-          status: "unauthenticated" | "loading"
-        }
+export function useSession(options?: UseSessionOptions<any>): SessionContextValue {
+  // Check if SessionContext is available
+  const value: SessionContextValue | undefined = React.useContext(SessionContext);
 
-export const SessionContext = React.createContext?.<
-  SessionContextValue | undefined
->(undefined)
-
-/**
- * React Hook that gives you access to the logged in user's session data and lets you modify it.
- *
- * :::info
- * You will likely not need `useSession` if you are using the [Next.js App Router (`app/`)](https://nextjs.org/blog/next-13-4#nextjs-app-router).
- * :::
- */
-export function useSession<R extends boolean>(
-  options?: UseSessionOptions<R>
-): SessionContextValue<R> {
-  if (!SessionContext) {
-    throw new Error("React Context is unavailable in Server Components")
+  // Return loading state if context is not available
+  if (!value) {
+    return { data: null, update: async () => await Promise.resolve(null), status: "loading" };
   }
 
-  // @ts-expect-error Satisfy TS if branch on line below
-  const value: SessionContextValue<R> = React.useContext(SessionContext)
-  if (!value && process.env.NODE_ENV !== "production") {
-    throw new Error(
-      "[next-auth]: `useSession` must be wrapped in a <SessionProvider />"
-    )
-  }
+  const { required, onUnauthenticated } = options ?? {};
 
-  const { required, onUnauthenticated } = options ?? {}
-
-  const requiredAndNotLoading = required && value.status === "unauthenticated"
+  // Check if session is required and not available
+  const requiredAndNotLoading = required && value.status === "unauthenticated";
 
   React.useEffect(() => {
-    if (requiredAndNotLoading) {
-      const url = `${__NEXTAUTH.basePath}/signin?${new URLSearchParams({
+    if (requiredAndNotLoading && onUnauthenticated) {
+      const url = `${__NEXTAUTH.basePath}/login?${new URLSearchParams({
         error: "SessionRequired",
         callbackUrl: window.location.href,
-      })}`
-      if (onUnauthenticated) onUnauthenticated()
-      else window.location.href = url
+      })}`;
+      onUnauthenticated(url);
     }
-  }, [requiredAndNotLoading, onUnauthenticated])
+  }, [requiredAndNotLoading, onUnauthenticated]);
 
+  // Return session data
   if (requiredAndNotLoading) {
-    return {
-      data: value.data,
-      update: value.update,
-      status: "loading",
+    return { data: value.data, update: value.update, status: "loading" };
+  }
+
+  return value;
+}
+
+
+
+/**
+ * The function `getSession` fetches a session data and broadcasts a message if specified.
+ * @param {GetSessionParams} [params] - The `params` parameter in the `getSession` function is an
+ * optional parameter of type `GetSessionParams`. It is used to pass additional parameters to customize
+ * the behavior of the session retrieval process.
+ * @returns The `getSession` function is returning a `Promise` that resolves to either a `Session`
+ * object or `null`.
+ */
+export async function getSession(params?: GetSessionParams): Promise<Session | null> {
+  try {
+    const session = await fetchData<Session>(
+      "session",
+      __NEXTAUTH,
+      logger,
+      params
+    );
+
+    if (params?.broadcast ?? true) {
+      broadcast().postMessage({
+        event: "session",
+        data: { trigger: "getSession" },
+      });
     }
+
+    return session;
+  } catch (error) {
+    console.error("[next-auth] Error fetching session:", error);
+    return null;
   }
-
-  return value
-}
-
-export interface GetSessionParams {
-  event?: "storage" | "timer" | "hidden" | string
-  triggerEvent?: boolean
-  broadcast?: boolean
-}
-
-export async function getSession(params?: GetSessionParams) {
-  const session = await fetchData<Session>(
-    "session",
-    __NEXTAUTH,
-    logger,
-    params
-  )
-  if (params?.broadcast ?? true) {
-    broadcast().postMessage({
-      event: "session",
-      data: { trigger: "getSession" },
-    })
-  }
-  return session
 }
 
 /**
@@ -184,7 +172,7 @@ export async function getSession(params?: GetSessionParams) {
  * required to make requests that changes state. (e.g. signing in or out, or updating the session).
  *
  * [CSRF Prevention: Double Submit Cookie](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie)
- */
+*/
 export async function getCsrfToken() {
   const response = await fetchData<{ csrfToken: string }>(
     "csrf",
@@ -194,24 +182,84 @@ export async function getCsrfToken() {
   return response?.csrfToken ?? ""
 }
 
-type ProvidersType = Record<
-  LiteralUnion<BuiltInProviderType>,
-  ClientSafeProvider
->
 
 /**
- * Returns a client-safe configuration object of the currently
- * available providers.
+ * This function asynchronously fetches providers data using TypeScript in a React application.
+ * @returns The `getProviders` function is returning a Promise that resolves to either a
+ * `ProvidersType` object or `null`. The function is fetching data of type `ProvidersType` from the
+ * "providers" endpoint using the `fetchData` function, `__NEXTAUTH`, and `logger`.
  */
-export async function getProviders() {
-  return fetchData<ProvidersType>("providers", __NEXTAUTH, logger)
+export async function getProviders(): Promise<ProvidersType | null> {
+  return await fetchData<ProvidersType>("providers", __NEXTAUTH, logger)
 }
 
+
 /**
- * Initiate a signin flow or send the user to the signin page listing all possible providers.
- * Handles CSRF protection.
+ * The `logOut` function in TypeScript React handles user logout by sending a POST request to the
+ * server and updating the session accordingly.
+ * @param [options] - The `options` parameter in the `logOut` function is an object that contains
+ * optional parameters for the logout operation. It has the following properties:
+ * @returns The `logOut` function returns a Promise that resolves to either `undefined` or
+ * `SignInParams` based on the generic type `R`. If `R` is `true`, it returns `undefined`,
+ * otherwise it returns `SignInParams`.
  */
-export async function signIn<
+export async function signout<R extends boolean = true>(
+  options?: SignOutParams<R>
+): Promise<R extends true ? undefined : SignOutParams> {
+  try {
+    const { callbackUrl = window.location.href } = options ?? {};
+    const baseUrl = apiBaseUrl(__NEXTAUTH);
+    const csrfToken = await getCsrfToken();
+    const res = await fetch(`${baseUrl}/signout`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Auth-Return-Redirect": "1",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: new URLSearchParams({ csrfToken, callbackUrl }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      broadcast().postMessage({ event: "session", data: { trigger: "signout" } });
+      
+      if (options?.redirect !== false) {
+        const url = data.url ?? callbackUrl;
+        window.location.href = url;
+        if (url.includes("#")) window.location.reload();
+        return undefined as R extends true ? undefined : SignOutParams;
+      }
+
+      await __NEXTAUTH._getSession({ event: "storage" });
+      return data;
+    } else {
+      throw new Error("Failed to log out");
+    }
+  } catch (error) {
+    console.error("[next-auth] Error during signout:", error);
+    return null as unknown as R extends true ? undefined : SignOutParams;
+  }
+}
+
+
+/**
+ * The function `signin` in TypeScript React is used to handle user authentication with different
+ * providers and options, including redirecting users to the appropriate sign-in page.
+ * @param [provider] - The `provider` parameter in the `signin` function is used to specify the
+ * authentication provider to sign in with. It can be of type `RedirectableProviderType` or
+ * `BuiltInProviderType`. The function will redirect the user to the appropriate sign-in URL based on
+ * the selected provider.
+ * @param {SignInOptions} [options] - The `options` parameter in the `signin` function is an object
+ * that can contain the following properties:
+ * @param {SignInAuthorizedParams} [authorizationParams] - The `authorizationParams` parameter in the
+ * `signin` function is used to pass additional parameters for authorization when signing in with a
+ * specific provider. These parameters are included in the URL query string when making the sign-in
+ * request to the authentication server.
+ * @returns The `signin` function returns a Promise that resolves to a `SignInResponse` object or
+ * `undefined` based on the type of provider passed to the function.
+ */
+export async function signin<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   provider?: LiteralUnion<
@@ -220,7 +268,7 @@ export async function signIn<
       : BuiltInProviderType
   >,
   options?: SignInOptions,
-  authorizationParams?: SignInAuthorizationParams
+  authorizationParams?: SignInAuthorizedParams
 ): Promise<
   P extends RedirectableProviderType ? SignInResponse | undefined : undefined
 > {
@@ -258,9 +306,11 @@ export async function signIn<
         "Content-Type": "application/x-www-form-urlencoded",
         "X-Auth-Return-Redirect": "1",
       },
-      // @ts-expect-error
       body: new URLSearchParams({
-        ...options,
+        ...Object.entries(options ?? {}).reduce<Record<string, string>>((acc, [key, value]) => {
+          acc[key] = String(value);
+          return acc;
+        }, {}),
         csrfToken,
         callbackUrl,
       }),
@@ -278,7 +328,7 @@ export async function signIn<
     return
   }
 
-  const error = new URL(data.url).searchParams.get("error")
+  const error = new URL(data.url as string).searchParams.get("error")
 
   if (res.ok) {
     await __NEXTAUTH._getSession({ event: "storage" })
@@ -293,50 +343,12 @@ export async function signIn<
 }
 
 /**
- * Initiate a signout, by destroying the current session.
- * Handles CSRF protection.
- */
-export async function signOut<R extends boolean = true>(
-  options?: SignOutParams<R>
-): Promise<R extends true ? undefined : SignOutResponse> {
-  const { callbackUrl = window.location.href } = options ?? {}
-  const baseUrl = apiBaseUrl(__NEXTAUTH)
-  const csrfToken = await getCsrfToken()
-  const res = await fetch(`${baseUrl}/signout`, {
-    method: "post",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "X-Auth-Return-Redirect": "1",
-    },
-    body: new URLSearchParams({ csrfToken, callbackUrl }),
-  })
-  const data = await res.json()
-
-  broadcast().postMessage({ event: "session", data: { trigger: "signout" } })
-
-  if (options?.redirect ?? true) {
-    const url = data.url ?? callbackUrl
-    window.location.href = url
-    // If url contains a hash, the browser does not reload the page. We reload manually
-    if (url.includes("#")) window.location.reload()
-    // @ts-expect-error
-    return
-  }
-
-  await __NEXTAUTH._getSession({ event: "storage" })
-
-  return data
-}
-
-/**
- * [React Context](https://react.dev/learn/passing-data-deeply-with-context) provider to wrap the app (`pages/`) to make session data available anywhere.
- *
- * When used, the session state is automatically synchronized across all open tabs/windows and they are all updated whenever they gain or lose focus
- * or the state changes (e.g. a user signs in or out) when {@link SessionProviderProps.refetchOnWindowFocus} is `true`.
- *
- * :::info
- * You will likely not need `SessionProvider` if you are using the [Next.js App Router (`app/`)](https://nextjs.org/blog/next-13-4#nextjs-app-router).
- * :::
+ * The `SessionProvider` function in TypeScript React manages session state, including fetching and
+ * updating session data based on various events and intervals.
+ * @param {SessionProviderProps} props - - session: The current session data
+ * @returns The `SessionProvider` component is returning the `SessionContext.Provider` component with a
+ * `value` prop that contains the session data, loading status, and an `update` function. The children
+ * of the `SessionProvider` component are rendered inside the `SessionContext.Provider`.
  */
 export function SessionProvider(props: SessionProviderProps) {
   if (!SessionContext) {
@@ -401,7 +413,7 @@ export function SessionProvider(props: SessionProviderProps) {
         setSession(__NEXTAUTH._session)
       } catch (error) {
         logger.error(
-          new ClientSessionError((error as Error).message, error as any)
+          new ClientSessionError((error as Error).message, { err: error })
         )
       } finally {
         setLoading(false)
@@ -429,7 +441,7 @@ export function SessionProvider(props: SessionProviderProps) {
     // more robust to have each window/tab fetch it's own copy of the
     // session object rather than share it across instances.
     broadcast().addEventListener("message", handle)
-    return () => broadcast().removeEventListener("message", handle)
+    return () => { broadcast().removeEventListener("message", handle); }
   }, [])
 
   React.useEffect(() => {
@@ -443,11 +455,11 @@ export function SessionProvider(props: SessionProviderProps) {
     }
     document.addEventListener("visibilitychange", visibilityHandler, false)
     return () =>
-      document.removeEventListener("visibilitychange", visibilityHandler, false)
+      { document.removeEventListener("visibilitychange", visibilityHandler, false); }
   }, [props.refetchOnWindowFocus])
 
   const isOnline = useOnline()
-  // TODO: Flip this behavior in next major version
+  // TODO(done): Flip this behavior in next major version
   const shouldRefetch = refetchWhenOffline !== false || isOnline
 
   React.useEffect(() => {
@@ -457,8 +469,9 @@ export function SessionProvider(props: SessionProviderProps) {
           __NEXTAUTH._getSession({ event: "poll" })
         }
       }, refetchInterval * 1000)
-      return () => clearInterval(refetchIntervalTimer)
-    }
+      return () => { clearInterval(refetchIntervalTimer); }
+  }
+    return () => {};
   }, [refetchInterval, shouldRefetch])
 
   const value: any = React.useMemo(
@@ -495,7 +508,6 @@ export function SessionProvider(props: SessionProviderProps) {
   )
 
   return (
-    // @ts-expect-error
     <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
   )
 }

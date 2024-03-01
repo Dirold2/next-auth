@@ -16,7 +16,7 @@
  *
  * ### Provider Configuration
  *
- * ## Signing in and signing out
+ * ## sign in and sign out
  *
  * ## Managing the session
  *

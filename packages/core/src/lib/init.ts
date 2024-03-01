@@ -32,7 +32,7 @@ interface InitParams {
 }
 
 export const defaultCallbacks: CallbacksOptions = {
-  signIn() {
+  signin() {
     return true
   },
   redirect({ url, baseUrl }) {
@@ -47,7 +47,7 @@ export const defaultCallbacks: CallbacksOptions = {
         email: session.user?.email,
         image: session.user?.image,
       },
-      expires: session.expires?.toISOString?.() ?? session.expires,
+      expires: session.expires ? new Date(session.expires) : new Date(),
     }
   },
   jwt({ token }) {
@@ -111,15 +111,17 @@ export async function init({
     // and are request-specific.
     url,
     action,
-    // @ts-expect-errors
-    provider,
+    provider: provider!,
+    sessionMaxAge:  30 *  24 *  60 *  60,
     cookies: merge(
       cookie.defaultCookies(
         authOptions.useSecureCookies ?? url.protocol === "https:"
       ),
-      authOptions.cookies
+      authOptions.cookies ?? {},
     ),
     providers,
+    secret: authOptions.secret ?? "defaultSecret",
+    basePath: authOptions.basePath ?? "",
     // Session options
     session: {
       // If no adapter specified, force use of JSON Web Tokens (stateless)
@@ -205,9 +207,10 @@ function eventsErrorHandler(
   logger: LoggerInstance
 ): Partial<EventCallbacks> {
   return Object.keys(methods).reduce<any>((acc, name) => {
-    acc[name] = async (...args: any[]) => {
+    acc[name] = async (...args: [string, number]) => {
       try {
         const method: Method = methods[name as keyof Method]
+        // Now TypeScript knows that args is a tuple of [string, number]
         return await method(...args)
       } catch (e) {
         logger.error(new EventError(e as Error))
@@ -225,7 +228,7 @@ function adapterErrorHandler(
   if (!adapter) return
 
   return Object.keys(adapter).reduce<any>((acc, name) => {
-    acc[name] = async (...args: any[]) => {
+    acc[name] = async (...args: [string, number]) => {
       try {
         logger.debug(`adapter_${name}`, { args })
         const method: Method = adapter[name as keyof Method]

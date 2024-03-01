@@ -13,7 +13,7 @@ import type { OAuthConfig, OAuthUserConfig } from "./index.js"
 export interface UserData {
   id: number
   email: string
-  login: string
+  signin: string
   first_name: string
   last_name: string
   usual_full_name: null | string
@@ -175,7 +175,7 @@ export interface FortyTwoProfile extends UserData, Record<string, any> {
 }
 
 /**
- * Add 42School login to your page.
+ * Add 42School signin to your page.
  *
  * ### Setup
  *
@@ -241,7 +241,7 @@ export default function FortyTwo<P extends FortyTwoProfile>(
     profile(profile) {
       return {
         id: profile.id.toString(),
-        name: profile.usual_full_name,
+        name: profile.usual_full_name ?? undefined,
         email: profile.email,
         image: profile.image.link,
       }

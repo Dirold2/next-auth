@@ -12,18 +12,18 @@ declare global {
       auth(): Promise<Session | null>
       /** @deprecated Use `auth` instead. */
       getSession(): Promise<Session | null>
-      signIn: <
+      signin: <
         P extends BuiltInProviderType | (string & NonNullable<unknown>),
         R extends boolean = true,
       >(
-        /** Provider to sign in to */
+        /** Provider to signin to */
         provider?: P, // See: https://github.com/microsoft/TypeScript/issues/29729
         options?:
           | FormData
           | ({
-              /** The URL to redirect to after signing in. By default, the user is redirected to the current page. */
+              /** The URL to redirect to after signin in. By default, the user is redirected to the current page. */
               redirectTo?: string
-              /** If set to `false`, the `signIn` method will return the URL to redirect to instead of redirecting automatically. */
+              /** If set to `false`, the `signin` method will return the URL to redirect to instead of redirecting automatically. */
               redirect?: R
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } & Record<string, any>),
@@ -38,10 +38,10 @@ declare global {
             any
           : never
       >
-      signOut: <R extends boolean = true>(options?: {
-        /** The URL to redirect to after signing out. By default, the user is redirected to the current page. */
+      signout: <R extends boolean = true>(options?: {
+        /** The URL to redirect to after signin out. By default, the user is redirected to the current page. */
         redirectTo?: string
-        /** If set to `false`, the `signOut` method will return the URL to redirect to instead of redirecting automatically. */
+        /** If set to `false`, the `signout` method will return the URL to redirect to instead of redirecting automatically. */
         redirect?: R
       }) => Promise<
         R extends false

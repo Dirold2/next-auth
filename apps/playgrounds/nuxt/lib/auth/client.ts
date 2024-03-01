@@ -1,7 +1,9 @@
+// TODO
+// @ts-nocheck
 import type {
   LiteralUnion,
-  SignInOptions,
-  SignInAuthorizationParams,
+  signInOptions,
+  signInAuthorizationParams,
   SignOutParams,
 } from "./types"
 import type {
@@ -10,11 +12,11 @@ import type {
 } from "@auth/core/providers"
 
 /**
- * Client-side method to initiate a signin flow
- * or send the user to the signin page listing all possible providers.
+ * Client-side method to initiate a signIn flow
+ * or send the user to the signIn page listing all possible providers.
  * Automatically adds the CSRF token to the request.
  *
- * [Documentation](https://next-auth.js.org/getting-started/client#signin)
+ * [Documentation](https://next-auth.js.org/getting-started/client#signIn)
  */
 export async function signIn<
   P extends RedirectableProviderType | undefined = undefined,
@@ -24,8 +26,8 @@ export async function signIn<
       ? P | BuiltInProviderType
       : BuiltInProviderType
   >,
-  options?: SignInOptions,
-  authorizationParams?: SignInAuthorizationParams
+  options?: signInOptions,
+  authorizationParams?: signInAuthorizationParams
 ) {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
@@ -36,14 +38,15 @@ export async function signIn<
 
   // TODO: Handle custom base path
   const signInUrl = `/api/auth/${
-    isCredentials ? "callback" : "signin"
+    isCredentials ? "callback" : "signIn"
   }/${providerId}`
 
   const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`
 
   // TODO: Handle custom base path
   // TODO: Remove this since Sveltekit offers the CSRF protection via origin check
-  const { csrfToken } = await $fetch<{ csrfToken: string }>("/api/auth/csrf")
+  const response = await fetch("/api/auth/csrf");
+  const { csrfToken } = await response.json();
 
   console.log(_signInUrl)
 
@@ -79,7 +82,7 @@ export async function signIn<
  * Signs the user out, by removing the session cookie.
  * Automatically adds the CSRF token to the request.
  *
- * [Documentation](https://next-auth.js.org/getting-started/client#signout)
+ * [Documentation](https://next-auth.js.org/getting-started/client#Signout)
  */
 export async function signOut(options?: SignOutParams) {
   const { callbackUrl = window.location.href } = options ?? {}

@@ -8,11 +8,11 @@ import type { NextAuthResult, Session } from "../index.js"
 import type { ProviderType } from "../providers/index.js"
 import type { headers } from "next/headers"
 
-type SignInParams = Parameters<NextAuthResult["signIn"]>
-export async function signIn(
+type SignInParams = Parameters<NextAuthResult["signin"]>
+export async function signin(
   provider: SignInParams[0],
   options: SignInParams[1] = {},
-  authorizationParams: SignInParams[2],
+  SignInParams: SignInParams[2],
   config: NextAuthConfig
 ) {
   const headers = new Headers(nextHeaders())
@@ -23,16 +23,16 @@ export async function signIn(
   } = options instanceof FormData ? Object.fromEntries(options) : options
 
   const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/"
-  const signInURL = createActionURL("signin", headers, config.basePath)
+  const signinURL = createActionURL("signin", headers, config.basePath)
 
   if (!provider) {
-    signInURL.searchParams.append("callbackUrl", callbackUrl)
-    if (shouldRedirect) redirect(signInURL.toString())
-    return signInURL.toString()
+    signinURL.searchParams.append("callbackUrl", callbackUrl)
+    if (shouldRedirect) redirect(signinURL.toString())
+    return signinURL.toString()
   }
 
-  let url = `${signInURL}/${provider}?${new URLSearchParams(
-    authorizationParams
+  let url = `${signinURL}/${provider}?${new URLSearchParams(
+    SignInParams
   )}`
   let foundProvider: { id?: SignInParams[0]; type?: ProviderType } = {}
 
@@ -50,7 +50,7 @@ export async function signIn(
   }
 
   if (!foundProvider.id) {
-    const url = `${signInURL}?${new URLSearchParams({ callbackUrl })}`
+    const url = `${signinURL}?${new URLSearchParams({ callbackUrl })}`
     if (shouldRedirect) redirect(url)
     return url
   }
@@ -70,8 +70,8 @@ export async function signIn(
   return res.redirect as any
 }
 
-type SignOutParams = Parameters<NextAuthResult["signOut"]>
-export async function signOut(
+type SignOutParams = Parameters<NextAuthResult["signout"]>
+export async function signout(
   options: SignOutParams[0],
   config: NextAuthConfig
 ) {
@@ -89,10 +89,10 @@ export async function signOut(
 
   if (options?.redirect ?? true) return redirect(res.redirect!)
 
-  return res as any
+  return res
 }
 
-type UpdateParams = Parameters<NextAuthResult["unstable_update"]>
+type UpdateParams = Parameters<NextAuthResult["update"]>
 export async function update(
   data: UpdateParams[0],
   config: NextAuthConfig
@@ -104,7 +104,7 @@ export async function update(
   const body = JSON.stringify({ data })
   const req = new Request(url, { method: "POST", headers, body })
 
-  const res: any = await Auth(req, { ...config, raw, skipCSRFCheck })
+  const res = await Auth(req, { ...config, raw, skipCSRFCheck })
 
   for (const c of res?.cookies ?? []) cookies().set(c.name, c.value, c.options)
 

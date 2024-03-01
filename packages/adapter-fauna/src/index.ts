@@ -16,22 +16,90 @@
  */
 import { Client, TimeStub, fql, NullDocument, QueryValue, QueryValueObject } from "fauna"
 
-import type {
+import {
   Adapter,
-  AdapterUser,
   AdapterSession,
+  AdapterUser,
   VerificationToken,
-  AdapterAccount,
 } from "@auth/core/adapters"
 
-type ToFauna<T> = {
-  [P in keyof T]: T[P] extends Date | null ? TimeStub | null : T[P] extends undefined ? null : T[P] extends QueryValue ? T[P] : QueryValueObject
+export const collections = {
+  Users: Collection("users"),
+  Accounts: Collection("accounts"),
+  Sessions: Collection("sessions"),
+  VerificationTokens: Collection("verification_tokens"),
+} as const
+
+export const indexes = {
+  AccountByProviderAndProviderAccountId: Index(
+    "account_by_provider_and_provider_account_id"
+  ),
+  UserByEmail: Index("user_by_email"),
+  SessionByToken: Index("session_by_session_token"),
+  VerificationTokenByIdentifierAndToken: Index(
+    "verification_token_by_identifier_and_token"
+  ),
+  SessionsByUser: Index("sessions_by_user_id"),
+  AccountsByUser: Index("accounts_by_user_id"),
+} as const
+
+export const format = {
+  /** Takes a plain old JavaScript object and turns it into a Fauna object */
+  to(object: Record<string, any>) {
+    const newObject: Record<string, unknown> = {}
+    for (const key in object) {
+      const value = object[key]
+      if (value instanceof Date) {
+        newObject[key] = Time(value.toISOString())
+      } else {
+        newObject[key] = value
+      }
+    }
+    return newObject
+  },
+  /** Takes a Fauna object and returns a plain old JavaScript object */
+  from<T = Record<string, unknown>>(object: Record<string, any>): T {
+    const newObject: Record<string, unknown> = {}
+    for (const key in object) {
+      const value = object[key]
+      if (value?.value && typeof value.value === "string") {
+        newObject[key] = new Date(value.value)
+      } else {
+        newObject[key] = value
+      }
+    }
+    return newObject as T
+  },
 }
 
-export type FaunaUser = ToFauna<AdapterUser>
-export type FaunaSession = ToFauna<AdapterSession>
-export type FaunaVerificationToken = ToFauna<VerificationToken> & { id: string }
-export type FaunaAccount = ToFauna<AdapterAccount>
+/**
+ * Fauna throws an error when something is not found in the db,
+ * `next-auth` expects `null` to be returned
+ */
+export function query(f: FaunaClient, format: (...args: any) => any) {
+  return async function <T>(expr: ExprArg): Promise<T | null> {
+    try {
+      const result = await f.query<{
+        data: T
+        ref: { id: string }
+      } | null>(expr)
+      if (!result) return null
+      return format({ ...result.data, id: result.ref.id })
+    } catch (error) {
+      if ((error as errors.FaunaError).name === "NotFound") return null
+      if (
+        (error as errors.FaunaError).description?.includes(
+          "Number or numeric String expected"
+        )
+      )
+        return null
+
+      if (process.env.NODE_ENV === "test") console.error(error)
+
+      throw error
+    }
+  }
+}
 
 /**
  *
@@ -190,48 +258,41 @@ export type FaunaAccount = ToFauna<AdapterAccount>
  * })
  * ```
  *
+ * > This schema is adapted for use in Fauna and based upon our main [schema](https://authjs.dev/reference/core/adapters#models)
  **/
-export function FaunaAdapter(client: Client): Adapter {
+export function FaunaAdapter(f: FaunaClient): Adapter {
+  const { Users, Accounts, Sessions, VerificationTokens } = collections
+  const {
+    AccountByProviderAndProviderAccountId,
+    AccountsByUser,
+    SessionByToken,
+    SessionsByUser,
+    UserByEmail,
+    VerificationTokenByIdentifierAndToken,
+  } = indexes
+  const { to, from } = format
+  const q = query(f, from)
   return {
-    async createUser(user) {
-      const response = await client.query<FaunaUser>(
-        fql`User.create(${format.to(user)})`,
-      )
-      return format.from(response.data)
-    },
-    async getUser(id) {
-      const response = await client.query<FaunaUser | NullDocument>(
-        fql`User.byId(${id})`,
-      )
-      if (response.data instanceof NullDocument) return null
-      return format.from(response.data)
-    },
-    async getUserByEmail(email) {
-      const response = await client.query<FaunaUser>(
-        fql`User.byEmail(${email}).first()`,
-      )
-      if (response.data === null) return null
-      return format.from(response.data)
-    },
+    createUser: async (data) => (await q(Create(Users, { data: to(data) })))!,
+    getUser: async (id) => await q(Get(Ref(Users, id))),
+    getUserByEmail: async (email) => await q(Get(Match(UserByEmail, email))),
     async getUserByAccount({ provider, providerAccountId }) {
-      const response = await client.query<FaunaUser>(fql`
-        let account = Account.byProviderAndProviderAccountId(${provider}, ${providerAccountId}).first()
-        if (account != null) {
-          User.byId(account.userId)
-        } else {
-          null
-        }
-      `)
-      return format.from(response.data)
-    },
-    async updateUser(user) {
-      const _user: Partial<AdapterUser> = { ...user }
-      delete _user.id
-      const response = await client.query<FaunaUser>(
-        fql`User.byId(${user.id}).update(${format.to(_user)})`,
+      const key = [provider, providerAccountId]
+      const ref = Match(AccountByProviderAndProviderAccountId, key)
+      const user = await q<AdapterUser>(
+        Let(
+          { ref },
+          If(
+            Exists(Var("ref")),
+            Get(Ref(Users, Select(["data", "userId"], Get(Var("ref"))))),
+            null
+          )
+        )
       )
-      return format.from(response.data)
+      return user
     },
+    updateUser: async (data) =>
+      (await q(Update(Ref(Users, data.id), { data: to(data) })))!,
     async deleteUser(userId) {
       await client.query(fql`
         // Delete the user's sessions
@@ -244,18 +305,18 @@ export function FaunaAdapter(client: Client): Adapter {
         User.byId(${userId}).delete()
       `)
     },
-    async linkAccount(account) {
-      await client.query<FaunaAccount>(
-        fql`Account.create(${format.to(account)})`,
-      )
-      return account
-    },
+    linkAccount: async (data) =>
+      (await q(Create(Accounts, { data: to(data) })))!,
     async unlinkAccount({ provider, providerAccountId }) {
-      const response = await client.query<FaunaAccount>(
-        fql`Account.byProviderAndProviderAccountId(${provider}, ${providerAccountId}).first().delete()`,
+      const id = [provider, providerAccountId]
+      await q(
+        Delete(
+          Select("ref", Get(Match(AccountByProviderAndProviderAccountId, id)))
+        )
       )
-      return format.from<AdapterAccount>(response.data)
     },
+    createSession: async (data) =>
+      (await q<AdapterSession>(Create(Sessions, { data: to(data) })))!,
     async getSessionAndUser(sessionToken) {
       const response = await client.query<[FaunaUser, FaunaSession]>(fql`
         let session = Session.bySessionToken(${sessionToken}).first()
@@ -280,63 +341,39 @@ export function FaunaAdapter(client: Client): Adapter {
       )
       return session
     },
-    async updateSession(session) {
-      const response = await client.query<FaunaSession>(
-        fql`Session.bySessionToken(${
-          session.sessionToken
-        }).first().update(${format.to(session)})`,
-      )
-      return format.from(response.data)
+    async updateSession(data) {
+      const ref = Select("ref", Get(Match(SessionByToken, data.sessionToken)))
+      return await q(Update(ref, { data: to(data) }))
     },
     async deleteSession(sessionToken) {
       await client.query(
         fql`Session.bySessionToken(${sessionToken}).first().delete()`,
       )
     },
-    async createVerificationToken(verificationToken) {
-      await client.query<FaunaVerificationToken>(
-        fql`VerificationToken.create(${format.to(
-          verificationToken,
-        )})`,
+    async createVerificationToken(data) {
+      // @ts-expect-error
+      const { id: _id, ...verificationToken } = await q<VerificationToken>(
+        Create(VerificationTokens, { data: to(data) })
       )
-      return verificationToken
+      if (!result) {
+        throw new Error('Verification token creation failed');
+      }
+      const { ...verificationToken } = result;
+      return verificationToken;
     },
     async useVerificationToken({ identifier, token }) {
-      const response = await client.query<FaunaVerificationToken>(
-        fql`VerificationToken.byIdentifierAndToken(${identifier}, ${token}).first()`,
-      )
-      if (response.data === null) return null
-      // Delete the verification token so it can only be used once
-      await client.query(
-        fql`VerificationToken.byId(${response.data.id}).delete()`,
-      )
-      const _verificationToken: Partial<FaunaVerificationToken> = { ...response.data }
-      delete _verificationToken.id
-      return format.from(_verificationToken)
+      const key = [identifier, token]
+      const object = Get(Match(VerificationTokenByIdentifierAndToken, key))
+
+      const verificationToken = await q<VerificationToken>(object)
+      if (!verificationToken) return null
+
+      // Verification tokens can be used only once
+      await q(Delete(Select("ref", object)))
+
+      // @ts-expect-error
+      delete verificationToken.id
+      return verificationToken
     },
   }
-}
-
-export const format = {
-  /** Takes an object that's coming from the database and converts it to plain JavaScript. */
-  from<T>(object: Record<string, any> = {}): T {
-    if (!object) return null as unknown as T
-    const newObject: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(object))
-      if (key === "coll" || key === "ts") continue
-      else if (value instanceof TimeStub) newObject[key] = value.toDate()
-      else newObject[key] = value
-    return newObject as T
-  },
-  /** Takes an object that's coming from Auth.js and prepares it to be written to the database. */
-  to<T>(object: Record<string, any>): T {
-    const newObject: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(object))
-      if (value instanceof Date) newObject[key] = TimeStub.fromDate(value)
-      else if (typeof value === "string" && !isNaN(Date.parse(value)))
-        newObject[key] = TimeStub.from(value)
-      else newObject[key] = value ?? null
-
-    return newObject as T
-  },
 }

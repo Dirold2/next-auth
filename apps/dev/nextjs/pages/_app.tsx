@@ -1,17 +1,21 @@
-import { SessionProvider, signIn, signOut, useSession } from "next-auth/react"
+import { SessionProvider, signin, signout, useSession } from "next-auth/react"
 import "./styles.css"
 import { Header } from "components/header"
 import styles from "components/header.module.css"
 import Footer from "components/footer"
+import Head from "next/head.js"
 
 export default function App({ Component, pageProps }) {
-  return (
+  return (<>
+    <Head>
+        <title>NextAuthJs</title>
+    </Head>
     <SessionProvider session={pageProps.session} basePath="/auth">
       <PagesHeader />
       <Component {...pageProps} />
       <Footer />
     </SessionProvider>
-  )
+  </>)
 }
 
 function PagesHeader() {
@@ -19,14 +23,14 @@ function PagesHeader() {
   return (
     <Header
       session={session}
-      signIn={
-        <button onClick={() => signIn()} className={styles.buttonPrimary}>
-          Sign in
+      logIn={
+        <button onClick={() => signin()} className={styles.buttonPrimary}>
+          Log in
         </button>
       }
-      signOut={
-        <button onClick={() => signOut()} className={styles.button}>
-          Sign out
+      logOut={
+        <button onClick={() => signout()} className={styles.button}>
+          Log out
         </button>
       }
     />

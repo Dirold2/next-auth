@@ -47,4 +47,4 @@ export const authOptions: AuthOptions = {
 export default NuxtAuthHandler(authOptions)
 ```
 
-All requests to `/api/auth/*` (`signIn`, `callback`, `signOut`, etc.) will automatically be handled by Auth.js.
+All requests to `/api/auth/*` (`logIn`, `callback`, `logOut`, etc.) will automatically be handled by Auth.js.

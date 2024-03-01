@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test"
 
 test.describe("Basic Auth", () => {
-  test("Credentials Signin / Signout", async ({ page }) => {
-    await test.step("should login", async () => {
+  test("Credentials signin / signout", async ({ page }) => {
+    await test.step("should signin", async () => {
       await page.goto("http://localhost:3000/auth/signin")
       await page.getByLabel("Password").fill("password")
       await page
-        .getByRole("button", { name: "Sign in with Credentials" })
+        .getByRole("button", { name: "signin with Credentials" })
         .click()
       const session = await page.locator("pre").textContent()
 
@@ -23,7 +23,7 @@ test.describe("Basic Auth", () => {
       })
     })
 
-    await test.step("should logout", async () => {
+    await test.step("should signout", async () => {
       await page
         .getByRole("banner")
         .getByRole("button", { name: "Sign out" })
@@ -37,7 +37,7 @@ test.describe("Basic Auth", () => {
     })
   })
 
-  test("Keycloak Signin / Signout", async ({ page }) => {
+  test("Keycloak signin / signout", async ({ page }) => {
     if (
       !process.env.TEST_KEYCLOAK_USERNAME ||
       !process.env.TEST_KEYCLOAK_PASSWORD
@@ -51,7 +51,7 @@ test.describe("Basic Auth", () => {
         .getByLabel("Username or email")
         .fill(process.env.TEST_KEYCLOAK_USERNAME!)
       await page.locator("#password").fill(process.env.TEST_KEYCLOAK_PASSWORD!)
-      await page.getByRole("button", { name: "Sign In" }).click()
+      await page.getByRole("button", { name: "Authorized" }).click()
       const session = await page.locator("pre").textContent()
 
       expect(JSON.parse(session ?? "{}")).toEqual({
@@ -68,7 +68,7 @@ test.describe("Basic Auth", () => {
       })
     })
 
-    await test.step("should logout", async () => {
+    await test.step("should signout", async () => {
       await page
         .getByRole("banner")
         .getByRole("button", { name: "Sign out" })

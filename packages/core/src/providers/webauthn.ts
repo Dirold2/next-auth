@@ -26,7 +26,7 @@ export type WebAuthnProviderType = "webauthn"
 export const DEFAULT_WEBAUTHN_TIMEOUT = 5 * 60 * 1000 // 5 minutes
 export const DEFAULT_SIMPLEWEBAUTHN_BROWSER_VERSION: SemverString = "v9.0.1"
 
-export type RelayingParty = {
+export interface RelayingParty {
   /** Relaying Party ID. Use the website's domain name. */
   id: string
   /** Relaying Party name. Use the website's name. */
@@ -35,7 +35,7 @@ export type RelayingParty = {
   origin: string
 }
 
-type RelayingPartyArray = {
+interface RelayingPartyArray {
   /** Relaying Party ID. Use the website's domain name. */
   id: string | string[]
   /** Relaying Party name. Use the website's name. */
@@ -102,13 +102,13 @@ export interface WebAuthnConfig extends CommonProviderOptions {
    */
   enableConditionalUI: boolean
   /**
-   * Version of SimpleWebAuthn browser script to load in the sign in page.
+   * Version of SimpleWebAuthn browser script to load in the signin page.
    *
    * This is only loaded if the provider has conditional UI enabled. If set to false, it won't load any script.
    * Defaults to `v9.0.0`.
    */
   simpleWebAuthnBrowserVersion: SemverString | false
-  /** Form fields displayed in the default Passkey sign in/up form.
+  /** Form fields displayed in the default Passkey signin/up form.
    * These are not validated or enforced beyond the default Auth.js authentication page.
    *
    * By default it displays an email field.

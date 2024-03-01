@@ -5,11 +5,11 @@ import {
   mysqlTable as defaultMySqlTableFn,
   primaryKey,
   varchar,
-  MySqlTableFn,
-  MySqlDatabase,
+  type MySqlTableFn,
+  type MySqlDatabase,
 } from "drizzle-orm/mysql-core"
 
-import type { Adapter, AdapterAccount } from "@auth/core/adapters"
+import type { Adapter, AdapterAccount, AdapterUser } from "@auth/core/adapters"
 
 export function createTables(mySqlTable: MySqlTableFn) {
   const users = mySqlTable("user", {
@@ -86,24 +86,24 @@ export function mySqlDrizzleAdapter(
   return {
     async createUser(data) {
       const id = crypto.randomUUID()
-
+    
       await client.insert(users).values({ ...data, id })
-
+    
       return await client
         .select()
         .from(users)
         .where(eq(users.id, id))
-        .then((res) => res[0])
+        .then((res) => ({ ...res[0], name: res[0].name ?? undefined }))
     },
     async getUser(data) {
-      const thing =
+      const user =
         (await client
           .select()
           .from(users)
           .where(eq(users.id, data))
           .then((res) => res[0])) ?? null
-
-      return thing
+    
+      return user ? { ...user, name: user.name ?? undefined } : null;
     },
     async getUserByEmail(data) {
       const user =
@@ -112,8 +112,8 @@ export function mySqlDrizzleAdapter(
           .from(users)
           .where(eq(users.email, data))
           .then((res) => res[0])) ?? null
-
-      return user
+    
+      return user ? { ...user, name: user.name ?? undefined } : null;
     },
     async createSession(data) {
       await client.insert(sessions).values(data)
@@ -124,7 +124,7 @@ export function mySqlDrizzleAdapter(
         .where(eq(sessions.sessionToken, data.sessionToken))
         .then((res) => res[0])
     },
-    async getSessionAndUser(data) {
+    async getSessionAndUser(data: string) {
       const sessionAndUser =
         (await client
           .select({
@@ -136,20 +136,33 @@ export function mySqlDrizzleAdapter(
           .innerJoin(users, eq(users.id, sessions.userId))
           .then((res) => res[0])) ?? null
 
-      return sessionAndUser
-    },
-    async updateUser(data) {
-      if (!data.id) {
-        throw new Error("No user id.")
+      if (sessionAndUser) {
+        sessionAndUser.user.name = (sessionAndUser.user.name ?? undefined) as string | null;
       }
 
-      await client.update(users).set(data).where(eq(users.id, data.id))
-
-      return await client
+      return sessionAndUser;
+    },
+    async updateUser(data: Partial<AdapterUser> & Pick<AdapterUser, "id">): Promise<AdapterUser> {
+      if (!data.id) {
+        throw new Error("No user id.");
+      }
+    
+      await client.update(users).set(data).where(eq(users.id, data.id));
+    
+      const updatedUser = await client
         .select()
         .from(users)
         .where(eq(users.id, data.id))
-        .then((res) => res[0])
+        .then((res) => res[0]);
+    
+      // Ensure all properties of AdapterUser are present, even if they are null or undefined
+      return {
+        id: updatedUser.id,
+        name: updatedUser.name ?? undefined,
+        email: updatedUser.email ?? null,
+        emailVerified: updatedUser.emailVerified ?? null,
+        image: updatedUser.image ?? null,
+      };
     },
     async updateSession(data) {
       await client
@@ -163,28 +176,38 @@ export function mySqlDrizzleAdapter(
         .where(eq(sessions.sessionToken, data.sessionToken))
         .then((res) => res[0])
     },
-    async linkAccount(rawAccount) {
-      await client.insert(accounts).values(rawAccount)
+    async linkAccount(rawAccount: AdapterAccount) {
+      const accountValues = { ...rawAccount, provider: rawAccount.provider! };
+      if (accountValues.providerAccountId === null) {
+        // Handle the case where providerAccountId is null, e.g., by setting it to an empty string or some default value
+        accountValues.providerAccountId = '';
+      }
+      await client.insert(accounts).values(accountValues);
     },
-    async getUserByAccount(account) {
+    async getUserByAccount(account: Pick<AdapterAccount, "provider" | "providerAccountId">): Promise<AdapterUser | null> {
       const dbAccount =
         (await client
           .select()
           .from(accounts)
           .where(
             and(
-              eq(accounts.providerAccountId, account.providerAccountId),
-              eq(accounts.provider, account.provider)
+              account.providerAccountId !== null ? eq(accounts.providerAccountId, account.providerAccountId) : undefined,
+              account.provider !== null ? eq(accounts.provider, account.provider) : undefined
             )
           )
           .leftJoin(users, eq(accounts.userId, users.id))
           .then((res) => res[0])) ?? null
 
-      if (!dbAccount) {
-        return null
+      if (!dbAccount?.user) {
+        return null;
       }
-
-      return dbAccount.user
+      return {
+        id: dbAccount.user.id,
+        name: dbAccount.user.name ?? undefined,
+        email: dbAccount.user.email ?? null,
+        emailVerified: dbAccount.user.emailVerified ?? null,
+        image: dbAccount.user.image ?? null,
+      };
     },
     async deleteSession(sessionToken) {
       const session =

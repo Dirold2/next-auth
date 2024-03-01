@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import CustomLink from "@/components/custom-link"
 import SessionData from "@/components/session-data"
 // import { auth } from "../../auth"

@@ -1,4 +1,4 @@
-import SignIn from "./SignIn.svelte"
-import SignOut from "./SignOut.svelte"
+import signin from "./signin.svelte"
+import signout from "./signout.svelte"
 
-export { SignIn, SignOut }
+export { signin, signout }

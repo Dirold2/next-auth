@@ -1,7 +1,7 @@
 import { renderToString } from "preact-render-to-string"
 import ErrorPage from "./error.js"
-import SigninPage from "./signin.js"
-import SignoutPage from "./signout.js"
+import SignInPage from "./signin.js"
+import SignOutPage from "./signout.js"
 import css from "./styles.js"
 import VerifyRequestPage from "./verify-request.js"
 import { UnknownAction } from "../../errors.js"
@@ -14,6 +14,12 @@ import type {
   PublicProvider,
 } from "../../types.js"
 import type { Cookie } from "../utils/cookie.js"
+import { type VNode } from "preact"
+
+interface VerifyRequestPageProps {
+  url: URL;
+  theme: any;
+}
 
 function send({
   html,
@@ -22,7 +28,14 @@ function send({
   cookies,
   theme,
   headTags,
-}: any): ResponseInternal {
+}: {
+  html: VNode;
+  title: string;
+  status: number;
+  cookies: any; 
+  theme: any;
+  headTags: string | undefined;
+}): ResponseInternal {
   return {
     cookies,
     status,
@@ -83,9 +96,9 @@ export default function renderPage(params: RenderPageParams) {
     },
     signin(providerId?: string, error?: any) {
       if (providerId) throw new UnknownAction("Unsupported action")
-      if (pages?.signIn) {
-        let signinUrl = `${pages.signIn}${
-          pages.signIn.includes("?") ? "&" : "?"
+      if (pages?.signin) {
+        let signinUrl = `${pages.signin}${
+          pages.signin.includes("?") ? "&" : "?"
         }${new URLSearchParams({ callbackUrl: params.callbackUrl ?? "/" })}`
         if (error) signinUrl = `${signinUrl}&${new URLSearchParams({ error })}`
         return { redirect: signinUrl, cookies }
@@ -110,7 +123,7 @@ export default function renderPage(params: RenderPageParams) {
       return send({
         cookies,
         theme,
-        html: SigninPage({
+        html: SignInPage({
           csrfToken: params.csrfToken,
           // We only want to render providers
           providers: params.providers?.filter(
@@ -129,27 +142,30 @@ export default function renderPage(params: RenderPageParams) {
           error,
           ...query,
         }),
-        title: "Sign In",
+        title: "Log in",
         headTags: simpleWebAuthnBrowserScript,
+        status:  200,
       })
     },
     signout() {
-      if (pages?.signOut) return { redirect: pages.signOut, cookies }
+      if (pages?.signin) return { redirect: pages.signin, cookies }
       return send({
         cookies,
         theme,
-        html: SignoutPage({ csrfToken: params.csrfToken, url, theme }),
-        title: "Sign Out",
+        html: SignOutPage({ csrfToken: params.csrfToken, url, theme }),
+        title: "Log Out",
+        status:   200,
+        headTags: "",
       })
     },
     verifyRequest(props?: any) {
-      if (pages?.verifyRequest)
-        return { redirect: pages.verifyRequest, cookies }
       return send({
         cookies,
         theme,
-        html: VerifyRequestPage({ url, theme, ...props }),
+        html: VerifyRequestPage({ ...(props as VerifyRequestPageProps) }),
         title: "Verify Request",
+        status:  200, // Add the missing status property
+        headTags: "", // Add the missing headTags property, adjust as needed
       })
     },
     error(error?: string) {
@@ -167,6 +183,7 @@ export default function renderPage(params: RenderPageParams) {
         // @ts-expect-error fix error type
         ...ErrorPage({ url, theme, error }),
         title: "Error",
+        headTags: "",
       })
     },
   }

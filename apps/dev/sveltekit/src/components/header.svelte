@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores"
-  import { SignIn, SignOut } from "@auth/sveltekit/components"
+  import { Authorized, LogOut } from "@auth/sveltekit/components"
 </script>
 
 <header>
@@ -16,19 +16,22 @@
     <div class="nav-right">
       {#if $page.data.session}
         <span class="header-text">
-          <small>Signed in as</small><br />
+          <small>Log in as</small><br />
           <strong>
             {$page.data.session.user?.email ?? $page.data.session.user?.name}
           </strong>
         </span>
-        <SignOut>
-          <div class="buttonPrimary" slot="submitButton">Sign out</div>
-        </SignOut>
+        <LogOut>
+          <!-- TODO -->
+          <!-- svelte-ignore ts7053 -->
+          <div class="buttonPrimary" slot="submitButton">Log out</div>
+        </LogOut>
       {:else}
-        <span class="header-text">You are not signed in</span>
-        <SignIn>
-          <div class="buttonPrimary" slot="submitButton">Sign in</div>
-        </SignIn>
+        <span class="header-text">You are not log in</span>
+        <!-- TODO -->
+        <Authorized provider="google">
+          <div class="buttonPrimary" slot="submitButton">Log in</div>
+         </Authorized>
       {/if}
     </div>
   </nav>

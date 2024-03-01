@@ -1,4 +1,4 @@
-import { runBasicTests } from "utils/adapter"
+import { runBasicTests } from "../../utils/adapter"
 import {
   AzureNamedKeyCredential,
   TableServiceClient,

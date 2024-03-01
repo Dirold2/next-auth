@@ -69,16 +69,16 @@ export interface WorkOSProfile extends Record<string, any> {
  * To add a custom login page, you can use the `pages` option:
  * ```js title="pages/api/auth/[...nextauth].js"
  * pages: {
- *   signIn: "/auth/signin",
+ *   signin: "/auth/login",
  * }
  * ```
  * We can then add a custom login page that displays an input where the user can enter their email address.
- * We then extract the domain from the user's email address and pass it to the `authorizationParams` parameter on the `signIn` function:
- * ```js title="pages/auth/signin.js"
+ * We then extract the domain from the user's email address and pass it to the `authorizationParams` parameter on the `signin` function:
+ * ```js title="pages/auth/login.js"
  * import { useState } from "react"
- * import { getProviders, signIn } from "next-auth/react"
+ * import { getProviders, signin } from "next-auth/react"
  *
- * export default function SignIn({ providers }) {
+ * export default function signin({ providers }) {
  *   const [email, setEmail] = useState("")
  *
  *   return (
@@ -95,12 +95,12 @@ export interface WorkOSProfile extends Record<string, any> {
  *               />
  *               <button
  *                 onClick={() =>
- *                   signIn(provider.id, undefined, {
+ *                   signin(provider.id, undefined, {
  *                     domain: email.split("@")[1],
  *                   })
  *                 }
  *               >
- *                 Sign in with SSO
+ *                 Authorized with SSO
  *               </button>
  *             </div>
  *           )
@@ -108,8 +108,8 @@ export interface WorkOSProfile extends Record<string, any> {
  *
  *         return (
  *           <div key={provider.id}>
- *             <button onClick={() => signIn(provider.id)}>
- *               Sign in with {provider.name}
+ *             <button onClick={() => signin(provider.id)}>
+ *               Authorized with {provider.name}
  *             </button>
  *           </div>
  *         )
@@ -152,7 +152,7 @@ export default function WorkOS<P extends WorkOSProfile>(
     id: "workos",
     name: "WorkOS",
     type: "oauth",
-    authorization: `${issuer}sso/authorize`,
+    authorization: `${issuer}sso/login`,
     token: `${issuer}sso/token`,
     client: {
       token_endpoint_auth_method: "client_secret_post",

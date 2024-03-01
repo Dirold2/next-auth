@@ -37,8 +37,8 @@
  * [origin]/auth/callback/[provider]
  * ```
  *
- * ## Signing in and signing out
- * Once your application is mounted you can sign in or out by making requests to the following [REST API endpoints](https://authjs.dev/reference/core/types#authaction) from your client-side code.
+ * ## signin in and signin out
+ * Once your application is mounted you can signin or out by making requests to the following [REST API endpoints](https://authjs.dev/reference/core/types#authaction) from your client-side code.
  * NB: Make sure to include the `csrfToken` in the request body for all sign-in and sign-out requests.
  *
  * ## Managing the session
@@ -138,16 +138,22 @@ export type {
 
 export function ExpressAuth(config: Omit<AuthConfig, "raw">) {
   return async (req: e.Request, res: e.Response, next: e.NextFunction) => {
-    e.json()(req, res, async (err) => {
-      if (err) return next(err)
-      e.urlencoded({ extended: true })(req, res, async (err) => {
-        if (err) return next(err)
-        config.basePath = getBasePath(req)
-        setEnvDefaults(process.env, config)
-        await toExpressResponse(await Auth(toWebRequest(req), config), res)
-        next()
-      })
-    })
+    e.json()(req, res, (err) => {
+      if (err) { next(err); return; }
+      e.urlencoded({ extended: true })(req, res, (err) => {
+        if (err) { next(err); return; }
+        void (async () => {
+          try {
+            config.basePath = getBasePath(req);
+            setEnvDefaults(process.env, config);
+            await toExpressResponse(await Auth(toWebRequest(req), config), res);
+            next();
+          } catch (error) {
+            next(error);
+          }
+        })();
+      });
+    });
   }
 }
 
@@ -161,6 +167,7 @@ export async function getSession(
   const url = createActionURL(
     "session",
     req.protocol,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     new Headers(req.headers),
     process.env,
@@ -174,11 +181,20 @@ export async function getSession(
 
   const { status = 200 } = response
 
-  const data = await response.json()
+  const data = await response.json() as Record<string, unknown>;
 
-  if (!data || !Object.keys(data).length) return null
-  if (status === 200) return data
-  throw new Error(data.message)
+  if (!data || !Object.keys(data).length) return null;
+  if (status ===  200) {
+    if (!data.expires || !(data.expires instanceof Date)) {
+      throw new Error('Session data is missing or invalid "expires" property.');
+    }
+    if ('expires' in data && data.expires instanceof Date) {
+      return data as unknown as Session;
+    } else {
+      throw new Error('Data does not match the Session type.');
+    }
+  }
+  throw new Error(data.message as string);
 }
 
 function getBasePath(req: e.Request) {

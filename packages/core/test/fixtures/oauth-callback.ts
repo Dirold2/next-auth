@@ -57,7 +57,7 @@ export const getUserAndAccountArgs = {
     style: { logo: "/github.svg", bg: "#24292f", text: "#fff" },
     clientId: "abc",
     clientSecret: "abc",
-    signinUrl: "http://localhost:3000/api/auth/signin/github",
+    signinUrl: "http://localhost:3000/api/auth/login/github",
     callbackUrl: "http://localhost:3000/api/auth/callback/github",
     redirectProxyUrl: undefined,
     checks: ["pkce" as const],

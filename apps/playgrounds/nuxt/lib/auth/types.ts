@@ -11,12 +11,12 @@ export interface ClientSafeProvider {
   id: LiteralUnion<BuiltInProviderType>
   name: string
   type: ProviderType
-  signinUrl: string
+  signInUrl: string
   callbackUrl: string
 }
 export interface SignInOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after signing in. Defaults to the page URL the sign-in is initiated from.
+   * Specify to which URL the user will be redirected after signIn in. Defaults to the page URL the sign-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */

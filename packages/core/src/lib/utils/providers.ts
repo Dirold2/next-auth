@@ -32,14 +32,14 @@ export default function parseProviders(params: {
     const { options: userOptions, ...defaults } = provider
 
     const id = (userOptions?.id ?? defaults.id) as string
-    const merged = merge(defaults, userOptions, {
+    const merged = merge(defaults, userOptions ?? {}, {
       signinUrl: `${url}/signin/${id}`,
       callbackUrl: `${url}/callback/${id}`,
     })
 
     if (provider.type === "oauth" || provider.type === "oidc") {
       merged.redirectProxyUrl ??= options.redirectProxyUrl
-      return normalizeOAuth(merged)
+      return normalizeOAuth(merged as OAuthConfig<any> | OAuthUserConfig<any>)
     }
 
     return merged
@@ -55,7 +55,7 @@ export default function parseProviders(params: {
 // We should return both a client and authorization server config.
 function normalizeOAuth(
   c: OAuthConfig<any> | OAuthUserConfig<any>
-): OAuthConfigInternal<any> | {} {
+): OAuthConfigInternal<any> | Record<string, unknown> {
   if (c.issuer) c.wellKnown ??= `${c.issuer}/.well-known/openid-configuration`
 
   const authorization = normalizeEndpoint(c.authorization, c.issuer)
@@ -97,7 +97,7 @@ function normalizeOAuth(
 const defaultProfile: ProfileCallback<Profile> = (profile) => {
   return stripUndefined({
     id: profile.sub ?? profile.id ?? crypto.randomUUID(),
-    name: profile.name ?? profile.nickname ?? profile.preferred_username,
+    name: profile.name ?? profile.nickname ?? profile.preferred_username ?? "",
     email: profile.email,
     image: profile.picture,
   })
@@ -123,7 +123,7 @@ const defaultAccount: AccountCallback = (account) => {
 
 function stripUndefined<T extends object>(o: T): T {
   const result = {} as any
-  for (let [k, v] of Object.entries(o)) v !== undefined && (result[k] = v)
+  for (const [k, v] of Object.entries(o)) v !== undefined && (result[k] = v)
   return result as T
 }
 
@@ -144,7 +144,7 @@ function normalizeEndpoint(
   // for the authorization, token and userinfo endpoints.
   const url = new URL(e?.url ?? "https://authjs.dev")
   if (e?.params != null) {
-    for (let [key, value] of Object.entries(e.params)) {
+    for (let [key, value] of Object.entries(e.params as Record<string, unknown>)) {
       if (key === "claims") value = JSON.stringify(value)
       url.searchParams.set(key, String(value))
     }

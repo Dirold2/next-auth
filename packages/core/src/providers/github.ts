@@ -145,7 +145,7 @@ export default function GitHub(
     userinfo: {
       url: `${apiBaseUrl}/user`,
       async request({ tokens, provider }) {
-        const profile = await fetch(provider.userinfo?.url as URL, {
+        const profile = await fetch(provider.userinfo?.url ?? 'https://api.github.com/user', {
           headers: {
             Authorization: `Bearer ${tokens.access_token}`,
             "User-Agent": "authjs",

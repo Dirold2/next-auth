@@ -41,7 +41,7 @@ export const authOptions = {
       clientSecret: "abc",
       redirectProxyUrl: undefined,
       checks: [],
-      account: () => {},
+      account: () => undefined,
     },
   ],
   basePath: "/auth",

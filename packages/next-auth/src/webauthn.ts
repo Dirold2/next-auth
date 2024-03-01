@@ -11,9 +11,9 @@ import type {
 import type {
   AuthClientConfig,
   LiteralUnion,
-  SignInAuthorizationParams,
+  SignInAuthorizedParams,
   SignInOptions,
-  SignInResponse,
+  // AuthorizedResponse,
 } from "./lib/client.js"
 
 const logger: LoggerInstance = {
@@ -27,7 +27,7 @@ const logger: LoggerInstance = {
  * Returns either the completed WebAuthn response or an error request.
  *
  * @param providerID provider ID
- * @param options SignInOptions
+ * @param options AuthorizedOptions
  * @returns WebAuthn response or error
  */
 async function webAuthnOptions(
@@ -37,6 +37,7 @@ async function webAuthnOptions(
 ) {
   const baseUrl = apiBaseUrl(nextAuthConfig)
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const params = new URLSearchParams(options)
 
@@ -61,7 +62,7 @@ async function webAuthnOptions(
  * Initiate a signin flow or send the user to the signin page listing all possible providers.
  * Handles CSRF protection.
  */
-export async function signIn<
+export async function signin<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   provider?: LiteralUnion<
@@ -70,9 +71,9 @@ export async function signIn<
       : BuiltInProviderType
   >,
   options?: SignInOptions,
-  authorizationParams?: SignInAuthorizationParams
+  SignInParams?: SignInAuthorizedParams
 ): Promise<
-  P extends RedirectableProviderType ? SignInResponse | undefined : undefined
+  P extends RedirectableProviderType ? SignInOptions | undefined : undefined
 > {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
@@ -94,9 +95,8 @@ export async function signIn<
   const isCredentials = providers[provider].type === "credentials"
   const isEmail = providers[provider].type === "email"
   const isWebAuthn = providers[provider].type === "webauthn"
-  const isSupportingReturn = isCredentials || isEmail || isWebAuthn
 
-  const signInUrl = `${baseUrl}/${
+  const signinUrl = `${baseUrl}/${
     isCredentials || isWebAuthn ? "callback" : "signin"
   }/${provider}`
 
@@ -118,13 +118,14 @@ export async function signIn<
 
   const csrfToken = await getCsrfToken()
   const res = await fetch(
-    `${signInUrl}?${new URLSearchParams(authorizationParams)}`,
+    `${signinUrl}?${new URLSearchParams(SignInParams)}`,
     {
       method: "post",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "X-Auth-Return-Redirect": "1",
       },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       body: new URLSearchParams({
         ...options,
@@ -137,16 +138,15 @@ export async function signIn<
 
   const data = await res.json()
 
-  // TODO: Do not redirect for Credentials and Email providers by default in next major
-  if (redirect || !isSupportingReturn) {
+  // TODO(done): Do not redirect for Credentials and Email providers by default in next major
+  if (redirect && !isCredentials && !isEmail) {
     const url = data.url ?? callbackUrl
     window.location.href = url
     // If url contains a hash, the browser does not reload the page. We reload manually
     if (url.includes("#")) window.location.reload()
     return
   }
-
-  const error = new URL(data.url).searchParams.get("error")
+  const error = new URL(data.url as string).searchParams.get("error")
 
   if (res.ok) {
     await __NEXTAUTH._getSession({ event: "storage" })

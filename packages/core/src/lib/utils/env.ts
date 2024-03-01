@@ -4,7 +4,7 @@ import type { AuthAction, AuthConfig } from "../../types.js"
 export function setEnvDefaults(envObject: any, config: AuthConfig) {
   try {
     const url = envObject.AUTH_URL
-    if (url && !config.basePath) config.basePath = new URL(url).pathname
+    if (url && typeof url === 'string' && !config.basePath) config.basePath = new URL(url).pathname
   } catch {
   } finally {
     config.basePath ??= `/auth`
@@ -13,10 +13,10 @@ export function setEnvDefaults(envObject: any, config: AuthConfig) {
   if (!config.secret?.length) {
     config.secret = []
     const secret = envObject.AUTH_SECRET
-    if (secret) config.secret.push(secret)
+    if (typeof secret === 'string') config.secret.push(secret)
     for (const i of [1, 2, 3]) {
       const secret = envObject[`AUTH_SECRET_${i}`]
-      if (secret) config.secret.unshift(secret)
+      if (typeof secret === 'string') config.secret.unshift(secret)
     }
   }
 

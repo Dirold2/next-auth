@@ -64,10 +64,10 @@ describe("pages", () => {
       })
 
       const render = renderPage({ ...options, query: {}, cookies: [] })
-      const signInPage = render.signin()
+      const signinPage = render.signin()
 
-      expect(signInPage.body).toContain(`<title>Sign In</title>`)
-      expect(signInPage.body).toContain(
+      expect(signinPage.body).toContain(`<title>Authorized</title>`)
+      expect(signinPage.body).toContain(
         `action="http://localhost:3000/auth/signin/github"`
       )
     })

@@ -30,7 +30,7 @@ export interface AuthClientConfig {
 export interface UseSessionOptions<R extends boolean> {
   required: R
   /** Defaults to `signIn` */
-  onUnauthenticated?: () => void
+  onUnauthenticated?: (url: string) => void;
 }
 
 // Util type that matches some strings literally, but allows any other string as well.
@@ -69,7 +69,7 @@ export interface SignInResponse {
  * Match `inputType` of `new URLSearchParams(inputType)`
  * @internal
  */
-export type SignInAuthorizationParams =
+export type SignInAuthorizedParams =
   | string
   | string[][]
   | Record<string, string>
@@ -151,7 +151,7 @@ export async function fetchData<T = any>(
     if (!res.ok) throw data
     return data
   } catch (error) {
-    logger.error(new ClientFetchError((error as Error).message, error as any))
+    logger.error(new ClientFetchError((error as Error).message, { err: error }))
     return null
   }
 }
@@ -172,8 +172,8 @@ export function useOnline() {
     typeof navigator !== "undefined" ? navigator.onLine : false
   )
 
-  const setOnline = () => setIsOnline(true)
-  const setOffline = () => setIsOnline(false)
+  const setOnline = () => { setIsOnline(true); }
+  const setOffline = () => { setIsOnline(false); }
 
   React.useEffect(() => {
     window.addEventListener("online", setOnline)
@@ -218,7 +218,7 @@ export function parseUrl(url?: string): {
     url = `https://${url}`
   }
 
-  const _url = new URL(url || defaultUrl)
+  const _url = new URL(url ?? defaultUrl)
   const path = (_url.pathname === "/" ? defaultUrl.pathname : _url.pathname)
     // Remove trailing slash
     .replace(/\/$/, "")

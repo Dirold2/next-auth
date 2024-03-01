@@ -36,7 +36,6 @@
   "dependencies": {
     "@auth/core": "workspace:*"
   },
-  "peerDependencies": {},
   "keywords": [
     "<framework-name>",
     "oauth",
@@ -50,5 +49,13 @@
   "author": "",
   "contributors": [],
   "repository": "https://github.com/nextauthjs/next-auth",
-  "license": "ISC"
+  "license": "ISC",
+  "pnpm": {
+    "overrides": {
+      "postcss@<8.4.31": ">=8.4.31",
+      "nodemailer@<=6.9.8": ">=6.9.9",
+      "axios@>=0.8.1 <0.28.0": ">=0.28.0",
+      "undici@<=5.28.2": ">=5.28.3"
+    }
+  }
 }
