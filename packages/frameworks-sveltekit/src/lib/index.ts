@@ -68,7 +68,7 @@
  * </script>
  *
  * <h1>SvelteKit Auth Example</h1>
- * <p>
+ * <div>
  *   {#if $page.data.session}
  *     {#if $page.data.session.user?.image}
  *       <span
@@ -87,7 +87,7 @@
  *     <signin provider="google"/>
  *     <signin provider="facebook"/>
  *   {/if}
- * </p>
+ * </div>
  * ```
  *
  * `<signin />` and `<signout />` are components that `@auth/sveltekit` provides out of the box - they handle the sign-in/signout flow, and can be used as-is as a starting point or customized for your own components.
