@@ -4,7 +4,7 @@ import type { AuthFixture } from "../fixtures/auth"
 export class KeycloakLoginPom {
   usernameInput: Locator
   passwordInput: Locator
-  authorizedButton: Locator
+  signinButton: Locator
 
   #auth: AuthFixture
 
@@ -14,7 +14,7 @@ export class KeycloakLoginPom {
     this.usernameInput = page.getByLabel("Username or email")
     this.passwordInput = page.locator("#password")
 
-    this.authorizedButton = page.getByRole("button", { name: "Authorized" })
+    this.signinButton = page.getByRole("button", { name: "Authorized" })
   }
 
   async login({
@@ -32,14 +32,14 @@ export class KeycloakLoginPom {
     await this.usernameInput.fill(username)
     await this.passwordInput.fill(password)
 
-    return this.authorizedButton.click()
+    return this.signinButton.click()
   }
 
   isVisible() {
     return Promise.all([
       expect(this.usernameInput).toBeVisible(),
       expect(this.passwordInput).toBeVisible(),
-      expect(this.authorizedButton).toBeVisible(),
+      expect(this.signinButton).toBeVisible(),
     ])
   }
 }

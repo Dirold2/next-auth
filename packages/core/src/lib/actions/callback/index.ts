@@ -1,12 +1,12 @@
 import {
   AuthError,
-  AuthorizedCallbackError,
+  SignInCallbackError,
   CallbackRouteError,
   CredentialsAuthorized,
   InvalidProvider,
   Verification,
 } from "../../../errors.js";
-import { handleLoginOrRegister } from "./handle-login.js";
+import { handleLoginOrRegister } from "./handle-signin.js";
 import { handleOAuth } from "./oauth/callback.js";
 import { handleState } from "./oauth/checks.js";
 import { createHash } from "../../utils/web.js";
@@ -84,7 +84,7 @@ export async function callback(
 
 /**
  * The function `handleOAuthCallback` processes OAuth callback requests, handles authorization, user
- * login or registration, and session management based on the provided options and request data.
+ * signin or registration, and session management based on the provided options and request data.
  * @param {RequestInternal} request - The `request` parameter in the `handleOAuthCallback` function
  * represents the incoming request object containing information about the HTTP request made to the
  * server. It includes details such as headers, body, method, URL, query parameters, and more. In this
@@ -157,7 +157,7 @@ async function handleOAuthCallback(
   } = authorizationResult;
 
   if (!userFromProvider || !account || !OAuthProfile) {
-    return { redirect: `${url}/authorized`, cookies };
+    return { redirect: `${url}/signin`, cookies };
   }
 
   let userByAccount: User | null = null;
@@ -206,7 +206,7 @@ async function handleOAuthCallback(
       account: accountToUse,
       profile: OAuthProfile,
       isNewUser,
-      trigger: isNewUser ? "signUp" : "authorized",
+      trigger: isNewUser ? "signUp" : "signin",
     });
 
     if (token === null) {
@@ -234,7 +234,7 @@ async function handleOAuthCallback(
     });
   }
 
-  await events.authorized?.({
+  await events.signin?.({
     user,
     account: accountToUse,
     profile: OAuthProfile,
@@ -354,7 +354,7 @@ async function handleEmailCallback(
       user: loggedInUser,
       account,
       isNewUser,
-      trigger: isNewUser ? "signUp" : "authorized",
+      trigger: isNewUser ? "signUp" : "signin",
     });
 
     if (token === null) {
@@ -382,7 +382,7 @@ async function handleEmailCallback(
     });
   }
 
-  await events.authorized?.({ user: loggedInUser, account, isNewUser });
+  await events.signin?.({ user: loggedInUser, account, isNewUser });
 
   if (isNewUser && pages.newUser) {
     return {
@@ -395,31 +395,31 @@ async function handleEmailCallback(
 }
 
 /**
- * This TypeScript function handles authorized callbacks by executing the authorized function, handling
+ * This TypeScript function handles signin callbacks by executing the signin function, handling
  * errors, and redirecting based on the result.
  * @param params - The `params` parameter in the `handleAuthorized` function is of type
- * `Parameters<InternalOptions["callbacks"]["authorized"]>[0]`. This means it is the first parameter
- * type of the `authorized` callback function defined in the `InternalOptions` configuration.
+ * `Parameters<InternalOptions["callbacks"]["signin"]>[0]`. This means it is the first parameter
+ * type of the `signin` callback function defined in the `InternalOptions` configuration.
  * @param {InternalOptions} config - The `config` parameter in the `handleAuthorized` function is of
  * type `InternalOptions`, which likely contains various configuration options for the function to use.
- * It seems to have a property called `callbacks`, which in turn has properties `authorized` and
+ * It seems to have a property called `callbacks`, which in turn has properties `signin` and
  * `redirect`.
  * @returns a Promise that resolves to a string or undefined.
  */
 async function handleAuthorized(
-  params: Parameters<InternalOptions["callbacks"]["authorized"]>[0],
+  params: Parameters<InternalOptions["callbacks"]["signin"]>[0],
   config: InternalOptions
 ): Promise<string | undefined> {
-  const { authorized, redirect } = config.callbacks
+  const { signin, redirect } = config.callbacks
   try {
-    await authorized(params)
+    await signin(params)
   } catch (e) {
     if (e instanceof AuthError) throw e
-    throw new AuthorizedCallbackError(e as Error)
+    throw new SignInCallbackError(e as Error)
   }
-  if (!authorized) throw new AuthorizedCallbackError("AccessDenied")
-  if (typeof authorized !== "string") return
-  return await redirect({ url: authorized, baseUrl: config.url.origin })
+  if (!signin) throw new SignInCallbackError("AccessDenied")
+  if (typeof signin !== "string") return
+  return await redirect({ url: signin, baseUrl: config.url.origin })
 }
 
 /**
@@ -502,7 +502,7 @@ async function handleCredentialsCallback(
     user,
     account,
     isNewUser: false,
-    trigger: "authorized",
+    trigger: "signin",
   });
 
   if (token === null) {
@@ -521,7 +521,7 @@ async function handleCredentialsCallback(
     cookies.push(...sessionCookies);
   }
 
-  await events.authorized?.({ user, account });
+  await events.signin?.({ user, account });
 
   return { redirect: callbackUrl, cookies };
 }
@@ -623,7 +623,7 @@ async function handleWebAuthnCallback(
       user: loggedInUser,
       account: currentAccount,
       isNewUser,
-      trigger: isNewUser ? "signUp" : "authorized",
+      trigger: isNewUser ? "signUp" : "signin",
     });
 
     if (token === null) {
@@ -651,7 +651,7 @@ async function handleWebAuthnCallback(
     });
   }
 
-  await events.authorized?.({ user: loggedInUser, account: currentAccount, isNewUser });
+  await events.signin?.({ user: loggedInUser, account: currentAccount, isNewUser });
 
   return { redirect: options.callbackUrl, cookies };
 }

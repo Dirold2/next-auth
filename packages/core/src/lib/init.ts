@@ -32,7 +32,7 @@ interface InitParams {
 }
 
 export const defaultCallbacks: CallbacksOptions = {
-  authorized() {
+  signin() {
     return true
   },
   redirect({ url, baseUrl }) {

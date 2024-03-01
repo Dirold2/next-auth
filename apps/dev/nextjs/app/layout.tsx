@@ -1,4 +1,4 @@
-import { auth, authorized, logOut, update } from "auth"
+import { auth, signin, signout, update } from "auth"
 import Footer from "components/footer"
 import { Header } from "components/header"
 import styles from "components/header.module.css"
@@ -31,7 +31,7 @@ export async function AppHeader() {
           action={async () => {
             "use server"
             try {
-              await authorized()
+              await signin()
             } catch (error) {
               if (error instanceof AuthError) {
                 console.log(error)
@@ -47,7 +47,7 @@ export async function AppHeader() {
         <form
           action={async () => {
             "use server"
-            await logOut()
+            await signout()
           }}
         >
           <button className={styles.buttonPrimary}>Log out</button>

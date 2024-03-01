@@ -1,4 +1,4 @@
-import { SessionProvider, authorized, logOut, useSession } from "next-auth/react"
+import { SessionProvider, signin, signout, useSession } from "next-auth/react"
 import "./styles.css"
 import { Header } from "components/header"
 import styles from "components/header.module.css"
@@ -24,12 +24,12 @@ function PagesHeader() {
     <Header
       session={session}
       logIn={
-        <button onClick={() => authorized()} className={styles.buttonPrimary}>
+        <button onClick={() => signin()} className={styles.buttonPrimary}>
           Log in
         </button>
       }
       logOut={
-        <button onClick={() => logOut()} className={styles.button}>
+        <button onClick={() => signout()} className={styles.button}>
           Log out
         </button>
       }

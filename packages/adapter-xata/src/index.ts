@@ -15,8 +15,8 @@
  * # Install the Xata CLI globally if you don't already have it
  * npm install --location=global @xata.io/cli
  *
- * # Login
- * xata auth login
+ * # signin
+ * xata auth signin
  * ```
  *
  * @module @auth/xata-adapter

@@ -186,7 +186,7 @@ export function assertConfig(
     )
     if (dbStrategy && onlyCredentials) {
       return new UnsupportedStrategy(
-        "authorizedg in with credentials only supported if JWT strategy is enabled"
+        "signing in with credentials only supported if JWT strategy is enabled"
       )
     }
 
@@ -207,7 +207,7 @@ export function assertConfig(
 
   if (hasEmail || session?.strategy === "database" || (!session?.strategy && adapter)) {
     if (hasEmail) {
-      if (!adapter) return new MissingAdapter("Email login requires an adapter.")
+      if (!adapter) return new MissingAdapter("Email signin requires an adapter.")
       requiredMethods.push(...emailMethods)
     } else {
       if (!adapter) return new MissingAdapter("Database session requires an adapter.")

@@ -22,14 +22,14 @@ import { UnstorageAdapter } from "@auth/unstorage-adapter"
 
 
 const storage = createStorage()
-export const { handle, authorized, logOut } = SvelteKitAuth({
+export const { handle, signIn, signOut } = SvelteKitAuth({
   adapter: UnstorageAdapter(storage),
   session: {
     strategy: "jwt",
   },
   providers: [
     SendGrid,
-    Email({ server: "smtps://0.0.0.0:465?tls.rejectUnauthorized=false" }),
+    Email({ server: "smtps://0.0.0.0:465?tls.rejectUnsignIn=false" }),
     Credentials({
       credentials: { password: { label: "Password", type: "password" } },
       async authorize(credentials) {

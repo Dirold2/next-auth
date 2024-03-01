@@ -150,11 +150,11 @@ export async function handleOAuth(
 
     // Fetch user profile
     if (userinfo?.request) {
-      const providerWithauthorizedUrl = {
+      const providerWithSignInUrl = {
         ...provider,
-        authorizedUrl: provider.authorizedUrl, // Ensure authorizedUrl is included
+        signinUrl: provider.signinUrl, // Ensure signinUrl is included
       };
-      const _profile = await userinfo.request({ tokens, provider: providerWithauthorizedUrl });
+      const _profile = await userinfo.request({ tokens, provider: providerWithSignInUrl });
       if (_profile instanceof Object) profile = _profile;
     } else if (userinfo?.url) {
       const userinfoResponse = await o.userInfoRequest(

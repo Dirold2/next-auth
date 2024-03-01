@@ -166,10 +166,10 @@ export interface Profile {
   [claim: string]: unknown
 }
 
-// TODO(done): rename `authorized` to `authorized`
+// TODO: rename `signin` to `authorized`
 /** Override the default session creation flow of Auth.js */
 export interface CallbacksOptions<P = Profile, A = Account> {
-  authorized: (params: {
+  signin: (params: {
     user: User | AdapterUser
     account: A | null
     profile?: P | null
@@ -199,7 +199,7 @@ export interface CallbacksOptions<P = Profile, A = Account> {
     user: User | AdapterUser
     account: A | null
     profile?: P | null
-    trigger?: "authorized" | "signUp" | "update" | null
+    trigger?: "signin" | "signUp" | "update" | null
     isNewUser?: boolean | null
     session?: any | null
   }) => Awaitable<JWT | null>
@@ -234,7 +234,7 @@ export interface EventCallbacks {
    * For other providers, you'll get the User object from your adapter, the account,
    * and an indicator if the user was new to your Adapter.
    */
-  authorized: (message: {
+  signin: (message: {
     user: User
     account: Account | null
     profile?: Profile | null
@@ -246,7 +246,7 @@ export interface EventCallbacks {
    * - `token`: The JWT for this session.
    * - `session`: The session object from your adapter that is being ended.
    */
-  logOut: (
+  signout: (
     message:
       | { session: Awaited<ReturnType<Required<Adapter>["deleteSession"]>> }
       | { token: Awaited<ReturnType<JWTOptions["decode"]>> }
@@ -287,15 +287,15 @@ export type AuthorizedPageErrorParam =
 
 export interface PagesOptions {
   /**
-   * The path to the authorized page.
+   * The path to the signin page.
    *
    * The optional "error" query parameter is set to
-   * one of the {@link authorizedPageErrorParam available} values.
+   * one of the {@link SignInPageErrorParam available} values.
    *
-   * @default "/authorized"
+   * @default "/signin"
    */
-  authorized: string
-  logOut: string
+  signin: string
+  signout: string
   /**
    * The path to the error page.
    *
@@ -306,7 +306,7 @@ export interface PagesOptions {
    */
   error: string
   verifyRequest: string
-  /** If set, new users will be directed here on first authorized */
+  /** If set, new users will be directed here on first signin */
   newUser: string | null
 }
 
@@ -350,7 +350,7 @@ export type InternalProvider<T = ProviderType> = (T extends "oauth"
         : T extends WebAuthnProviderType
           ? WebAuthnConfig
           : never) & {
-  authorizedUrl: string
+            signinUrl: string
   /** @example `"https://example.com/api/auth/callback/id"` */
   callbackUrl: string
 }
@@ -359,7 +359,7 @@ export interface PublicProvider {
   id: string
   name: string
   type: string
-  authorizedUrl: string
+  signinUrl: string
   callbackUrl: string
 }
 
@@ -382,10 +382,10 @@ export interface PublicProvider {
  * - **`"session"`**:
  *   - **`GET**`: Returns the user's session if it exists, otherwise `null`.
  *   - **`POST**`: Updates the user's session and returns the updated session.
- * - **`"authorized"`**:
+ * - **`"signin"`**:
  *   - **`GET`**: Renders the built-in log-in page.
  *   - **`POST`**: Initiates the log-in flow.
- * - **`"logout"`**:
+ * - **`"signout"`**:
  *   - **`GET`**: Renders the built-in log-out page.
  *   - **`POST`**: Initiates the log-out flow. This will invalidate the user's session (deleting the cookie, and if there is a session in the database, it will be deleted as well).
  * - **`"verify-request"`**: Renders the built-in verification request page.
@@ -398,8 +398,8 @@ export type AuthAction =
   | "error"
   | "providers"
   | "session"
-  | "authorized"
-  | "logout"
+  | "signin"
+  | "signout"
   | "verify-request"
   | "webauthn-options"
 

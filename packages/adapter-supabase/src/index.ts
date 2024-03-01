@@ -237,8 +237,8 @@ export interface SupabaseAdapterOptions {
  *   }),
  * 	callbacks: {
  *     async session({ session, user }) {
- *       const authorizedgSecret = process.env.SUPABASE_JWT_SECRET
- *       if (authorizedgSecret) {
+ *       const signingSecret = process.env.SUPABASE_JWT_SECRET
+ *       if (signingSecret) {
  *         const payload = {
  *           aud: "authenticated",
  *           exp: Math.floor(new Date(session.expires).getTime() / 1000),
@@ -246,7 +246,7 @@ export interface SupabaseAdapterOptions {
  *           email: user.email,
  *           role: "authenticated",
  *         }
- *         session.supabaseAccessToken = jwt.sign(payload, authorizedgSecret)
+ *         session.supabaseAccessToken = jwt.sign(payload, signingSecret)
  *       }
  *       return session
  *     },

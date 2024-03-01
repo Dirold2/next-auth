@@ -1,5 +1,5 @@
 export { callback } from "./callback/index.js"
 export { session } from "./session.js"
-export { authorized } from "./login/index.js"
-export { logOut } from "./logout.js"
+export { signin } from "./signin/index.js"
+export { signout } from "./signout.js"
 export { webAuthnOptions } from "./webauthn-options.js"

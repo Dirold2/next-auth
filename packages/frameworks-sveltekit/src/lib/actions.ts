@@ -9,11 +9,11 @@ import type { AuthAction } from "@auth/core/types"
 import type { SvelteKitAuthConfig } from "./types"
 import { setEnvDefaults } from "./env"
 
-type authorizedParams = Parameters<App.Locals["authorized"]>
-export async function authorized(
-  provider: authorizedParams[0],
-  options: authorizedParams[1] = {},
-  authorizationParams: authorizedParams[2],
+type SignInParams = Parameters<App.Locals["signin"]>
+export async function signin(
+  provider: SignInParams[0],
+  options: SignInParams[1] = {},
+  authorizationParams: SignInParams[2],
   config: SvelteKitAuthConfig,
   event: RequestEvent
 ) {
@@ -26,7 +26,7 @@ export async function authorized(
   } = options instanceof FormData ? Object.fromEntries(options) : options
 
   const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/"
-  const base = createActionURL("authorized", headers, config.basePath)
+  const base = createActionURL("signin", headers, config.basePath)
 
   if (!provider) {
     const url = `${base}?${new URLSearchParams({ callbackUrl })}`
@@ -35,7 +35,7 @@ export async function authorized(
   }
 
   let url = `${base}/${provider}?${new URLSearchParams(authorizationParams)}`
-  let foundProvider: authorizedParams[0] | undefined = undefined
+  let foundProvider: SignInParams[0] | undefined = undefined
 
   for (const _provider of config.providers) {
     const { id } = typeof _provider === "function" ? _provider() : _provider
@@ -52,7 +52,7 @@ export async function authorized(
   }
 
   if (foundProvider === "credentials") {
-    url = url.replace("authorized", "callback")
+    url = url.replace("signin", "callback")
   }
 
   headers.set("Content-Type", "application/x-www-form-urlencoded")
@@ -72,9 +72,9 @@ export async function authorized(
   return res.redirect as any
 }
 
-type LogOutParams = Parameters<App.Locals["logOut"]>
-export async function logOut(
-  options: LogOutParams[0],
+type SignOutParams = Parameters<App.Locals["signout"]>
+export async function signout(
+  options: SignOutParams[0],
   config: SvelteKitAuthConfig,
   event: RequestEvent
 ) {
@@ -82,7 +82,7 @@ export async function logOut(
   const headers = new Headers(request.headers)
   headers.set("Content-Type", "application/x-www-form-urlencoded")
 
-  const url = createActionURL("logout", headers, config.basePath)
+  const url = createActionURL("signout", headers, config.basePath)
   const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/"
   const body = new URLSearchParams({ callbackUrl })
   const req = new Request(url, { method: "POST", headers, body })

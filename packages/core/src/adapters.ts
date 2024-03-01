@@ -1,11 +1,11 @@
 /**
  * Auth.js can be integrated with _any_ data layer (database, ORM, or backend API, HTTP client)
- * in order to automatically create users, handle account linking automatically, support passwordless login,
+ * in order to automatically create users, handle account linking automatically, support passwordless signin,
  * and to store session information.
  *
  * This module contains utility functions and types to create an Auth.js compatible adapter.
  *
- * Auth.js supports 2 session strategies to persist the login state of a user.
+ * Auth.js supports 2 session strategies to persist the signin state of a user.
  * The default is to use a cookie + {@link https://authjs.dev/concepts/session-strategies#jwt JWT}
  * based session store (`strategy: "jwt"`),
  * but you can also use a database adapter to store the session in a database.
@@ -148,16 +148,16 @@
  * in the core library.
  * [This guide](https://authjs.dev/guides/basics/refresh-token-rotation#database-strategy) should provide the necessary steps to do this in user land.
  *
- * ### Federated logout
+ * ### Federated signout
  *
- * Auth.js _currently_ does not support {@link https://authjs.dev/concepts/oauth#federated-logout federated logout} out of the box.
+ * Auth.js _currently_ does not support {@link https://authjs.dev/concepts/oauth#federated-signout federated signout} out of the box.
  * This means that even if an active session is deleted from the database, the user will still be signed in to the identity provider,
  * they will only be signed out of the application.
  * Eg. if you use Google as an identity provider, and you delete the session from the database,
  * the user will still be signed in to Google, but they will be signed out of your application.
  *
- * If your users might be using the application from a publicly shared computer (eg: library), you might want to implement federated logout.
- * {@link https://authjs.dev/guides/providers/federated-logout This guide} should provide the necessary steps.
+ * If your users might be using the application from a publicly shared computer (eg: library), you might want to implement federated signout.
+ * {@link https://authjs.dev/guides/providers/federated-signout This guide} should provide the necessary steps.
  *
  * @module adapters
  */
@@ -169,8 +169,8 @@ import type { Account, Authenticator, Awaitable, User } from "./types.js"
 // have a common implementation.
 
 /**
- * A user represents a person who can authorized to the application.
- * If a user does not exist yet, it will be created when they authorized for the first time,
+ * A user represents a person who can signin to the application.
+ * If a user does not exist yet, it will be created when they signin for the first time,
  * using the information (profile data) returned by the identity provider.
  * A corresponding account is also created and linked to the user.
  */
@@ -181,7 +181,7 @@ export interface AdapterUser extends User {
   email: string
   /**
    * Whether the user has verified their email address via an [Email provider](https://authjs.dev/reference/core/providers/email).
-   * It is `null` if the user has not signed in with the Email provider yet, or the date of the first successful authorized.
+   * It is `null` if the user has not signed in with the Email provider yet, or the date of the first successful signin.
    */
   emailVerified: Date | null
 
@@ -204,7 +204,7 @@ export interface AdapterAccount extends Account {
 }
 
 /**
- * A session holds information about a user's current authorized state.
+ * A session holds information about a user's current signin state.
  */
 export interface AdapterSession {
   /**
@@ -230,7 +230,7 @@ export interface AdapterSession {
 }
 
 /**
- * A verification token is a temporary token that is used to authorized a user via their email address.
+ * A verification token is a temporary token that is used to signin a user via their email address.
  * It is created when a user signs in with an [Email provider](https://authjs.dev/reference/core/providers/email).
  * When the user clicks the link in the email, the token and email is sent back to the server
  * where it is hashed and compared to the value in the database.

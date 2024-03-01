@@ -1,7 +1,7 @@
 /**
  * <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
  * <span style={{fontSize: "1.35rem" }}>
- *  Built-in authorized with <b>Auth0</b> integration.
+ *  Built-in signin with <b>Auth0</b> integration.
  * </span>
  * <a href="https://auth0.com" style={{backgroundColor: "black", padding: "12px", borderRadius: "100%" }}>
  *   <img style={{display: "block"}} src="https://authjs.dev/img/providers/auth0.svg" width="24"/>
@@ -48,14 +48,14 @@ export interface Auth0Profile extends Record<string, any> {
     profileData: object
     [key: string]: any
   }>
-  /** IP address associated with the user's last login. */
+  /** IP address associated with the user's last signin. */
   last_ip: string
-  /** Timestamp indicating when the user last logged in. If a user is blocked and logs in, the blocked session updates last_login. If you are using this property from inside a Rule using the user< object, its value will be associated with the login that triggered the rule; this is because rules execute after login. */
-  last_login: Date
+  /** Timestamp indicating when the user last logged in. If a user is blocked and logs in, the blocked session updates last_signin. If you are using this property from inside a Rule using the user< object, its value will be associated with the signin that triggered the rule; this is because rules execute after signin. */
+  last_signin: Date
   /** Timestamp indicating the last time the user's password was reset/changed. At user creation, this field does not exist. This property is only available for Database connections. */
   last_password_reset: Date
-  /** Number of times the user has logged in. If a user is blocked and logs in, the blocked session is counted in logins_count. */
-  logins_count: number
+  /** Number of times the user has logged in. If a user is blocked and logs in, the blocked session is counted in signins_count. */
+  signins_count: number
   /** List of multi-factor providers with which the user is enrolled. */
   multifactor: string
   /** The user's full name. */
@@ -68,7 +68,7 @@ export interface Auth0Profile extends Record<string, any> {
   phone_verified: boolean
   /** URL pointing to the user's profile picture. */
   picture: string
-  /** Timestamp indicating when the user's profile was last updated/modified. Changes to last_login are considered updates, so most of the time, updated_at will match last_login. */
+  /** Timestamp indicating when the user's profile was last updated/modified. Changes to last_signin are considered updates, so most of the time, updated_at will match last_signin. */
   updated_at: Date
   /** (unique) The user's identifier. Importing allows user records to be synchronized across multiple systems without using mapping tables. */
   user_id: string

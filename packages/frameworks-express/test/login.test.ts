@@ -54,9 +54,9 @@ describe("Integration test with login and getSession", () => {
       res.send("OK")
     })
 
-    // Get authorized page
+    // Get signin page
     const response = await client
-      .get("/auth/authorized")
+      .get("/auth/signin")
       .set("X-Test-Header", "foo")
       .set("Accept", "application/json")
 

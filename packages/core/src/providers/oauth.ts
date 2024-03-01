@@ -27,7 +27,7 @@ type EndpointRequest<C, R, P> = (
   context: C & {
     /** Provider is passed for convenience, and also contains the `callbackUrl`. */
     provider: OAuthConfigInternal<P> & {
-      authorizedUrl: string
+      signinUrl: string
       callbackUrl: string
     }
   }
@@ -111,16 +111,16 @@ export interface OAuth2Config<Profile>
   extends CommonProviderOptions,
     PartialIssuer {
   /**
-   * Identifies the provider when you want to authorized to
+   * Identifies the provider when you want to signin to
    * a specific provider.
    *
    * @example
    * ```ts
-   * authorized('github') // "github" is the provider ID
+   * signin('github') // "github" is the provider ID
    * ```
    */
   id: string
-  /** The name of the provider. shown on the default authorized page. */
+  /** The name of the provider. shown on the default signin page. */
   name: string
   /**
    * OpenID Connect (OIDC) compliant providers can configure
@@ -207,11 +207,11 @@ export interface OAuth2Config<Profile>
   client?: Partial<Client>
   style?: OAuthProviderButtonStyles
   /**
-   * Normally, when you authorized with an OAuth provider and another account
+   * Normally, when you signin with an OAuth provider and another account
    * with the same email address already exists,
    * the accounts are not linked automatically.
    *
-   * Automatic account linking on authorized is not secure
+   * Automatic account linking on signin is not secure
    * between arbitrary providers and is disabled by default.
    * Learn more in our [Security FAQ](https://authjs.dev/reference/faq#security).
    *

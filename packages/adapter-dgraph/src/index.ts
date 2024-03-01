@@ -227,7 +227,7 @@ export { format }
  *
  *  ### The nextAuth secret
  *
- *  The `$nextAuth` secret is securely generated using the `jwtSecret` and injected by the DgraphAdapter in order to allow interacting with the JWT DgraphClient for anonymous user requests made within the system `ie. login, register`. This allows
+ *  The `$nextAuth` secret is securely generated using the `jwtSecret` and injected by the DgraphAdapter in order to allow interacting with the JWT DgraphClient for anonymous user requests made within the system `ie. signin, register`. This allows
  *  secure interactions to be made with all the auth types required by next-auth. You have to specify it for each auth rule of
  *  each type defined in your secure schema.
  *

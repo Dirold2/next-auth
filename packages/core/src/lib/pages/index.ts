@@ -1,7 +1,7 @@
 import { renderToString } from "preact-render-to-string"
 import ErrorPage from "./error.js"
-import authorizedPage from "./login.js"
-import LogOutPage from "./logout.js"
+import SignInPage from "./signin.js"
+import SignOutPage from "./signout.js"
 import css from "./styles.js"
 import VerifyRequestPage from "./verify-request.js"
 import { UnknownAction } from "../../errors.js"
@@ -86,22 +86,22 @@ export default function renderPage(params: RenderPageParams) {
       return {
         headers: { "Content-Type": "application/json" },
         body: providers.reduce<Record<string, PublicProvider>>(
-          (acc, { id, name, type, authorizedUrl, callbackUrl }) => {
-            acc[id] = { id, name, type, authorizedUrl, callbackUrl }
+          (acc, { id, name, type, signinUrl, callbackUrl }) => {
+            acc[id] = { id, name, type, signinUrl, callbackUrl }
             return acc
           },
           {}
         ),
       }
     },
-    authorized(providerId?: string, error?: any) {
+    signin(providerId?: string, error?: any) {
       if (providerId) throw new UnknownAction("Unsupported action")
-      if (pages?.authorized) {
-        let authorizedUrl = `${pages.authorized}${
-          pages.authorized.includes("?") ? "&" : "?"
+      if (pages?.signin) {
+        let signinUrl = `${pages.signin}${
+          pages.signin.includes("?") ? "&" : "?"
         }${new URLSearchParams({ callbackUrl: params.callbackUrl ?? "/" })}`
-        if (error) authorizedUrl = `${authorizedUrl}&${new URLSearchParams({ error })}`
-        return { redirect: authorizedUrl, cookies }
+        if (error) signinUrl = `${signinUrl}&${new URLSearchParams({ error })}`
+        return { redirect: signinUrl, cookies }
       }
 
       // If we have a webauthn provider with conditional UI and
@@ -123,7 +123,7 @@ export default function renderPage(params: RenderPageParams) {
       return send({
         cookies,
         theme,
-        html: authorizedPage({
+        html: SignInPage({
           csrfToken: params.csrfToken,
           // We only want to render providers
           providers: params.providers?.filter(
@@ -147,12 +147,12 @@ export default function renderPage(params: RenderPageParams) {
         status:  200,
       })
     },
-    logout() {
-      if (pages?.logOut) return { redirect: pages.logOut, cookies }
+    signout() {
+      if (pages?.signin) return { redirect: pages.signin, cookies }
       return send({
         cookies,
         theme,
-        html: LogOutPage({ csrfToken: params.csrfToken, url, theme }),
+        html: SignOutPage({ csrfToken: params.csrfToken, url, theme }),
         title: "Log Out",
         status:   200,
         headTags: "",

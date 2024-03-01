@@ -157,7 +157,7 @@ export interface TiktokProfile extends Record<string, any> {
  *
  * :::tip
  *
- * Production applications cannot use localhost URLs to authorized with Tiktok. You need add the domain and Callback/Redirect url's to your Tiktok app and have them review and approved by the Tiktok Team.
+ * Production applications cannot use localhost URLs to signin with Tiktok. You need add the domain and Callback/Redirect url's to your Tiktok app and have them review and approved by the Tiktok Team.
  *
  * :::
  *

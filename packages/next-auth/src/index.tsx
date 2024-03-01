@@ -70,7 +70,7 @@
 import { Auth } from "@auth/core"
 import { reqWithEnvURL, setEnvDefaults } from "./lib/env.js"
 import { initAuth } from "./lib/index.js"
-import { authorized, logOut, update } from "./lib/actions.js"
+import { signin, signout, update } from "./lib/actions.js"
 
 import type { Session } from "@auth/core/types"
 import type { BuiltInProviderType } from "@auth/core/providers"
@@ -278,7 +278,7 @@ export interface NextAuthResult {
    * ```
    *
   */
-  authorized: <
+  signin: <
     P extends BuiltInProviderType | string,
     R extends boolean = true,
   >(
@@ -321,7 +321,7 @@ export interface NextAuthResult {
    *
    *
   */
-  logOut: <R extends boolean = true>(options?: {
+  signout: <R extends boolean = true>(options?: {
     /** The URL to redirect to after signing out. By default, the user is redirected to the current page. */
     redirectTo?: string
     /** If set to `false`, the `logOut` method will return the URL to redirect to instead of redirecting automatically. */
@@ -387,7 +387,7 @@ export default function NextAuth(
   ): Promise<R extends false ? any : never> => {
     const _config = typeof config === "function" ? config(undefined) : providedConfig ?? config;
     setEnvDefaults(_config);
-    const result = await logOut(options, _config);
+    const result = await signout(options, _config);
     if (options?.redirect === false) {
        return result as any;
     } else {
@@ -409,11 +409,11 @@ export default function NextAuth(
       // @ts-expect-error
       auth: initAuth(config),
       // Authorizing a user with the provided provider, options, and authorizationParams
-      authorized: async (provider, options, authorizationParams) => {
-        return await authorized(provider, options, authorizationParams, config(undefined));
+      signin: async (provider, options, authorizationParams) => {
+        return await signin(provider, options, authorizationParams, config(undefined));
       },
       // Logging out a user with optional redirection options
-      logOut: handleConfigAndLogOut,
+      signout: handleConfigAndLogOut,
       // Updating user data asynchronously
       update: async (data) => {
         return await update(data, config(undefined));
@@ -435,11 +435,11 @@ export default function NextAuth(
     // @ts-expect-error
     auth: initAuth(config),
     // Authorizing a user with the provided provider, options, and authorizationParams
-    authorized: async (provider, options, authorizationParams) => {
-      return await authorized(provider, options, authorizationParams, config);
+    signin: async (provider, options, authorizationParams) => {
+      return await signin(provider, options, authorizationParams, config);
     },
     // Logging out a user with optional redirection options
-    logOut: handleConfigAndLogOut,
+    signout: handleConfigAndLogOut,
     // Updating user data asynchronously
     update: async (data) => {
       return await update(data, config);

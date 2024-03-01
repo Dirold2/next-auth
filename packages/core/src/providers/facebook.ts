@@ -50,7 +50,7 @@ export interface FacebookProfile extends Record<string, any> {
  * ### Notes
  *
  * :::tip
- * Production applications cannot use localhost URLs to authorized with Facebook. You need to use a dedicated development application in Facebook to use localhost callback URLs.
+ * Production applications cannot use localhost URLs to signin with Facebook. You need to use a dedicated development application in Facebook to use localhost callback URLs.
  * :::
  *
  * :::tip

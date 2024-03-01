@@ -5,9 +5,9 @@ import type {
 
 type LiteralUnion<T extends U, U = string> = T | (U & Record<never, never>)
 
-interface authorizedOptions extends Record<string, unknown> {
+interface SignInOptions extends Record<string, unknown> {
   /**
-   * Specify to which URL the user will be redirected after authorizedg in. Defaults to the page URL the log-in is initiated from.
+   * Specify to which URL the user will be redirected after signin in. Defaults to the page URL the log-in is initiated from.
    *
    * [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl)
    */
@@ -16,7 +16,7 @@ interface authorizedOptions extends Record<string, unknown> {
   redirect?: boolean
 }
 
-interface LogOutParams<R extends boolean = true> {
+interface SignOutParams<R extends boolean = true> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl-1) */
   callbackUrl?: string
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1 */
@@ -24,24 +24,24 @@ interface LogOutParams<R extends boolean = true> {
 }
 
 /** Match `inputType` of `new URLSearchParams(inputType)` */
-export type authorizedAuthorizationParams =
+export type SignInAuthorizationParams =
   | string
   | string[][]
   | Record<string, string>
   | URLSearchParams
 
 /**
- * Client-side method to initiate a authorized flow
- * or send the user to the authorized page listing all possible providers.
+ * Client-side method to initiate a signin flow
+ * or send the user to the signin page listing all possible providers.
  * Automatically adds the CSRF token to the request.
  *
  * ```ts
- * import { authorized } from "@auth/solid-start/client"
- * authorized()
- * authorized("provider") // example: authorized("github")
+ * import { signin } from "@auth/solid-start/client"
+ * signin()
+ * signin("provider") // example: signin("github")
  * ```
  */
-export async function authorized<
+export async function signin<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   providerId?: LiteralUnion<
@@ -49,8 +49,8 @@ export async function authorized<
       ? P | BuiltInProviderType
       : BuiltInProviderType
   >,
-  options?: authorizedOptions,
-  authorizationParams?: authorizedAuthorizationParams
+  options?: SignInOptions,
+  authorizationParams?: SignInAuthorizationParams
 ) {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
@@ -60,17 +60,17 @@ export async function authorized<
   const isSupportingReturn = isCredentials || isEmail
 
   // TODO: Handle custom base path
-  const authorizedUrl = `/api/auth/${
+  const signinUrl = `/api/auth/${
     isCredentials ? "callback" : "login"
   }/${providerId}`
 
-  const _authorizedUrl = `${authorizedUrl}?${new URLSearchParams(authorizationParams)}`
+  const _signinUrl = `${signinUrl}?${new URLSearchParams(authorizationParams)}`
 
   // TODO: Handle custom base path
   const csrfTokenResponse = await fetch("/api/auth/csrf")
   const { csrfToken } = await csrfTokenResponse.json()
 
-  const res = await fetch(_authorizedUrl, {
+  const res = await fetch(_signinUrl, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -102,16 +102,16 @@ export async function authorized<
  * Automatically adds the CSRF token to the request.
  *
  * ```ts
- * import { logOut } from "@auth/solid-start/client"
- * logOut()
+ * import { signout } from "@auth/solid-start/client"
+ * signout()
  * ```
  */
-export async function logOut(options?: LogOutParams) {
+export async function signout(options?: SignOutParams) {
   const { callbackUrl = window.location.href } = options ?? {}
   // TODO: Custom base path
   const csrfTokenResponse = await fetch("/api/auth/csrf")
   const { csrfToken } = await csrfTokenResponse.json()
-  const res = await fetch(`/api/auth/logout`, {
+  const res = await fetch(`/api/auth/signout`, {
     method: "post",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

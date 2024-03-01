@@ -26,10 +26,10 @@ import type {
   ClientSafeProvider,
   LiteralUnion,
   SessionProviderProps,
-  SiAuthorizedParams,
-  AuthorizedOptions,
-  AuthorizedResponse,
-  LogOutParams,
+  SignInAuthorizedParams,
+  SignInOptions,
+  SignInResponse,
+  SignOutParams,
   UseSessionOptions,
 } from "./lib/client.js";
 
@@ -200,17 +200,17 @@ export async function getProviders(): Promise<ProvidersType | null> {
  * @param [options] - The `options` parameter in the `logOut` function is an object that contains
  * optional parameters for the logout operation. It has the following properties:
  * @returns The `logOut` function returns a Promise that resolves to either `undefined` or
- * `AuthorizedParams` based on the generic type `R`. If `R` is `true`, it returns `undefined`,
- * otherwise it returns `AuthorizedParams`.
+ * `SignInParams` based on the generic type `R`. If `R` is `true`, it returns `undefined`,
+ * otherwise it returns `SignInParams`.
  */
-export async function logOut<R extends boolean = true>(
-  options?: LogOutParams<R>
-): Promise<R extends true ? undefined : LogOutParams> {
+export async function signout<R extends boolean = true>(
+  options?: SignOutParams<R>
+): Promise<R extends true ? undefined : SignOutParams> {
   try {
     const { callbackUrl = window.location.href } = options ?? {};
     const baseUrl = apiBaseUrl(__NEXTAUTH);
     const csrfToken = await getCsrfToken();
-    const res = await fetch(`${baseUrl}/logout`, {
+    const res = await fetch(`${baseUrl}/signout`, {
       method: "post",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -222,13 +222,13 @@ export async function logOut<R extends boolean = true>(
 
     if (res.ok) {
       const data = await res.json();
-      broadcast().postMessage({ event: "session", data: { trigger: "logout" } });
+      broadcast().postMessage({ event: "session", data: { trigger: "signout" } });
       
       if (options?.redirect !== false) {
         const url = data.url ?? callbackUrl;
         window.location.href = url;
         if (url.includes("#")) window.location.reload();
-        return undefined as R extends true ? undefined : LogOutParams;
+        return undefined as R extends true ? undefined : SignOutParams;
       }
 
       await __NEXTAUTH._getSession({ event: "storage" });
@@ -237,31 +237,29 @@ export async function logOut<R extends boolean = true>(
       throw new Error("Failed to log out");
     }
   } catch (error) {
-    console.error("[next-auth] Error during logout:", error);
-    return null as unknown as R extends true ? undefined : LogOutParams;
+    console.error("[next-auth] Error during signout:", error);
+    return null as unknown as R extends true ? undefined : SignOutParams;
   }
 }
 
+
 /**
- * The function `authorized` in TypeScript React handles authorization with different providers and
- * options, including fetching providers, generating login URLs, and processing authorization
- * responses.
- * @param {string} [provider] - The `provider` parameter in the `authorized` function is used to
- * specify the authentication provider that the user wants to authorize with. It is a string that
- * represents the name of the provider. This could be a social provider like Google, Facebook, or a
- * custom provider like credentials or email.
- * @param {AuthorizedOptions} [options] - The `options` parameter in the `authorized` function is an
- * object that can contain the following properties:
- * @param {SiAuthorizedParams} [authorizationParams] - The `authorizationParams` parameter in the
- * `authorized` function is used to pass additional parameters for the authorization process. These
- * parameters are typically specific to the authentication provider being used and may include things
- * like client IDs, scopes, or any other necessary information for authentication.
- * @returns The `authorized` function returns a Promise that resolves to an `AuthorizedResponse` object
- * or `undefined`. The `AuthorizedResponse` object contains properties such as `error`, `status`, `ok`,
- * and `url`. If an error occurs during the authorization process, the function will catch the error,
- * log it, and return `undefined`.
+ * The function `signin` in TypeScript React is used to handle user authentication with different
+ * providers and options, including redirecting users to the appropriate sign-in page.
+ * @param [provider] - The `provider` parameter in the `signin` function is used to specify the
+ * authentication provider to sign in with. It can be of type `RedirectableProviderType` or
+ * `BuiltInProviderType`. The function will redirect the user to the appropriate sign-in URL based on
+ * the selected provider.
+ * @param {SignInOptions} [options] - The `options` parameter in the `signin` function is an object
+ * that can contain the following properties:
+ * @param {SignInAuthorizedParams} [authorizationParams] - The `authorizationParams` parameter in the
+ * `signin` function is used to pass additional parameters for authorization when signing in with a
+ * specific provider. These parameters are included in the URL query string when making the sign-in
+ * request to the authentication server.
+ * @returns The `signin` function returns a Promise that resolves to a `SignInResponse` object or
+ * `undefined` based on the type of provider passed to the function.
  */
-export async function authorized<
+export async function signin<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   provider?: LiteralUnion<
@@ -269,10 +267,10 @@ export async function authorized<
       ? P | BuiltInProviderType
       : BuiltInProviderType
   >,
-  options?: AuthorizedOptions,
-  authorizationParams?: SiAuthorizedParams
+  options?: SignInOptions,
+  authorizationParams?: SignInAuthorizedParams
 ): Promise<
-  P extends RedirectableProviderType ? AuthorizedResponse | undefined : undefined
+  P extends RedirectableProviderType ? SignInResponse | undefined : undefined
 > {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
@@ -285,7 +283,7 @@ export async function authorized<
   }
 
   if (!provider || !(provider in providers)) {
-    window.location.href = `${baseUrl}/authorized?${new URLSearchParams({
+    window.location.href = `${baseUrl}/signin?${new URLSearchParams({
       callbackUrl,
     })}`
     return
@@ -296,7 +294,7 @@ export async function authorized<
   const isSupportingReturn = isCredentials || isEmail
 
   const signInUrl = `${baseUrl}/${
-    isCredentials ? "callback" : "authorized"
+    isCredentials ? "callback" : "signin"
   }/${provider}`
 
   const csrfToken = await getCsrfToken()

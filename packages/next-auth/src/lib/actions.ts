@@ -8,11 +8,11 @@ import type { NextAuthResult, Session } from "../index.js"
 import type { ProviderType } from "../providers/index.js"
 import type { headers } from "next/headers"
 
-type authorizedParams = Parameters<NextAuthResult["authorized"]>
-export async function authorized(
-  provider: authorizedParams[0],
-  options: authorizedParams[1] = {},
-  authorizationParams: authorizedParams[2],
+type SignInParams = Parameters<NextAuthResult["signin"]>
+export async function signin(
+  provider: SignInParams[0],
+  options: SignInParams[1] = {},
+  SignInParams: SignInParams[2],
   config: NextAuthConfig
 ) {
   const headers = new Headers(nextHeaders())
@@ -23,18 +23,18 @@ export async function authorized(
   } = options instanceof FormData ? Object.fromEntries(options) : options
 
   const callbackUrl = redirectTo?.toString() ?? headers.get("Referer") ?? "/"
-  const authorizedURL = createActionURL("authorized", headers, config.basePath)
+  const signinURL = createActionURL("signin", headers, config.basePath)
 
   if (!provider) {
-    authorizedURL.searchParams.append("callbackUrl", callbackUrl)
-    if (shouldRedirect) redirect(authorizedURL.toString())
-    return authorizedURL.toString()
+    signinURL.searchParams.append("callbackUrl", callbackUrl)
+    if (shouldRedirect) redirect(signinURL.toString())
+    return signinURL.toString()
   }
 
-  let url = `${authorizedURL}/${provider}?${new URLSearchParams(
-    authorizationParams
+  let url = `${signinURL}/${provider}?${new URLSearchParams(
+    SignInParams
   )}`
-  let foundProvider: { id?: authorizedParams[0]; type?: ProviderType } = {}
+  let foundProvider: { id?: SignInParams[0]; type?: ProviderType } = {}
 
   for (const providerConfig of config.providers) {
     const { options, ...defaults } =
@@ -50,13 +50,13 @@ export async function authorized(
   }
 
   if (!foundProvider.id) {
-    const url = `${authorizedURL}?${new URLSearchParams({ callbackUrl })}`
+    const url = `${signinURL}?${new URLSearchParams({ callbackUrl })}`
     if (shouldRedirect) redirect(url)
     return url
   }
 
   if (foundProvider.type === "credentials") {
-    url = url.replace("authorized", "callback")
+    url = url.replace("signin", "callback")
   }
 
   headers.set("Content-Type", "application/x-www-form-urlencoded")
@@ -70,15 +70,15 @@ export async function authorized(
   return res.redirect as any
 }
 
-type LogOutParams = Parameters<NextAuthResult["logOut"]>
-export async function logOut(
-  options: LogOutParams[0],
+type SignOutParams = Parameters<NextAuthResult["signout"]>
+export async function signout(
+  options: SignOutParams[0],
   config: NextAuthConfig
 ) {
   const headers = new Headers(nextHeaders())
   headers.set("Content-Type", "application/x-www-form-urlencoded")
 
-  const url = createActionURL("logout", headers, config.basePath)
+  const url = createActionURL("signout", headers, config.basePath)
   const callbackUrl = options?.redirectTo ?? headers.get("Referer") ?? "/"
   const body = new URLSearchParams({ callbackUrl })
   const req = new Request(url, { method: "POST", headers, body })

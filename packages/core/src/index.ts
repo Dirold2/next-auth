@@ -27,7 +27,7 @@ export async function Auth(request: Request, config: AuthConfig): Promise<Respon
   if (Array.isArray(assertionResult)) assertionResult.forEach(logger.warn)
   else if (assertionResult instanceof Error) {
     logger.error(assertionResult)
-    const htmlPages = ["login", "logout", "error", "verify-request"]
+    const htmlPages = ["signin", "signout", "error", "verify-request"]
     if (!htmlPages.includes(internalRequest.action) || internalRequest.method !== "GET") {
       return new Response("There was a problem with the server configuration. Check the server logs for more information.", { status: 500 })
     }

@@ -10,12 +10,12 @@ import authConfig from "auth.config"
 
 // authConfig.providers.push(
 //   // Start server with `pnpm email`
-//   Email({ server: "smtp://127.0.0.1:1025?tls.rejectUnauthorized=false" }),
+//   Email({ server: "smtp://127.0.0.1:1025?tls.rejectUnsignIn=false" }),
 //   SendGrid,
 //   Resend
 // )
 
-// export const { handlers, auth, authorized, signOut, unstable_update } = NextAuth(
+// export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth(
 //   (request) => {
 //     if (request?.nextUrl.searchParams.get("test")) {
 //       return {
@@ -33,7 +33,7 @@ import authConfig from "auth.config"
 //   }
 // )
 
-export const { handlers, auth, authorized, logOut, update } = NextAuth({
+export const { handlers, auth, signin, signout, update } = NextAuth({
   // adapter: PrismaAdapter(globalThis.prisma),
   // secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },

@@ -12,7 +12,7 @@ import type { OAuthConfig } from "../../../providers/index.js"
 import type { SessionToken } from "../../utils/cookie.js"
 
 /**
- * This function handles the complex flow of authorizedg users in, and either creating,
+ * This function handles the complex flow of signing users in, and either creating,
  * linking (or not linking) accounts depending on if the user is currently logged
  * in, if they have account already and the authentication mechanism they are using.
  *
@@ -90,7 +90,7 @@ export async function handleLoginOrRegister(
   }
 
   if (account.type === "email") {
-    // If authorizedg in with an email, check if an account with the same email address exists already
+    // If signing in with an email, check if an account with the same email address exists already
     const userByEmail = await getUserByEmail(profile.email)
     if (userByEmail) {
       // If they are not already signed in as the same user, this flow will
@@ -138,7 +138,7 @@ export async function handleLoginOrRegister(
           const currentAccount: AdapterAccount = { ...account, userId: user.id }
           return { session, user, isNewUser, account: currentAccount }
         }
-        // If the user is currently signed in, but the new account they are authorizedg in
+        // If the user is currently signed in, but the new account they are signing in
         // with is already associated with another user, then we cannot link them
         // and need to return an error.
         throw new AccountNotLinked(
@@ -212,7 +212,7 @@ export async function handleLoginOrRegister(
     }
   }
 
-  // If authorizedg in with OAuth account, check to see if the account exists already
+  // If signing in with OAuth account, check to see if the account exists already
   const userByAccount = await getUserByAccount({
     providerAccountId: account.providerAccountId,
     provider: account.provider,
@@ -223,7 +223,7 @@ export async function handleLoginOrRegister(
       if (userByAccount.id === user.id) {
         return { session, user, isNewUser }
       }
-      // If the user is currently signed in, but the new account they are authorizedg in
+      // If the user is currently signed in, but the new account they are signing in
       // with is already associated with another user, then we cannot link them
       // and need to return an error.
       throw new OAuthAccountNotLinked(
@@ -267,12 +267,12 @@ export async function handleLoginOrRegister(
     // This step is often overlooked in OAuth implementations, but covers the following cases:
     //
     // 1. It makes it harder for someone to accidentally create two accounts.
-    //    e.g. by authorized in with email, then again with an oauth account connected to the same email.
+    //    e.g. by signin in with email, then again with an oauth account connected to the same email.
     // 2. It makes it harder to hijack a user account using a 3rd party OAuth account.
     //    e.g. by creating an oauth account then changing the email address associated with it.
     //
     // It's quite common for services to automatically link accounts in this case, but it's
-    // better practice to require the user to authorized *then* link accounts to be sure
+    // better practice to require the user to signin *then* link accounts to be sure
     // someone is not exploiting a problem with a third party OAuth service.
     //
     // OAuth providers should require email address verification to prevent this, but in
@@ -289,11 +289,11 @@ export async function handleLoginOrRegister(
       } else {
         // We end up here when we don't have an account with the same [provider].id *BUT*
         // we do already have an account with the same email address as the one in the
-        // OAuth profile the user has just tried to authorized with.
+        // OAuth profile the user has just tried to signin with.
         //
         // We don't want to have two accounts with the same email address, and we don't
         // want to link them in case it's not safe to do so, so instead we prompt the user
-        // to authorized via email to verify their identity and then link the accounts.
+        // to signin via email to verify their identity and then link the accounts.
         throw new OAuthAccountNotLinked(
           "Another account already exists with the same e-mail address",
           { provider: account.provider }

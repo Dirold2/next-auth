@@ -5,7 +5,7 @@ import type { JSX } from "preact"
 /**
  * Besides providing type safety inside {@link CredentialsConfig.authorize}
  * it also determines how the credentials input fields will be rendered
- * on the default authorized page.
+ * on the default signin page.
  */
 export interface CredentialInput
   extends Partial<JSX.IntrinsicElements["input"]> {
@@ -73,7 +73,7 @@ export interface CredentialsConfig<
 export type CredentialsProviderType = "Credentials"
 
 /**
- * The Credentials provider allows you to handle authorizedg in with arbitrary credentials,
+ * The Credentials provider allows you to handle signing in with arbitrary credentials,
  * such as a username and password, domain, or two factor authentication or hardware device (e.g. YubiKey U2F / FIDO).
  *
  * It is intended to support use cases where you have an existing system you need to authenticate users against.
@@ -134,7 +134,7 @@ export type CredentialsProviderType = "Credentials"
  * })
  * ```
  * @see [Username/Password Example](https://authjs.dev/guides/providers/credentials#example---username--password)
- * @see [Web3/login With Ethereum Example](https://authjs.dev/guides/providers/credentials#example---web3--authorized-with-ethereum)
+ * @see [Web3/login With Ethereum Example](https://authjs.dev/guides/providers/credentials#example---web3--signin-with-ethereum)
  */
 export default function Credentials<
   CredentialsInputs extends Record<string, CredentialInput> = Record<

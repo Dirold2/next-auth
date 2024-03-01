@@ -45,7 +45,7 @@ const authURL = currentURL.substring(0, currentURL.lastIndexOf('/'));
   )
 }
 
-export default function SigninPage(props: {
+export default function SignInPage(props: {
   csrfToken?: string
   providers?: InternalProvider[]
   callbackUrl?: string
@@ -121,7 +121,7 @@ export default function SigninPage(props: {
           return (
             <div key={provider.id} className="provider">
               {provider.type === "oauth" || provider.type === "oidc" ? (
-                <form action={provider.authorizedUrl} method="POST">
+                <form action={provider.signinUrl} method="POST">
                   <input type="hidden" name="csrfToken" value={csrfToken} />
                   {callbackUrl && (
                     <input
@@ -171,7 +171,7 @@ export default function SigninPage(props: {
                 providers[i - 1].type !== "credentials" &&
                 providers[i - 1].type !== "webauthn" && <hr />}
               {provider.type === "email" && (
-                <form action={provider.authorizedUrl} method="POST">
+                <form action={provider.signinUrl} method="POST">
                   <input type="hidden" name="csrfToken" value={csrfToken} />
                   <label
                     className="section-header"

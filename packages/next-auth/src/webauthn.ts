@@ -11,8 +11,8 @@ import type {
 import type {
   AuthClientConfig,
   LiteralUnion,
-  SiAuthorizedParams,
-  AuthorizedOptions,
+  SignInAuthorizedParams,
+  SignInOptions,
   // AuthorizedResponse,
 } from "./lib/client.js"
 
@@ -33,7 +33,7 @@ const logger: LoggerInstance = {
 async function webAuthnOptions(
   providerID: string,
   nextAuthConfig: AuthClientConfig,
-  options?: AuthorizedOptions
+  options?: SignInOptions
 ) {
   const baseUrl = apiBaseUrl(nextAuthConfig)
 
@@ -59,10 +59,10 @@ async function webAuthnOptions(
 }
 
 /**
- * Initiate a authorized flow or send the user to the authorized page listing all possible providers.
+ * Initiate a signin flow or send the user to the signin page listing all possible providers.
  * Handles CSRF protection.
  */
-export async function authorized<
+export async function signin<
   P extends RedirectableProviderType | undefined = undefined,
 >(
   provider?: LiteralUnion<
@@ -70,10 +70,10 @@ export async function authorized<
       ? P | BuiltInProviderType
       : BuiltInProviderType
   >,
-  options?: AuthorizedOptions,
-  authorizationParams?: SiAuthorizedParams
+  options?: SignInOptions,
+  SignInParams?: SignInAuthorizedParams
 ): Promise<
-  P extends RedirectableProviderType ? AuthorizedOptions | undefined : undefined
+  P extends RedirectableProviderType ? SignInOptions | undefined : undefined
 > {
   const { callbackUrl = window.location.href, redirect = true } = options ?? {}
 
@@ -86,7 +86,7 @@ export async function authorized<
   }
 
   if (!provider || !(provider in providers)) {
-    window.location.href = `${baseUrl}/login?${new URLSearchParams({
+    window.location.href = `${baseUrl}/signin?${new URLSearchParams({
       callbackUrl,
     })}`
     return
@@ -96,8 +96,8 @@ export async function authorized<
   const isEmail = providers[provider].type === "email"
   const isWebAuthn = providers[provider].type === "webauthn"
 
-  const authorizedUrl = `${baseUrl}/${
-    isCredentials || isWebAuthn ? "callback" : "login"
+  const signinUrl = `${baseUrl}/${
+    isCredentials || isWebAuthn ? "callback" : "signin"
   }/${provider}`
 
   // Execute WebAuthn client flow if needed
@@ -118,7 +118,7 @@ export async function authorized<
 
   const csrfToken = await getCsrfToken()
   const res = await fetch(
-    `${authorizedUrl}?${new URLSearchParams(authorizationParams)}`,
+    `${signinUrl}?${new URLSearchParams(SignInParams)}`,
     {
       method: "post",
       headers: {

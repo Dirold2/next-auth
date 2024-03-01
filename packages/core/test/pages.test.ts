@@ -51,24 +51,24 @@ describe("pages", () => {
       vi.resetAllMocks()
     })
 
-    it("should attempt to render authorized page", async () => {
-      // Generated when visiting `/auth/authorized`
+    it("should attempt to render signin page", async () => {
+      // Generated when visiting `/auth/signin`
       const { options } = await init({
         authOptions: authOptions,
-        action: "authorized",
+        action: "signin",
         providerId: "github",
-        url: new URL("http://localhost:3000/auth/authorized"),
+        url: new URL("http://localhost:3000/auth/signin"),
         cookies: {},
         isPost: true,
         csrfDisabled: true,
       })
 
       const render = renderPage({ ...options, query: {}, cookies: [] })
-      const authorizedPage = render.authorized()
+      const signinPage = render.signin()
 
-      expect(authorizedPage.body).toContain(`<title>Authorized</title>`)
-      expect(authorizedPage.body).toContain(
-        `action="http://localhost:3000/auth/authorized/github"`
+      expect(signinPage.body).toContain(`<title>Authorized</title>`)
+      expect(signinPage.body).toContain(
+        `action="http://localhost:3000/auth/signin/github"`
       )
     })
   })

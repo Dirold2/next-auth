@@ -47,7 +47,7 @@ export interface ClientSafeProvider {
   callbackUrl: string
 }
 
-export interface AuthorizedOptions extends Record<string, unknown> {
+export interface SignInOptions extends Record<string, unknown> {
   /**
    * Specify to which URL the user will be redirected after signing in. Defaults to the page URL the sign-in is initiated from.
    *
@@ -58,7 +58,7 @@ export interface AuthorizedOptions extends Record<string, unknown> {
   redirect?: boolean
 }
 
-export interface AuthorizedResponse {
+export interface SignInResponse {
   error: string | undefined
   status: number
   ok: boolean
@@ -69,18 +69,18 @@ export interface AuthorizedResponse {
  * Match `inputType` of `new URLSearchParams(inputType)`
  * @internal
  */
-export type SiAuthorizedParams =
+export type SignInAuthorizedParams =
   | string
   | string[][]
   | Record<string, string>
   | URLSearchParams
 
 /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1) */
-export interface LogOutResponse {
+export interface SignOutResponse {
   url: string
 }
 
-export interface LogOutParams<R extends boolean = true> {
+export interface SignOutParams<R extends boolean = true> {
   /** [Documentation](https://next-auth.js.org/getting-started/client#specifying-a-callbackurl-1) */
   callbackUrl?: string
   /** [Documentation](https://next-auth.js.org/getting-started/client#using-the-redirect-false-option-1 */

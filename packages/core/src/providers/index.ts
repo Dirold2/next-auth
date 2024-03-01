@@ -87,7 +87,7 @@ export type AppProviders = Array<
 >
 
 export interface AppProvider extends CommonProviderOptions {
-  authorizedUrl: string
+  signinUrl: string
   callbackUrl: string
 }
 

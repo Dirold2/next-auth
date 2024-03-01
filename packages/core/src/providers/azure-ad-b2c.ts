@@ -30,7 +30,7 @@ export interface AzureADB2CProfile {
 }
 
 /**
- * Add Azure AD B2C login to your page.
+ * Add Azure AD B2C signin to your page.
  *
  *
  * ## Configuration

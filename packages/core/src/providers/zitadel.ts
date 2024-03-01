@@ -88,7 +88,7 @@ export interface ZitadelProfile extends Record<string, any> {
  * const options = {
  *   ...
  *   callbacks: {
- *     async authorized({ account, profile }) {
+ *     async signin({ account, profile }) {
  *       if (account.provider === "zitadel") {
  *         return profile.email_verified;
  *       }
